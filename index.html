@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>House Expenses - Cloud</title>
+    <title>House Expenses - Cloud Sync</title>
     <style>
         :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; }
@@ -15,25 +15,29 @@
         .stat-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); flex: 1; }
         .stat-val { display: block; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
         input, select { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
-        .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-bottom: 5px; }
-        .settle-card { background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; }
+        .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-bottom: 5px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); opacity: 0.8; }
+        .settle-card { background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; line-height: 1.6; }
         .expense-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent); position: relative; }
         .ex-main { display: flex; justify-content: space-between; padding-right: 35px; font-weight: 800; }
         .del-btn { position: absolute; top: 12px; right: 12px; color: #ff5f5f; border: none; background: none; cursor: pointer; font-size: 1.1rem; }
         .arc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333; font-size: 0.8rem; }
         .arc-del { color: #ff5f5f; cursor: pointer; font-size: 1.1rem; border: none; background: none; }
+        .receipt-btn { color: var(--accent); font-size: 0.75rem; cursor: pointer; text-decoration: underline; margin-top: 5px; display: inline-block; }
+        #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; }
+        
+        /* User Colors */
         .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
-        #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; }
     </style>
 </head>
 <body>
 
-<div id="loading">SYNCING...</div>
+<div id="loading">SYNCING DATA...</div>
 
 <div class="wrapper">
     <div class="section">
-        <h1>Expense Splitter</h1>
-        <div id="startDateDisplay" class="cycle-info">Cycle Start: Loading...</div>
+        <h1>House Expenses</h1>
+        <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
             <input type="text" id="curSearch" placeholder="Search Currency..." style="margin-bottom:0; font-size:0.8rem;" onkeyup="filterCurrency()">
@@ -54,10 +58,10 @@
 
         <div id="settlementBox" class="settle-card">
             <strong>Settlements:</strong>
-            <div id="settleList" style="margin-top:5px; color:#ccc; line-height: 1.4;">Calculating...</div>
+            <div id="settleList" style="margin-top:5px; color:#ccc;">Calculating...</div>
         </div>
         
-        <button class="btn" style="font-size: 0.7rem; margin-top:15px;" onclick="loadFromCloud()">Refresh Cloud Data</button>
+        <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff;" onclick="loadFromCloud()">Refresh Cloud</button>
     </div>
 
     <div class="section">
@@ -66,19 +70,21 @@
             <option value="Abubakar">Abubakar</option><option value="Sohail">Sohail</option>
             <option value="Mansoor">Mansoor</option>
         </select>
-        <input type="text" id="amtInput" placeholder="Amount (e.g. 20+5.50)">
-        <input type="text" id="descInput" placeholder="Details (e.g. Groceries)">
+        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50+2)">
+        <input type="text" id="descInput" placeholder="Description (e.g. Groceries)">
+        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional - Auto Compressed):</label>
+        <input type="file" id="receiptInput" accept="image/*" style="border:none; background:none; font-size:0.7rem; color:#888;">
         <button class="btn" id="addBtn" onclick="addExpense()">Add Expense</button>
     </div>
 
     <div class="section">
-        <h1>Current History</h1>
+        <h1>Current Month</h1>
         <div id="expenseList"></div>
-        <button class="btn" style="background: rgba(255,255,255,0.1); color:#fff; font-size: 0.7rem; border: 1px solid #ff5f5f; margin-top:10px;" onclick="startNewCycle()">End Month / Archive</button>
+        <button class="btn" style="background: #ff5f5f22; color:#ff5f5f; font-size: 0.7rem; border: 1px solid #ff5f5f; margin-top:10px;" onclick="startNewCycle()">End Month / Start New</button>
     </div>
 
     <div class="section">
-        <h1>Archives</h1>
+        <h1>Past 2 Archives</h1>
         <div id="archiveList"></div>
     </div>
 </div>
@@ -98,7 +104,7 @@
             });
             db = await res.json();
             render();
-        } catch (e) { alert("Error loading data. Check API Keys."); }
+        } catch (e) { alert("Load failed. Check your API keys and Internet."); }
         showLoading(false);
     }
 
@@ -110,13 +116,13 @@
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
                 body: JSON.stringify(db)
             });
-        } catch (e) { alert("Save failed."); }
+        } catch (e) { alert("Save failed. The cloud might be full or offline."); }
         showLoading(false);
     }
 
     function render() {
         const symbol = document.getElementById('currency').value;
-        document.getElementById('startDateDisplay').innerText = `Cycle Started: ${db.startDate || 'N/A'}`;
+        document.getElementById('startDateDisplay').innerText = `Cycle Started: ${db.startDate || 'Unknown'}`;
         const list = document.getElementById('expenseList');
         let total = 0;
         let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
@@ -130,6 +136,7 @@
                     <button class="del-btn" onclick="deleteEx(${i})">✕</button>
                     <div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div>
                     <span style="font-size:0.8rem; color:#aaa;">${ex.desc}</span>
+                    ${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}
                 </div>`;
         });
 
@@ -140,55 +147,89 @@
         let settleHtml = "";
         users.forEach(u => {
             const diff = userTotals[u] - perHead;
-            if (diff > 0) {
-                settleHtml += `<div><b class="${u}">${u}</b> gets back <b style="color:var(--accent)">${symbol}${diff.toFixed(2)}</b></div>`;
-            } else if (diff < 0) {
-                settleHtml += `<div><b class="${u}">${u}</b> owes <b style="color:#ff5f5f">${symbol}${Math.abs(diff).toFixed(2)}</b></div>`;
-            }
+            if (diff > 0) settleHtml += `<div><b class="${u}">${u}</b> gets back <b style="color:var(--accent)">${symbol}${diff.toFixed(2)}</b></div>`;
+            else if (diff < 0) settleHtml += `<div><b class="${u}">${u}</b> owes <b style="color:#ff5f5f">${symbol}${Math.abs(diff).toFixed(2)}</b></div>`;
         });
         document.getElementById('settleList').innerHTML = settleHtml || "Everyone is even!";
 
         const arcList = document.getElementById('archiveList');
-        arcList.innerHTML = db.archives.length ? "" : "<p style='font-size:0.7rem;text-align:center;color:#666;'>No archives.</p>";
+        arcList.innerHTML = db.archives.length ? "" : "<p style='font-size:0.7rem;text-align:center;color:#666;'>No archives found.</p>";
         db.archives.forEach((arc, i) => {
             arcList.innerHTML += `
                 <div class="arc-item">
                     <div onclick="viewArchive(${i})" style="cursor:pointer">
                         📁 <strong>${arc.start} - ${arc.end}</strong><br>
-                        <span style="color:#888">Total: ${symbol}${arc.total}</span>
+                        <span style="color:#888">Final Total: ${symbol}${arc.total}</span>
                     </div>
                     <button class="arc-del" onclick="deleteArchive(${i})">🗑</button>
                 </div>`;
         });
     }
 
-    function filterCurrency() {
-        const input = document.getElementById('curSearch').value.toUpperCase();
-        const select = document.getElementById('currency');
-        const options = select.options;
-        for (let i = 0; i < options.length; i++) {
-            options[i].style.display = options[i].text.toUpperCase().includes(input) ? "" : "none";
-        }
-    }
-
     async function addExpense() {
         const raw = document.getElementById('amtInput').value;
         const name = document.getElementById('userSelect').value;
         const desc = document.getElementById('descInput').value;
+        const file = document.getElementById('receiptInput').files[0];
         if(!raw) return;
+
         try {
             let amt = raw.split('+').reduce((acc, p) => acc + parseFloat(p || 0), 0);
-            db.expenses.unshift({ name, amount: amt, desc, date: new Date().toLocaleDateString() });
-            render(); await saveToCloud();
-            document.getElementById('amtInput').value = ""; document.getElementById('descInput').value = "";
-        } catch(e) { alert("Invalid amount math"); }
+            let receiptData = null;
+            if (file) {
+                showLoading(true);
+                receiptData = await compressImage(file);
+            }
+
+            db.expenses.unshift({ name, amount: amt, desc, receipt: receiptData, date: new Date().toLocaleDateString() });
+            render(); 
+            await saveToCloud();
+            document.getElementById('amtInput').value = ""; 
+            document.getElementById('descInput').value = "";
+            document.getElementById('receiptInput').value = "";
+        } catch(e) { alert("Error calculating amount. Use numbers and + only."); }
+    }
+
+    function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > 600) { height *= 600 / width; width = 600; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.5));
+                };
+            };
+        });
     }
 
     async function startNewCycle() {
-        if(!confirm("Archive current expenses and start fresh?")) return;
-        let total = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
-        db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: total.toFixed(2), details: [...db.expenses] });
-        db.expenses = []; db.startDate = new Date().toLocaleDateString();
+        if(!confirm("Archive this month? Receipts will be deleted and history limited to past 2 months.")) return;
+        
+        let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
+
+        // Map data WITHOUT receipts to save space
+        const cleanDetails = db.expenses.map(ex => ({
+            name: ex.name, amount: ex.amount, desc: ex.desc, date: ex.date
+        }));
+
+        db.archives.unshift({ 
+            start: db.startDate, end: new Date().toLocaleDateString(), 
+            total: totalAmt.toFixed(2), details: cleanDetails 
+        });
+
+        if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
+
+        db.expenses = []; 
+        db.startDate = new Date().toLocaleDateString();
         render(); await saveToCloud();
     }
 
@@ -201,13 +242,32 @@
     }
 
     async function deleteArchive(i) {
-        if(confirm("Permanently delete this archive?")) {
+        if(confirm("Delete this archive permanently?")) {
             db.archives.splice(i, 1);
             render(); await saveToCloud();
         }
     }
 
-    function deleteEx(i) { if(confirm("Delete expense?")) { db.expenses.splice(i,1); render(); saveToCloud(); } }
+    function deleteEx(i) {
+        if(confirm("Delete this expense?")) {
+            db.expenses.splice(i, 1);
+            render(); saveToCloud();
+        }
+    }
+
+    function filterCurrency() {
+        const input = document.getElementById('curSearch').value.toUpperCase();
+        const opts = document.getElementById('currency').options;
+        for (let i = 0; i < opts.length; i++) {
+            opts[i].style.display = opts[i].text.toUpperCase().includes(input) ? "" : "none";
+        }
+    }
+
+    function viewImg(data) {
+        const w = window.open("");
+        w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh"></body>`);
+    }
+
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
     window.onload = loadFromCloud;
 </script>
