@@ -7,7 +7,7 @@
     <style>
         :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top, #1a1a2e, #000); color: #eee; margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top, #1a1a2e, #000); color: #eee; margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
         .wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
         .section { background: var(--glass); backdrop-filter: blur(15px); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); width: 100%; position: relative; }
         h1 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.2rem; text-transform: uppercase; text-align: center; }
@@ -15,7 +15,7 @@
         .stat-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); flex: 1; }
         .stat-val { display: block; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
         input, select { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
-        .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-bottom: 5px; transition: 0.2s; }
+        .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .btn:active { transform: scale(0.98); opacity: 0.8; }
         .settle-card { background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; line-height: 1.6; }
         .expense-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent); position: relative; }
@@ -24,8 +24,14 @@
         .arc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333; font-size: 0.8rem; }
         .arc-del { color: #ff5f5f; cursor: pointer; font-size: 1.1rem; border: none; background: none; }
         .receipt-btn { color: var(--accent); font-size: 0.75rem; cursor: pointer; text-decoration: underline; margin-top: 5px; display: inline-block; }
-        #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; }
+        #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; z-index: 1000; }
         
+        /* User Selection Overlay */
+        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .login-box { background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; }
+        .login-btn { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-weight: 600; }
+        .login-btn:hover { background: var(--accent); color: #000; }
+
         /* User Colors */
         .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
     </style>
@@ -34,9 +40,23 @@
 
 <div id="loading">SYNCING DATA...</div>
 
+<div id="loginOverlay">
+    <div class="login-box">
+        <h1 style="margin-bottom: 20px;">Who are you?</h1>
+        <button class="login-btn" onclick="setUser('Shahzeb')">Shahzeb</button>
+        <button class="login-btn" onclick="setUser('Samad')">Samad</button>
+        <button class="login-btn" onclick="setUser('Abubakar')">Abubakar</button>
+        <button class="login-btn" onclick="setUser('Sohail')">Sohail</button>
+        <button class="login-btn" onclick="setUser('Mansoor')">Mansoor</button>
+    </div>
+</div>
+
 <div class="wrapper">
     <div class="section">
-        <h1>House Expenses</h1>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h1>House Expenses</h1>
+            <button onclick="logout()" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer;">Switch User</button>
+        </div>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -61,26 +81,22 @@
             <div id="settleList" style="margin-top:5px; color:#ccc;">Calculating...</div>
         </div>
         
-        <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff;" onclick="loadFromCloud()">Refresh Cloud</button>
+        <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff; padding:10px;" onclick="loadFromCloud()">Refresh Cloud</button>
     </div>
 
     <div class="section">
-        <select id="userSelect">
-            <option value="Shahzeb">Shahzeb</option><option value="Samad">Samad</option>
-            <option value="Abubakar">Abubakar</option><option value="Sohail">Sohail</option>
-            <option value="Mansoor">Mansoor</option>
-        </select>
-        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50+2)">
+        <p id="currentUserDisplay" style="text-align:center; font-weight:800; margin-top:0; border-bottom:1px solid var(--glass-border); padding-bottom:10px;"></p>
+        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50)">
         <input type="text" id="descInput" placeholder="Description (e.g. Groceries)">
-        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional - Auto Compressed):</label>
+        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Auto-Compressed):</label>
         <input type="file" id="receiptInput" accept="image/*" style="border:none; background:none; font-size:0.7rem; color:#888;">
-        <button class="btn" id="addBtn" onclick="addExpense()">Add Expense</button>
+        <button class="btn" id="addBtn" onclick="addExpense()" style="margin-top:10px; padding:15px;">Add Expense</button>
     </div>
 
     <div class="section">
         <h1>Current Month</h1>
         <div id="expenseList"></div>
-        <button class="btn" style="background: #ff5f5f22; color:#ff5f5f; font-size: 0.7rem; border: 1px solid #ff5f5f; margin-top:10px;" onclick="startNewCycle()">End Month / Start New</button>
+        <button class="btn" style="background: #ff5f5f22; color:#ff5f5f; font-size: 0.7rem; border: 1px solid #ff5f5f; margin-top:10px; padding:10px;" onclick="startNewCycle()">End Month / Start New</button>
     </div>
 
     <div class="section">
@@ -90,12 +106,35 @@
 </div>
 
 <script>
-    const BIN_ID = '69dab988856a682189232cd0';
+    // --- CONFIGURATION ---
+    const BIN_ID = '69dab988856a682189232cd069dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     
     let db = { startDate: "", expenses: [], archives: [] };
+    let currentUser = "";
     const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
+    // --- USER MANAGEMENT ---
+    function checkUser() {
+        const savedUser = localStorage.getItem('expenseUser');
+        if (savedUser) {
+            setUser(savedUser);
+        }
+    }
+
+    function setUser(name) {
+        currentUser = name;
+        localStorage.setItem('expenseUser', name);
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('currentUserDisplay').innerHTML = `Posting as: <span class="${name}">${name}</span>`;
+    }
+
+    function logout() {
+        localStorage.removeItem('expenseUser');
+        document.getElementById('loginOverlay').style.display = 'flex';
+    }
+
+    // --- DATA MANAGEMENT ---
     async function loadFromCloud() {
         showLoading(true);
         try {
@@ -104,7 +143,7 @@
             });
             db = await res.json();
             render();
-        } catch (e) { alert("Load failed. Check your API keys and Internet."); }
+        } catch (e) { alert("Load failed. Check API keys."); }
         showLoading(false);
     }
 
@@ -116,7 +155,7 @@
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
                 body: JSON.stringify(db)
             });
-        } catch (e) { alert("Save failed. The cloud might be full or offline."); }
+        } catch (e) { alert("Save failed."); }
         showLoading(false);
     }
 
@@ -159,7 +198,7 @@
                 <div class="arc-item">
                     <div onclick="viewArchive(${i})" style="cursor:pointer">
                         📁 <strong>${arc.start} - ${arc.end}</strong><br>
-                        <span style="color:#888">Final Total: ${symbol}${arc.total}</span>
+                        <span style="color:#888">Total: ${symbol}${arc.total}</span>
                     </div>
                     <button class="arc-del" onclick="deleteArchive(${i})">🗑</button>
                 </div>`;
@@ -168,7 +207,6 @@
 
     async function addExpense() {
         const raw = document.getElementById('amtInput').value;
-        const name = document.getElementById('userSelect').value;
         const desc = document.getElementById('descInput').value;
         const file = document.getElementById('receiptInput').files[0];
         if(!raw) return;
@@ -181,13 +219,13 @@
                 receiptData = await compressImage(file);
             }
 
-            db.expenses.unshift({ name, amount: amt, desc, receipt: receiptData, date: new Date().toLocaleDateString() });
+            db.expenses.unshift({ name: currentUser, amount: amt, desc, receipt: receiptData, date: new Date().toLocaleDateString() });
             render(); 
             await saveToCloud();
             document.getElementById('amtInput').value = ""; 
             document.getElementById('descInput').value = "";
             document.getElementById('receiptInput').value = "";
-        } catch(e) { alert("Error calculating amount. Use numbers and + only."); }
+        } catch(e) { alert("Error in amount."); }
     }
 
     function compressImage(file) {
@@ -205,29 +243,18 @@
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.5));
+                    resolve(canvas.toBase64 ? canvas.toDataURL('image/jpeg', 0.5) : canvas.toDataURL('image/jpeg', 0.5));
                 };
             };
         });
     }
 
     async function startNewCycle() {
-        if(!confirm("Archive this month? Receipts will be deleted and history limited to past 2 months.")) return;
-        
+        if(!confirm("Archive this month? Receipts will be deleted and history limited to 2 records.")) return;
         let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
-
-        // Map data WITHOUT receipts to save space
-        const cleanDetails = db.expenses.map(ex => ({
-            name: ex.name, amount: ex.amount, desc: ex.desc, date: ex.date
-        }));
-
-        db.archives.unshift({ 
-            start: db.startDate, end: new Date().toLocaleDateString(), 
-            total: totalAmt.toFixed(2), details: cleanDetails 
-        });
-
+        const cleanDetails = db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc, date: ex.date }));
+        db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: cleanDetails });
         if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
-
         db.expenses = []; 
         db.startDate = new Date().toLocaleDateString();
         render(); await saveToCloud();
@@ -242,17 +269,11 @@
     }
 
     async function deleteArchive(i) {
-        if(confirm("Delete this archive permanently?")) {
-            db.archives.splice(i, 1);
-            render(); await saveToCloud();
-        }
+        if(confirm("Delete this archive?")) { db.archives.splice(i, 1); render(); await saveToCloud(); }
     }
 
     function deleteEx(i) {
-        if(confirm("Delete this expense?")) {
-            db.expenses.splice(i, 1);
-            render(); saveToCloud();
-        }
+        if(confirm("Delete this expense?")) { db.expenses.splice(i, 1); render(); saveToCloud(); }
     }
 
     function filterCurrency() {
@@ -269,7 +290,12 @@
     }
 
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
-    window.onload = loadFromCloud;
+
+    // Init
+    window.onload = () => {
+        checkUser();
+        loadFromCloud();
+    };
 </script>
 </body>
 </html>
