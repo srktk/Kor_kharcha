@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Expenses - Cloud</title>
+    <style>
+        :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top, #1a1a2e, #000); color: #eee; margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        .wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+        .section { background: var(--glass); backdrop-filter: blur(15px); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); width: 100%; position: relative; }
+        h1 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.2rem; text-transform: uppercase; text-align: center; }
+        .cycle-info { text-align: center; font-size: 0.75rem; color: #888; margin-bottom: 10px; }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .stat-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
+        .stat-val { display: block; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+        input, select { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
+        .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-bottom: 5px; }
+        .btn-alt { background: rgba(255,255,255,0.1); color: #fff; font-size: 0.7rem; }
+        .expense-card { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); position: relative; }
+        .ex-main { display: flex; justify-content: space-between; padding-right: 25px; font-weight: 800; }
+        .ex-desc { font-size: 0.8rem; color: #aaa; margin-top: 4px; display: block; }
+        .del-btn { position: absolute; top: 10px; right: 10px; color: #ff5f5f; border: none; background: none; cursor: pointer; }
+        .archive-item { padding: 10px; border-bottom: 1px solid #333; font-size: 0.8rem; cursor: pointer; }
+        .archive-item:hover { color: var(--accent); }
+        /* Names Colors */
+        .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
+        #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; }
+    </style>
+</head>
+<body>
+
+<div id="loading">SYNCING...</div>
+
+<div class="wrapper">
+    <div class="section">
+        <h1>Expense Splitter</h1>
+        <div id="startDateDisplay" class="cycle-info">Cycle Start: Loading...</div>
+        <div class="summary-grid">
+            <div class="stat-box"><span id="totalExp" class="stat-val">0</span><span style="font-size:0.6rem">TOTAL</span></div>
+            <div class="stat-box"><span id="perPerson" class="stat-val">0</span><span style="font-size:0.6rem">EACH</span></div>
+        </div>
+        <button class="btn" style="font-size: 0.7rem;" onclick="loadFromCloud()">Refresh Data</button>
+    </div>
+
+    <div class="section">
+        <select id="userSelect">
+            <option value="Shahzeb">Shahzeb</option><option value="Samad">Samad</option>
+            <option value="Abubakar">Abubakar</option><option value="Sohail">Sohail</option>
+            <option value="Mansoor">Mansoor</option>
+        </select>
+        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+20)">
+        <input type="text" id="descInput" placeholder="Details">
+        <input type="file" id="receiptInput" accept="image/*" style="font-size: 0.7rem; border:none; background:none;">
+        <button class="btn" id="addBtn" onclick="addExpense()">Add Expense</button>
+    </div>
+
+    <div class="section">
+        <h1>Current History</h1>
+        <div id="expenseList"></div>
+        <button class="btn btn-alt" style="margin-top:20px; border: 1px solid #ff5f5f; color:#ff5f5f;" onclick="startNewCycle()">End Month / Start New Record</button>
+    </div>
+
+    <div class="section">
+        <h1>Past Archives</h1>
+        <div id="archiveList"></div>
+    </div>
+</div>
+
+<script>
+    // PASTE YOUR KEYS HERE
+    const BIN_ID = '69dab988856a682189232cd0';
+    const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
+    
+    let db = { startDate: "", expenses: [], archives: [] };
+
+    async function loadFromCloud() {
+        showLoading(true);
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': MASTER_KEY }
+            });
+            const data = await res.json();
+            db = data.record;
+            render();
+        } catch (e) { alert("Failed to load cloud data."); }
+        showLoading(false);
+    }
+
+    async function saveToCloud() {
+        showLoading(true);
+        try {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                body: JSON.stringify(db)
+            });
+        } catch (e) { alert("Failed to save to cloud."); }
+        showLoading(false);
+    }
+
+    function render() {
+        document.getElementById('startDateDisplay').innerText = `Cycle Started: ${db.startDate || 'N/A'}`;
+        const list = document.getElementById('expenseList');
+        let total = 0;
+        list.innerHTML = "";
+        
+        db.expenses.forEach((ex, i) => {
+            total += ex.amount;
+            list.innerHTML += `
+                <div class="expense-card">
+                    <button class="del-btn" onclick="deleteEx(${i})">✕</button>
+                    <div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>$${ex.amount.toFixed(2)}</span></div>
+                    <span class="ex-desc">${ex.desc}</span>
+                    ${ex.receipt ? `<span style="color:var(--accent);font-size:0.7rem;cursor:pointer" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}
+                </div>`;
+        });
+
+        document.getElementById('totalExp').innerText = total.toFixed(2);
+        document.getElementById('perPerson').innerText = (total / 5).toFixed(2);
+
+        // Render Archives
+        const arcList = document.getElementById('archiveList');
+        arcList.innerHTML = db.archives.length ? "" : "<p style='font-size:0.7rem;text-align:center'>No history yet.</p>";
+        db.archives.forEach((arc, i) => {
+            arcList.innerHTML += `<div class="archive-item" onclick="viewArchive(${i})">📁 ${arc.start} to ${arc.end} ($${arc.total})</div>`;
+        });
+    }
+
+    async function addExpense() {
+        const raw = document.getElementById('amtInput').value;
+        const name = document.getElementById('userSelect').value;
+        const desc = document.getElementById('descInput').value;
+        const file = document.getElementById('receiptInput').files[0];
+
+        if(!raw) return;
+        let amt = raw.split('+').reduce((acc, p) => acc + parseFloat(p || 0), 0);
+        
+        let receiptBase64 = null;
+        if(file) {
+            receiptBase64 = await toBase64(file);
+        }
+
+        db.expenses.unshift({ name, amount: amt, desc, receipt: receiptBase64 });
+        render();
+        await saveToCloud();
+        document.getElementById('amtInput').value = ''; document.getElementById('descInput').value = '';
+    }
+
+    async function startNewCycle() {
+        if(!confirm("This will clear current expenses and save them to Archives. Proceed?")) return;
+        
+        let total = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
+        const historyEntry = {
+            start: db.startDate,
+            end: new Date().toLocaleDateString(),
+            total: total.toFixed(2),
+            details: [...db.expenses]
+        };
+
+        db.archives.unshift(historyEntry);
+        db.expenses = [];
+        db.startDate = new Date().toLocaleDateString();
+        
+        render();
+        await saveToCloud();
+    }
+
+    function viewArchive(i) {
+        const arc = db.archives[i];
+        let msg = `History: ${arc.start} - ${arc.end}\nTotal: $${arc.total}\n\n`;
+        arc.details.forEach(d => msg += `${d.name}: $${d.amount} (${d.desc})\n`);
+        alert(msg);
+    }
+
+    function deleteEx(i) {
+        if(confirm("Delete?")) { db.expenses.splice(i, 1); render(); saveToCloud(); }
+    }
+
+    function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+    function viewImg(data) { const w = window.open(""); w.document.write(`<img src="${data}" style="max-width:100%">`); }
+
+    window.onload = loadFromCloud;
+</script>
+</body>
+</html>
