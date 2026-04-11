@@ -53,10 +53,7 @@
 
 <div class="wrapper">
     <div class="section">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <h1>House Expenses</h1>
-            <button onclick="logout()" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer;">Switch User</button>
-        </div>
+        <h1>House Expenses</h1>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -85,10 +82,14 @@
     </div>
 
     <div class="section">
-        <p id="currentUserDisplay" style="text-align:center; font-weight:800; margin-top:0; border-bottom:1px solid var(--glass-border); padding-bottom:10px;"></p>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); margin-bottom: 15px; padding-bottom: 5px;">
+            <p id="currentUserDisplay" style="font-weight:800; margin:0;"></p>
+            <button onclick="logout()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color:var(--accent); font-size:0.65rem; cursor:pointer; padding: 4px 8px; border-radius: 8px; text-transform: uppercase;">Switch User</button>
+        </div>
+        
         <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50)">
         <input type="text" id="descInput" placeholder="Description (e.g. Groceries)">
-        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Auto-Compressed):</label>
+        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional):</label>
         <input type="file" id="receiptInput" accept="image/*" style="border:none; background:none; font-size:0.7rem; color:#888;">
         <button class="btn" id="addBtn" onclick="addExpense()" style="margin-top:10px; padding:15px;">Add Expense</button>
     </div>
@@ -106,7 +107,7 @@
 </div>
 
 <script>
-    // --- CONFIGURATION ---
+    // --- IMPORTANT: REPLACE THESE WITH YOUR KEYS ---
     const BIN_ID = '69dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     
@@ -117,16 +118,14 @@
     // --- USER MANAGEMENT ---
     function checkUser() {
         const savedUser = localStorage.getItem('expenseUser');
-        if (savedUser) {
-            setUser(savedUser);
-        }
+        if (savedUser) setUser(savedUser);
     }
 
     function setUser(name) {
         currentUser = name;
         localStorage.setItem('expenseUser', name);
         document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('currentUserDisplay').innerHTML = `Posting as: <span class="${name}">${name}</span>`;
+        document.getElementById('currentUserDisplay').innerHTML = `User: <span class="${name}">${name}</span>`;
     }
 
     function logout() {
@@ -136,14 +135,16 @@
 
     // --- DATA MANAGEMENT ---
     async function loadFromCloud() {
+        if (BIN_ID.includes('YOUR_')) return; // Don't run with placeholders
         showLoading(true);
         try {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
                 headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } 
             });
+            if (!res.ok) throw new Error();
             db = await res.json();
             render();
-        } catch (e) { alert("Load failed. Check API keys."); }
+        } catch (e) { console.error("Load failed"); }
         showLoading(false);
     }
 
@@ -225,7 +226,7 @@
             document.getElementById('amtInput').value = ""; 
             document.getElementById('descInput').value = "";
             document.getElementById('receiptInput').value = "";
-        } catch(e) { alert("Error in amount."); }
+        } catch(e) { alert("Error in amount math."); }
     }
 
     function compressImage(file) {
@@ -243,16 +244,16 @@
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toBase64 ? canvas.toDataURL('image/jpeg', 0.5) : canvas.toDataURL('image/jpeg', 0.5));
+                    resolve(canvas.toDataURL('image/jpeg', 0.5));
                 };
             };
         });
     }
 
     async function startNewCycle() {
-        if(!confirm("Archive this month? Receipts will be deleted and history limited to 2 records.")) return;
+        if(!confirm("Archive this month? Only past 2 months kept.")) return;
         let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
-        const cleanDetails = db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc, date: ex.date }));
+        const cleanDetails = db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc }));
         db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: cleanDetails });
         if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
         db.expenses = []; 
@@ -264,7 +265,7 @@
         const arc = db.archives[i];
         const symbol = document.getElementById('currency').value;
         let msg = `ARCHIVE: ${arc.start} - ${arc.end}\nTotal: ${symbol}${arc.total}\n\n`;
-        arc.details.forEach(d => msg += `• ${d.name}: ${symbol}${d.amount.toFixed(2)} (${d.desc})\n`);
+        arc.details.forEach(d => msg += `• ${d.name}: ${symbol}${d.amount.toFixed(2)} (${d.desc || 'No desc'})\n`);
         alert(msg);
     }
 
@@ -291,7 +292,6 @@
 
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
 
-    // Init
     window.onload = () => {
         checkUser();
         loadFromCloud();
