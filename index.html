@@ -25,14 +25,10 @@
         .arc-del { color: #ff5f5f; cursor: pointer; font-size: 1.1rem; border: none; background: none; }
         .receipt-btn { color: var(--accent); font-size: 0.75rem; cursor: pointer; text-decoration: underline; margin-top: 5px; display: inline-block; }
         #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; z-index: 1000; }
-        
-        /* User Selection Overlay */
         #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .login-box { background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; }
         .login-btn { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-weight: 600; }
         .login-btn:hover { background: var(--accent); color: #000; }
-
-        /* User Colors */
         .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
     </style>
 </head>
@@ -76,6 +72,7 @@
         <div id="settlementBox" class="settle-card">
             <strong>Settlements:</strong>
             <div id="settleList" style="margin-top:5px; color:#ccc;">Calculating...</div>
+            <button class="btn" style="margin-top:10px; font-size:0.65rem; padding:8px; background:rgba(0,242,254,0.15); color:var(--accent); border:1px solid var(--accent)" onclick="shareSummary()">Copy Share Summary</button>
         </div>
         
         <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff; padding:10px;" onclick="loadFromCloud()">Refresh Cloud</button>
@@ -107,7 +104,6 @@
 </div>
 
 <script>
-    // --- IMPORTANT: REPLACE THESE WITH YOUR KEYS ---
     const BIN_ID = '69dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     
@@ -115,7 +111,6 @@
     let currentUser = "";
     const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    // --- USER MANAGEMENT ---
     function checkUser() {
         const savedUser = localStorage.getItem('expenseUser');
         if (savedUser) setUser(savedUser);
@@ -133,15 +128,13 @@
         document.getElementById('loginOverlay').style.display = 'flex';
     }
 
-    // --- DATA MANAGEMENT ---
     async function loadFromCloud() {
-        if (BIN_ID.includes('YOUR_')) return; // Don't run with placeholders
+        if (BIN_ID.includes('YOUR_')) return;
         showLoading(true);
         try {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
                 headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } 
             });
-            if (!res.ok) throw new Error();
             db = await res.json();
             render();
         } catch (e) { console.error("Load failed"); }
@@ -156,7 +149,7 @@
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
                 body: JSON.stringify(db)
             });
-        } catch (e) { alert("Save failed."); }
+        } catch (e) { alert("Save failed. Cloud limit may be reached."); }
         showLoading(false);
     }
 
@@ -171,13 +164,7 @@
         db.expenses.forEach((ex, i) => {
             total += ex.amount;
             userTotals[ex.name] += ex.amount;
-            list.innerHTML += `
-                <div class="expense-card">
-                    <button class="del-btn" onclick="deleteEx(${i})">✕</button>
-                    <div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div>
-                    <span style="font-size:0.8rem; color:#aaa;">${ex.desc}</span>
-                    ${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}
-                </div>`;
+            list.innerHTML += `<div class="expense-card"><button class="del-btn" onclick="deleteEx(${i})">✕</button><div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div><span style="font-size:0.8rem; color:#aaa;">${ex.desc}</span>${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}</div>`;
         });
 
         const perHead = total / 5;
@@ -195,14 +182,7 @@
         const arcList = document.getElementById('archiveList');
         arcList.innerHTML = db.archives.length ? "" : "<p style='font-size:0.7rem;text-align:center;color:#666;'>No archives found.</p>";
         db.archives.forEach((arc, i) => {
-            arcList.innerHTML += `
-                <div class="arc-item">
-                    <div onclick="viewArchive(${i})" style="cursor:pointer">
-                        📁 <strong>${arc.start} - ${arc.end}</strong><br>
-                        <span style="color:#888">Total: ${symbol}${arc.total}</span>
-                    </div>
-                    <button class="arc-del" onclick="deleteArchive(${i})">🗑</button>
-                </div>`;
+            arcList.innerHTML += `<div class="arc-item"><div onclick="viewArchive(${i})" style="cursor:pointer">📁 <strong>${arc.start} - ${arc.end}</strong><br><span style="color:#888">Total: ${symbol}${arc.total}</span></div><button class="arc-del" onclick="deleteArchive(${i})">🗑</button></div>`;
         });
     }
 
@@ -212,6 +192,12 @@
         const file = document.getElementById('receiptInput').files[0];
         if(!raw) return;
 
+        // FAILSAFE: Block massive files
+        if (file && file.size > 10 * 1024 * 1024) { 
+            alert("Error: File is too large (Max 10MB). Please take a smaller photo.");
+            return;
+        }
+
         try {
             let amt = raw.split('+').reduce((acc, p) => acc + parseFloat(p || 0), 0);
             let receiptData = null;
@@ -219,18 +205,15 @@
                 showLoading(true);
                 receiptData = await compressImage(file);
             }
-
             db.expenses.unshift({ name: currentUser, amount: amt, desc, receipt: receiptData, date: new Date().toLocaleDateString() });
-            render(); 
-            await saveToCloud();
-            document.getElementById('amtInput').value = ""; 
-            document.getElementById('descInput').value = "";
-            document.getElementById('receiptInput').value = "";
-        } catch(e) { alert("Error in amount math."); }
+            render(); await saveToCloud();
+            document.getElementById('amtInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('receiptInput').value = "";
+        } catch(e) { alert("Error adding expense. Check your amount format."); }
+        showLoading(false);
     }
 
     function compressImage(file) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
@@ -246,18 +229,37 @@
                     ctx.drawImage(img, 0, 0, width, height);
                     resolve(canvas.toDataURL('image/jpeg', 0.5));
                 };
+                img.onerror = () => reject("Image processing failed.");
             };
         });
     }
 
+    function shareSummary() {
+        const symbol = document.getElementById('currency').value;
+        const total = document.getElementById('totalExp').innerText;
+        const perHead = document.getElementById('perPerson').innerText;
+        let text = `🏠 *HOUSE EXPENSES SUMMARY*\nCycle: ${db.startDate} to ${new Date().toLocaleDateString()}\nTotal Spent: ${total}\nPer Person: ${perHead}\n\n*Settlements:*\n`;
+        
+        const perHeadVal = parseFloat(total.replace(symbol, '')) / 5;
+        let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
+        db.expenses.forEach(ex => userTotals[ex.name] += ex.amount);
+
+        users.forEach(u => {
+            const diff = userTotals[u] - perHeadVal;
+            if (diff > 0) text += `• ${u}: Gets back ${symbol}${diff.toFixed(2)}\n`;
+            else if (diff < 0) text += `• ${u}: Owes ${symbol}${Math.abs(diff).toFixed(2)}\n`;
+        });
+
+        navigator.clipboard.writeText(text).then(() => alert("Summary copied to clipboard! Paste it into your group chat."));
+    }
+
     async function startNewCycle() {
-        if(!confirm("Archive this month? Only past 2 months kept.")) return;
+        if(!confirm("Archive this month? Receipts will be deleted and history limited to 2 records.")) return;
         let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
         const cleanDetails = db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc }));
         db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: cleanDetails });
         if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
-        db.expenses = []; 
-        db.startDate = new Date().toLocaleDateString();
+        db.expenses = []; db.startDate = new Date().toLocaleDateString();
         render(); await saveToCloud();
     }
 
@@ -280,9 +282,7 @@
     function filterCurrency() {
         const input = document.getElementById('curSearch').value.toUpperCase();
         const opts = document.getElementById('currency').options;
-        for (let i = 0; i < opts.length; i++) {
-            opts[i].style.display = opts[i].text.toUpperCase().includes(input) ? "" : "none";
-        }
+        for (let i = 0; i < opts.length; i++) opts[i].style.display = opts[i].text.toUpperCase().includes(input) ? "" : "none";
     }
 
     function viewImg(data) {
@@ -292,10 +292,7 @@
 
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
 
-    window.onload = () => {
-        checkUser();
-        loadFromCloud();
-    };
+    window.onload = () => { checkUser(); loadFromCloud(); };
 </script>
 </body>
 </html>
