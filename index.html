@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>House Expenses - Cloud Sync</title>
-    <meta name="theme-color" content="#1a1a2e">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>House Expenses</title>
+    
+    <link rel="manifest" href='data:application/manifest+json,{"name":"House Expenses","short_name":"Expenses","start_url":".","display":"standalone","background_color":"#1a1a2e","theme_color":"#00f2fe","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"512x512","type":"image/png"}]}'>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <link rel="manifest" href='data:application/manifest+json,{"name":"House Expenses","short_name":"Expenses","start_url":".","display":"standalone","background_color":"#1a1a2e","theme_color":"#00f2fe","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"512x512","type":"image/png"}]}'>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a1a2e">
 
     <style>
         :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
@@ -39,7 +40,6 @@
         .login-btn { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-weight: 600; }
         .login-btn:hover { background: var(--accent); color: #000; }
         .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
-        #installBtn { display: none; margin-bottom: 10px; background: #fff; color: #000; }
     </style>
 </head>
 <body>
@@ -58,12 +58,9 @@
 </div>
 
 <div class="wrapper">
-    <button id="installBtn" class="btn" onclick="installApp()">📲 Install App</button>
-
     <div class="section">
-        <h1>House Expenses4</h1>
+        <h1>House Expenses6</h1>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
-        
         <div style="display:flex; gap:5px; margin-bottom:10px;">
             <input type="text" id="curSearch" placeholder="Search Currency..." style="margin-bottom:0; font-size:0.8rem;" onkeyup="filterCurrency()">
             <select id="currency" style="width:120px; margin-bottom:0;" onchange="render()">
@@ -75,18 +72,15 @@
                 <option value="AED">AED (د.إ)</option>
             </select>
         </div>
-
         <div style="display:flex; gap:10px;">
             <div class="stat-box"><span id="totalExp" class="stat-val">0</span><span style="font-size:0.6rem">TOTAL</span></div>
             <div class="stat-box"><span id="perPerson" class="stat-val">0</span><span style="font-size:0.6rem">PER HEAD</span></div>
         </div>
-
         <div id="settlementBox" class="settle-card">
             <strong>Settlements:</strong>
             <div id="settleList" style="margin-top:5px; color:#ccc;">Calculating...</div>
             <button class="btn" id="shareBtn" style="margin-top:10px; font-size:0.65rem; padding:8px; background:rgba(0,242,254,0.15); color:var(--accent); border:1px solid var(--accent); display: none;" onclick="shareSummary()">Copy Full Summary</button>
         </div>
-        
         <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff; padding:10px;" onclick="loadFromCloud()">Refresh Cloud Data</button>
     </div>
 
@@ -95,7 +89,6 @@
             <p id="currentUserDisplay" style="font-weight:800; margin:0;"></p>
             <button onclick="logout()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color:var(--accent); font-size:0.65rem; cursor:pointer; padding: 4px 8px; border-radius: 8px; text-transform: uppercase;">Switch User</button>
         </div>
-        
         <textarea id="amtInput" placeholder="Paste text here...&#10;Example: 23 Tesco 66 Gas £120 Rent"></textarea>
         <input type="text" id="descInput" placeholder="Overall Group Note (Optional)">
         <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional):</label>
@@ -122,16 +115,6 @@
     let db = { startDate: "", expenses: [], archives: [] };
     let currentUser = "";
     const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
-
-    // --- ENHANCED SERVICE WORKER (REQUIRED FETCH HANDLER) ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => e.waitUntil(clients.claim())); self.addEventListener('fetch', (e) => {});";
-            const blob = new Blob([swCode], { type: 'text/javascript' });
-            const url = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(url).catch(() => {});
-        });
-    }
 
     function checkUser() {
         const savedUser = localStorage.getItem('expenseUser');
@@ -308,23 +291,6 @@
     }
     function viewImg(data) { const w = window.open(""); w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh"></body>`); }
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
-
-    // --- UPDATED INSTALL LOGIC ---
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => { 
-        e.preventDefault(); 
-        deferredPrompt = e; 
-        document.getElementById('installBtn').style.display = 'block'; 
-    });
-
-    async function installApp() { 
-        if (deferredPrompt) { 
-            deferredPrompt.prompt(); 
-            const { outcome } = await deferredPrompt.userChoice; 
-            if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none'; 
-            deferredPrompt = null; 
-        } 
-    }
 
     window.onload = () => { checkUser(); loadFromCloud(); };
 </script>
