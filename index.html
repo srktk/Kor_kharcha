@@ -15,6 +15,7 @@
         .stat-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); flex: 1; }
         .stat-val { display: block; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
         input, select { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
+        textarea { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; font-family: inherit; resize: vertical; min-height: 80px; }
         .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .btn:active { transform: scale(0.98); opacity: 0.8; }
         .settle-card { background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; line-height: 1.6; }
@@ -49,7 +50,7 @@
 
 <div class="wrapper">
     <div class="section">
-        <h1>House Expenses</h1>
+        <h1>House Expenses1</h1>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -84,9 +85,9 @@
             <button onclick="logout()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color:var(--accent); font-size:0.65rem; cursor:pointer; padding: 4px 8px; border-radius: 8px; text-transform: uppercase;">Switch User</button>
         </div>
         
-        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50 or Rs 500)">
-        <input type="text" id="descInput" placeholder="Description (e.g. Groceries)">
-        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional - Auto Compressed):</label>
+        <textarea id="amtInput" placeholder="Paste text here...&#10;Example: 23 Tesco 66 Gas £120 Rent"></textarea>
+        <input type="text" id="descInput" placeholder="Overall Group Note (Optional)">
+        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional):</label>
         <input type="file" id="receiptInput" accept="image/*" style="border:none; background:none; font-size:0.7rem; color:#888;">
         <button class="btn" id="addBtn" onclick="addExpense()" style="margin-top:10px; padding:15px;">Add Expense</button>
     </div>
@@ -167,7 +168,7 @@
         db.expenses.forEach((ex, i) => {
             total += ex.amount;
             userTotals[ex.name] += ex.amount;
-            list.innerHTML += `<div class="expense-card"><button class="del-btn" onclick="deleteEx(${i})">✕</button><div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div><span style="font-size:0.8rem; color:#aaa;">${ex.desc}</span>${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}</div>`;
+            list.innerHTML += `<div class="expense-card"><button class="del-btn" onclick="deleteEx(${i})">✕</button><div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div><span style="font-size:0.8rem; color:#aaa; white-space: pre-line;">${ex.desc}</span>${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}</div>`;
         });
 
         const perHead = total / 5;
@@ -191,41 +192,58 @@
 
     async function addExpense() {
         const rawInput = document.getElementById('amtInput').value;
-        let desc = document.getElementById('descInput').value;
+        const generalNote = document.getElementById('descInput').value;
         const file = document.getElementById('receiptInput').files[0];
+        const symbol = document.getElementById('currency').value;
         
-        // --- AUTO-CLEAN INPUT ---
-        // Keeps only numbers, dots, and plus signs. Removes spaces, Rs, £, $, etc.
-        const cleanInput = rawInput.replace(/[^0-9.+]/g, '');
-        if(!cleanInput) return;
+        if(!rawInput.trim()) return;
+
+        let totalAmt = 0;
+        let breakdownRows = [];
+        
+        // Advanced Scanner: Looks for numbers, ignoring £/$ symbols, and captures text after it
+        // until it hits the next number or end of string.
+        const regex = /(?:[£$]|Rs)?\s*(\d+(\.\d+)?)\s*([^0-9\n]*)/gi;
+        let match;
+
+        while ((match = regex.exec(rawInput)) !== null) {
+            const amount = parseFloat(match[1]);
+            const label = match[3].trim().replace(/^[£$]|Rs/i, ''); // Clean symbol if caught in label
+            
+            if (!isNaN(amount)) {
+                totalAmt += amount;
+                breakdownRows.push(`${symbol}${amount} ${label}`);
+            }
+        }
+
+        if (totalAmt === 0) return;
 
         try {
-            // Split by plus and calculate total
-            const parts = cleanInput.split('+').filter(p => p !== "");
-            let amt = parts.reduce((acc, p) => acc + parseFloat(p || 0), 0);
-            
-            if (isNaN(amt) || amt <= 0) return;
-
-            // If it was a sum, add the breakdown to the description
-            if (parts.length > 1) {
-                const breakdown = ` [${parts.join(' + ')}]`;
-                desc = desc ? desc + breakdown : breakdown.trim();
-            }
+            let finalDesc = breakdownRows.join('\n');
+            if (generalNote) finalDesc = generalNote + "\n---\n" + finalDesc;
 
             let receiptData = null;
             if (file) {
-                if (file.size > 10 * 1024 * 1024) { alert("File too large (Max 10MB)"); return; }
+                if (file.size > 10 * 1024 * 1024) { alert("File too large"); return; }
                 showLoading(true);
                 receiptData = await compressImage(file);
             }
 
-            db.expenses.unshift({ name: currentUser, amount: amt, desc, receipt: receiptData, date: new Date().toLocaleDateString() });
-            render(); await saveToCloud();
+            db.expenses.unshift({ 
+                name: currentUser, 
+                amount: totalAmt, 
+                desc: finalDesc, 
+                receipt: receiptData, 
+                date: new Date().toLocaleDateString() 
+            });
+
+            render(); 
+            await saveToCloud();
             
             document.getElementById('amtInput').value = ""; 
             document.getElementById('descInput').value = ""; 
             document.getElementById('receiptInput').value = "";
-        } catch(e) { alert("Error calculating amount."); }
+        } catch(e) { console.error(e); }
         showLoading(false);
     }
 
