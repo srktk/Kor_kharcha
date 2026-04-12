@@ -84,7 +84,7 @@
             <button onclick="logout()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color:var(--accent); font-size:0.65rem; cursor:pointer; padding: 4px 8px; border-radius: 8px; text-transform: uppercase;">Switch User</button>
         </div>
         
-        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50)">
+        <input type="text" id="amtInput" placeholder="Amount (e.g. 10+5.50 or Rs 500)">
         <input type="text" id="descInput" placeholder="Description (e.g. Groceries)">
         <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional - Auto Compressed):</label>
         <input type="file" id="receiptInput" accept="image/*" style="border:none; background:none; font-size:0.7rem; color:#888;">
@@ -104,7 +104,6 @@
 </div>
 
 <script>
-    // --- API KEYS (Replace these) ---
     const BIN_ID = '69dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     
@@ -130,7 +129,6 @@
     }
 
     async function loadFromCloud() {
-        if (BIN_ID.includes('YOUR_')) return;
         showLoading(true);
         try {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
@@ -160,8 +158,6 @@
         const shareBtn = document.getElementById('shareBtn');
         
         document.getElementById('startDateDisplay').innerText = `Cycle Started: ${db.startDate || 'Unknown'}`;
-        
-        // --- BUTTON VISIBILITY FAILSAFE ---
         shareBtn.style.display = db.expenses.length > 0 ? 'block' : 'none';
 
         let total = 0;
@@ -194,26 +190,38 @@
     }
 
     async function addExpense() {
-        const raw = document.getElementById('amtInput').value;
-        const desc = document.getElementById('descInput').value;
+        const rawInput = document.getElementById('amtInput').value;
+        let desc = document.getElementById('descInput').value;
         const file = document.getElementById('receiptInput').files[0];
-        if(!raw) return;
-
-        // Failsafe for file size (10MB)
-        if (file && file.size > 10 * 1024 * 1024) { 
-            alert("Error: File is too large (Max 10MB).");
-            return;
-        }
+        
+        // --- AUTO-CLEAN INPUT ---
+        // Keeps only numbers, dots, and plus signs. Removes spaces, Rs, £, $, etc.
+        const cleanInput = rawInput.replace(/[^0-9.+]/g, '');
+        if(!cleanInput) return;
 
         try {
-            let amt = raw.split('+').reduce((acc, p) => acc + parseFloat(p || 0), 0);
+            // Split by plus and calculate total
+            const parts = cleanInput.split('+').filter(p => p !== "");
+            let amt = parts.reduce((acc, p) => acc + parseFloat(p || 0), 0);
+            
+            if (isNaN(amt) || amt <= 0) return;
+
+            // If it was a sum, add the breakdown to the description
+            if (parts.length > 1) {
+                const breakdown = ` [${parts.join(' + ')}]`;
+                desc = desc ? desc + breakdown : breakdown.trim();
+            }
+
             let receiptData = null;
             if (file) {
+                if (file.size > 10 * 1024 * 1024) { alert("File too large (Max 10MB)"); return; }
                 showLoading(true);
                 receiptData = await compressImage(file);
             }
+
             db.expenses.unshift({ name: currentUser, amount: amt, desc, receipt: receiptData, date: new Date().toLocaleDateString() });
             render(); await saveToCloud();
+            
             document.getElementById('amtInput').value = ""; 
             document.getElementById('descInput').value = ""; 
             document.getElementById('receiptInput').value = "";
@@ -230,8 +238,7 @@
                 img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
+                    let width = img.width, height = img.height;
                     if (width > 600) { height *= 600 / width; width = 600; }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
@@ -259,7 +266,7 @@
             else if (diff < 0) text += `• ${u}: Owes ${symbol}${Math.abs(diff).toFixed(2)}\n`;
         });
 
-        navigator.clipboard.writeText(text).then(() => alert("Summary copied! Paste it in WhatsApp."));
+        navigator.clipboard.writeText(text).then(() => alert("Summary copied!"));
     }
 
     async function startNewCycle() {
