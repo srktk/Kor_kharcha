@@ -20,8 +20,10 @@
         .btn:active { transform: scale(0.98); opacity: 0.8; }
         .settle-card { background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; line-height: 1.6; }
         .expense-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent); position: relative; }
-        .ex-main { display: flex; justify-content: space-between; padding-right: 35px; font-weight: 800; }
-        .del-btn { position: absolute; top: 12px; right: 12px; color: #ff5f5f; border: none; background: none; cursor: pointer; font-size: 1.1rem; }
+        .ex-main { display: flex; justify-content: space-between; padding-right: 65px; font-weight: 800; }
+        .card-btns { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; }
+        .del-btn { color: #ff5f5f; border: none; background: none; cursor: pointer; font-size: 1rem; }
+        .single-share-btn { color: var(--accent); border: none; background: none; cursor: pointer; font-size: 0.9rem; opacity: 0.7; }
         .arc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333; font-size: 0.8rem; }
         .arc-del { color: #ff5f5f; cursor: pointer; font-size: 1.1rem; border: none; background: none; }
         .receipt-btn { color: var(--accent); font-size: 0.75rem; cursor: pointer; text-decoration: underline; margin-top: 5px; display: inline-block; }
@@ -31,6 +33,7 @@
         .login-btn { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-weight: 600; }
         .login-btn:hover { background: var(--accent); color: #000; }
         .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
+        #installBtn { display: none; margin-bottom: 10px; background: #fff; color: #000; }
     </style>
 </head>
 <body>
@@ -49,8 +52,10 @@
 </div>
 
 <div class="wrapper">
+    <button id="installBtn" class="btn" onclick="installApp()">📲 Install App</button>
+
     <div class="section">
-        <h1>House Expenses1</h1>
+        <h1>House Expenses2</h1>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -73,7 +78,7 @@
         <div id="settlementBox" class="settle-card">
             <strong>Settlements:</strong>
             <div id="settleList" style="margin-top:5px; color:#ccc;">Calculating...</div>
-            <button class="btn" id="shareBtn" style="margin-top:10px; font-size:0.65rem; padding:8px; background:rgba(0,242,254,0.15); color:var(--accent); border:1px solid var(--accent); display: none;" onclick="shareSummary()">Copy Share Summary</button>
+            <button class="btn" id="shareBtn" style="margin-top:10px; font-size:0.65rem; padding:8px; background:rgba(0,242,254,0.15); color:var(--accent); border:1px solid var(--accent); display: none;" onclick="shareSummary()">Copy Full Summary</button>
         </div>
         
         <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff; padding:10px;" onclick="loadFromCloud()">Refresh Cloud Data</button>
@@ -168,7 +173,19 @@
         db.expenses.forEach((ex, i) => {
             total += ex.amount;
             userTotals[ex.name] += ex.amount;
-            list.innerHTML += `<div class="expense-card"><button class="del-btn" onclick="deleteEx(${i})">✕</button><div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div><span style="font-size:0.8rem; color:#aaa; white-space: pre-line;">${ex.desc}</span>${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}</div>`;
+            list.innerHTML += `
+                <div class="expense-card">
+                    <div class="card-btns">
+                        <button class="single-share-btn" onclick="shareSingle(${i})" title="Share Details">📤</button>
+                        <button class="del-btn" onclick="deleteEx(${i})">✕</button>
+                    </div>
+                    <div class="ex-main">
+                        <span class="${ex.name}">${ex.name}</span>
+                        <span>${symbol}${ex.amount.toFixed(2)}</span>
+                    </div>
+                    <span style="font-size:0.8rem; color:#aaa; white-space: pre-line;">${ex.desc}</span>
+                    ${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}
+                </div>`;
         });
 
         const perHead = total / 5;
@@ -200,16 +217,12 @@
 
         let totalAmt = 0;
         let breakdownRows = [];
-        
-        // Advanced Scanner: Looks for numbers, ignoring £/$ symbols, and captures text after it
-        // until it hits the next number or end of string.
         const regex = /(?:[£$]|Rs)?\s*(\d+(\.\d+)?)\s*([^0-9\n]*)/gi;
         let match;
 
         while ((match = regex.exec(rawInput)) !== null) {
             const amount = parseFloat(match[1]);
-            const label = match[3].trim().replace(/^[£$]|Rs/i, ''); // Clean symbol if caught in label
-            
+            const label = match[3].trim().replace(/^[£$]|Rs/i, '');
             if (!isNaN(amount)) {
                 totalAmt += amount;
                 breakdownRows.push(`${symbol}${amount} ${label}`);
@@ -229,22 +242,36 @@
                 receiptData = await compressImage(file);
             }
 
-            db.expenses.unshift({ 
-                name: currentUser, 
-                amount: totalAmt, 
-                desc: finalDesc, 
-                receipt: receiptData, 
-                date: new Date().toLocaleDateString() 
-            });
-
-            render(); 
-            await saveToCloud();
-            
-            document.getElementById('amtInput').value = ""; 
-            document.getElementById('descInput').value = ""; 
-            document.getElementById('receiptInput').value = "";
+            db.expenses.unshift({ name: currentUser, amount: totalAmt, desc: finalDesc, receipt: receiptData, date: new Date().toLocaleDateString() });
+            render(); await saveToCloud();
+            document.getElementById('amtInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('receiptInput').value = "";
         } catch(e) { console.error(e); }
         showLoading(false);
+    }
+
+    function shareSingle(i) {
+        const ex = db.expenses[i];
+        const symbol = document.getElementById('currency').value;
+        let text = `🧾 *EXPENSE DETAILS*\nUser: ${ex.name}\nTotal: ${symbol}${ex.amount.toFixed(2)}\nDate: ${ex.date}\n\n*Breakdown:*\n${ex.desc}`;
+        navigator.clipboard.writeText(text).then(() => alert("Expense details copied!"));
+    }
+
+    function shareSummary() {
+        if (db.expenses.length === 0) return;
+        const symbol = document.getElementById('currency').value;
+        const totalText = document.getElementById('totalExp').innerText;
+        const perHeadText = document.getElementById('perPerson').innerText;
+        let text = `🏠 *HOUSE EXPENSES SUMMARY*\nCycle: ${db.startDate} to ${new Date().toLocaleDateString()}\nTotal Spent: ${totalText}\nPer Person: ${perHeadText}\n\n*Settlements:*\n`;
+        const totalVal = parseFloat(totalText.replace(symbol, '').replace(/,/g, ''));
+        const perHeadVal = totalVal / 5;
+        let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
+        db.expenses.forEach(ex => userTotals[ex.name] += ex.amount);
+        users.forEach(u => {
+            const diff = userTotals[u] - perHeadVal;
+            const status = diff > 0 ? `Gets back ${symbol}${diff.toFixed(2)}` : `Owes ${symbol}${Math.abs(diff).toFixed(2)}`;
+            text += `\n*${u}* (${status})`;
+        });
+        navigator.clipboard.writeText(text).then(() => alert("Summary copied!"));
     }
 
     function compressImage(file) {
@@ -267,34 +294,13 @@
         });
     }
 
-    function shareSummary() {
-        if (db.expenses.length === 0) return;
-        const symbol = document.getElementById('currency').value;
-        const total = document.getElementById('totalExp').innerText;
-        const perHead = document.getElementById('perPerson').innerText;
-        let text = `🏠 *HOUSE EXPENSES SUMMARY*\nCycle: ${db.startDate} to ${new Date().toLocaleDateString()}\nTotal Spent: ${total}\nPer Person: ${perHead}\n\n*Settlements:*\n`;
-        
-        const perHeadVal = parseFloat(total.replace(symbol, '').replace(/,/g, '')) / 5;
-        let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
-        db.expenses.forEach(ex => userTotals[ex.name] += ex.amount);
-
-        users.forEach(u => {
-            const diff = userTotals[u] - perHeadVal;
-            if (diff > 0) text += `• ${u}: Gets back ${symbol}${diff.toFixed(2)}\n`;
-            else if (diff < 0) text += `• ${u}: Owes ${symbol}${Math.abs(diff).toFixed(2)}\n`;
-        });
-
-        navigator.clipboard.writeText(text).then(() => alert("Summary copied!"));
-    }
-
     async function startNewCycle() {
         if(!confirm("Archive this month? Receipts will be deleted.")) return;
         let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
         const cleanDetails = db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc }));
         db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: cleanDetails });
         if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
-        db.expenses = []; 
-        db.startDate = new Date().toLocaleDateString();
+        db.expenses = []; db.startDate = new Date().toLocaleDateString();
         render(); await saveToCloud();
     }
 
@@ -306,26 +312,22 @@
         alert(msg);
     }
 
-    async function deleteArchive(i) {
-        if(confirm("Delete this archive?")) { db.archives.splice(i, 1); render(); await saveToCloud(); }
-    }
-
-    function deleteEx(i) {
-        if(confirm("Delete this expense?")) { db.expenses.splice(i, 1); render(); saveToCloud(); }
-    }
-
+    async function deleteArchive(i) { if(confirm("Delete this archive?")) { db.archives.splice(i, 1); render(); await saveToCloud(); } }
+    function deleteEx(i) { if(confirm("Delete this expense?")) { db.expenses.splice(i, 1); render(); saveToCloud(); } }
     function filterCurrency() {
         const input = document.getElementById('curSearch').value.toUpperCase();
         const opts = document.getElementById('currency').options;
         for (let i = 0; i < opts.length; i++) opts[i].style.display = opts[i].text.toUpperCase().includes(input) ? "" : "none";
     }
-
     function viewImg(data) {
         const w = window.open("");
         w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh"></body>`);
     }
-
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').style.display = 'block'; });
+    async function installApp() { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none'; deferredPrompt = null; } }
 
     window.onload = () => { checkUser(); loadFromCloud(); };
 </script>
