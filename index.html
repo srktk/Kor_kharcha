@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>House Expenses - Cloud Sync</title>
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="manifest" href='data:application/manifest+json,{"name":"House Expenses","short_name":"Expenses","start_url":".","display":"standalone","background_color":"#1a1a2e","theme_color":"#00f2fe","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"512x512","type":"image/png"}]}'>
+
     <style>
         :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; }
@@ -55,7 +61,7 @@
     <button id="installBtn" class="btn" onclick="installApp()">📲 Install App</button>
 
     <div class="section">
-        <h1>House Expenses2</h1>
+        <h1>House Expenses3</h1>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -116,6 +122,16 @@
     let db = { startDate: "", expenses: [], archives: [] };
     let currentUser = "";
     const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
+
+    // --- SERVICE WORKER REGISTRATION (REQUIRED FOR INSTALL) ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            const swCode = "self.addEventListener('fetch', (event) => {});";
+            const blob = new Blob([swCode], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(url).catch(() => {});
+        });
+    }
 
     function checkUser() {
         const savedUser = localStorage.getItem('expenseUser');
@@ -325,9 +341,22 @@
     }
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
 
+    // --- INSTALL APP LOGIC ---
     let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').style.display = 'block'; });
-    async function installApp() { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none'; deferredPrompt = null; } }
+    window.addEventListener('beforeinstallprompt', (e) => { 
+        e.preventDefault(); 
+        deferredPrompt = e; 
+        document.getElementById('installBtn').style.display = 'block'; 
+    });
+
+    async function installApp() { 
+        if (deferredPrompt) { 
+            deferredPrompt.prompt(); 
+            const { outcome } = await deferredPrompt.userChoice; 
+            if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none'; 
+            deferredPrompt = null; 
+        } 
+    }
 
     window.onload = () => { checkUser(); loadFromCloud(); };
 </script>
