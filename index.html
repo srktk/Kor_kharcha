@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <link rel="manifest" href='data:application/manifest+json,{"name":"House Expenses","short_name":"Expenses","start_url":".","display":"standalone","background_color":"#1a1a2e","theme_color":"#00f2fe","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"House Expenses","short_name":"Expenses","start_url":".","display":"standalone","background_color":"#1a1a2e","theme_color":"#00f2fe","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/552/552791.png","sizes":"512x512","type":"image/png"}]}'>
 
     <style>
         :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
@@ -61,7 +61,7 @@
     <button id="installBtn" class="btn" onclick="installApp()">📲 Install App</button>
 
     <div class="section">
-        <h1>House Expenses3</h1>
+        <h1>House Expenses4</h1>
         <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
         
         <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -123,10 +123,10 @@
     let currentUser = "";
     const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    // --- SERVICE WORKER REGISTRATION (REQUIRED FOR INSTALL) ---
+    // --- ENHANCED SERVICE WORKER (REQUIRED FETCH HANDLER) ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            const swCode = "self.addEventListener('fetch', (event) => {});";
+            const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => e.waitUntil(clients.claim())); self.addEventListener('fetch', (e) => {});";
             const blob = new Blob([swCode], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             navigator.serviceWorker.register(url).catch(() => {});
@@ -153,9 +153,7 @@
     async function loadFromCloud() {
         showLoading(true);
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
-                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } 
-            });
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } });
             db = await res.json();
             render();
         } catch (e) { console.error("Cloud Load Error"); }
@@ -178,30 +176,16 @@
         const symbol = document.getElementById('currency').value;
         const list = document.getElementById('expenseList');
         const shareBtn = document.getElementById('shareBtn');
-        
         document.getElementById('startDateDisplay').innerText = `Cycle Started: ${db.startDate || 'Unknown'}`;
         shareBtn.style.display = db.expenses.length > 0 ? 'block' : 'none';
 
         let total = 0;
         let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
-        
         list.innerHTML = "";
         db.expenses.forEach((ex, i) => {
             total += ex.amount;
             userTotals[ex.name] += ex.amount;
-            list.innerHTML += `
-                <div class="expense-card">
-                    <div class="card-btns">
-                        <button class="single-share-btn" onclick="shareSingle(${i})" title="Share Details">📤</button>
-                        <button class="del-btn" onclick="deleteEx(${i})">✕</button>
-                    </div>
-                    <div class="ex-main">
-                        <span class="${ex.name}">${ex.name}</span>
-                        <span>${symbol}${ex.amount.toFixed(2)}</span>
-                    </div>
-                    <span style="font-size:0.8rem; color:#aaa; white-space: pre-line;">${ex.desc}</span>
-                    ${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}
-                </div>`;
+            list.innerHTML += `<div class="expense-card"><div class="card-btns"><button class="single-share-btn" onclick="shareSingle(${i})">📤</button><button class="del-btn" onclick="deleteEx(${i})">✕</button></div><div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div><span style="font-size:0.8rem; color:#aaa; white-space: pre-line;">${ex.desc}</span>${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}</div>`;
         });
 
         const perHead = total / 5;
@@ -228,36 +212,24 @@
         const generalNote = document.getElementById('descInput').value;
         const file = document.getElementById('receiptInput').files[0];
         const symbol = document.getElementById('currency').value;
-        
         if(!rawInput.trim()) return;
 
         let totalAmt = 0;
         let breakdownRows = [];
         const regex = /(?:[£$]|Rs)?\s*(\d+(\.\d+)?)\s*([^0-9\n]*)/gi;
         let match;
-
         while ((match = regex.exec(rawInput)) !== null) {
             const amount = parseFloat(match[1]);
             const label = match[3].trim().replace(/^[£$]|Rs/i, '');
-            if (!isNaN(amount)) {
-                totalAmt += amount;
-                breakdownRows.push(`${symbol}${amount} ${label}`);
-            }
+            if (!isNaN(amount)) { totalAmt += amount; breakdownRows.push(`${symbol}${amount} ${label}`); }
         }
-
         if (totalAmt === 0) return;
 
         try {
             let finalDesc = breakdownRows.join('\n');
             if (generalNote) finalDesc = generalNote + "\n---\n" + finalDesc;
-
             let receiptData = null;
-            if (file) {
-                if (file.size > 10 * 1024 * 1024) { alert("File too large"); return; }
-                showLoading(true);
-                receiptData = await compressImage(file);
-            }
-
+            if (file) { showLoading(true); receiptData = await compressImage(file); }
             db.expenses.unshift({ name: currentUser, amount: totalAmt, desc: finalDesc, receipt: receiptData, date: new Date().toLocaleDateString() });
             render(); await saveToCloud();
             document.getElementById('amtInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('receiptInput').value = "";
@@ -269,7 +241,7 @@
         const ex = db.expenses[i];
         const symbol = document.getElementById('currency').value;
         let text = `🧾 *EXPENSE DETAILS*\nUser: ${ex.name}\nTotal: ${symbol}${ex.amount.toFixed(2)}\nDate: ${ex.date}\n\n*Breakdown:*\n${ex.desc}`;
-        navigator.clipboard.writeText(text).then(() => alert("Expense details copied!"));
+        navigator.clipboard.writeText(text).then(() => alert("Details copied!"));
     }
 
     function shareSummary() {
@@ -311,10 +283,9 @@
     }
 
     async function startNewCycle() {
-        if(!confirm("Archive this month? Receipts will be deleted.")) return;
+        if(!confirm("Archive this month?")) return;
         let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
-        const cleanDetails = db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc }));
-        db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: cleanDetails });
+        db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc })) });
         if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
         db.expenses = []; db.startDate = new Date().toLocaleDateString();
         render(); await saveToCloud();
@@ -324,24 +295,21 @@
         const arc = db.archives[i];
         const symbol = document.getElementById('currency').value;
         let msg = `ARCHIVE: ${arc.start} - ${arc.end}\nTotal: ${symbol}${arc.total}\n\n`;
-        arc.details.forEach(d => msg += `• ${d.name}: ${symbol}${d.amount.toFixed(2)} (${d.desc || 'No desc'})\n`);
+        arc.details.forEach(d => msg += `• ${d.name}: ${symbol}${d.amount.toFixed(2)} (${d.desc})\n`);
         alert(msg);
     }
 
-    async function deleteArchive(i) { if(confirm("Delete this archive?")) { db.archives.splice(i, 1); render(); await saveToCloud(); } }
-    function deleteEx(i) { if(confirm("Delete this expense?")) { db.expenses.splice(i, 1); render(); saveToCloud(); } }
+    async function deleteArchive(i) { if(confirm("Delete?")) { db.archives.splice(i, 1); render(); await saveToCloud(); } }
+    function deleteEx(i) { if(confirm("Delete?")) { db.expenses.splice(i, 1); render(); saveToCloud(); } }
     function filterCurrency() {
         const input = document.getElementById('curSearch').value.toUpperCase();
         const opts = document.getElementById('currency').options;
         for (let i = 0; i < opts.length; i++) opts[i].style.display = opts[i].text.toUpperCase().includes(input) ? "" : "none";
     }
-    function viewImg(data) {
-        const w = window.open("");
-        w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh"></body>`);
-    }
+    function viewImg(data) { const w = window.open(""); w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh"></body>`); }
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
 
-    // --- INSTALL APP LOGIC ---
+    // --- UPDATED INSTALL LOGIC ---
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => { 
         e.preventDefault(); 
