@@ -2,297 +2,607 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>House Expenses</title>
-    
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1a1a2e">
-
+    <title>House Expenses</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        let savedTheme = localStorage.getItem('house_theme');
+        if (!savedTheme) savedTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    
     <style>
-        :root { --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top, #1a1a2e, #000); color: #eee; margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
-        .wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
-        .section { background: var(--glass); backdrop-filter: blur(15px); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); width: 100%; position: relative; }
-        h1 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.2rem; text-transform: uppercase; text-align: center; }
-        .cycle-info { text-align: center; font-size: 0.75rem; color: #888; margin-bottom: 10px; }
-        .stat-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); flex: 1; }
-        .stat-val { display: block; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
-        input, select { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
-        textarea { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; font-family: inherit; resize: vertical; min-height: 80px; }
-        .btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); opacity: 0.8; }
-        .settle-card { background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; line-height: 1.6; }
-        .expense-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent); position: relative; }
-        .ex-main { display: flex; justify-content: space-between; padding-right: 65px; font-weight: 800; }
-        .card-btns { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; }
-        .del-btn { color: #ff5f5f; border: none; background: none; cursor: pointer; font-size: 1rem; }
-        .single-share-btn { color: var(--accent); border: none; background: none; cursor: pointer; font-size: 0.9rem; opacity: 0.7; }
-        .arc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333; font-size: 0.8rem; }
-        .arc-del { color: #ff5f5f; cursor: pointer; font-size: 1.1rem; border: none; background: none; }
-        .receipt-btn { color: var(--accent); font-size: 0.75rem; cursor: pointer; text-decoration: underline; margin-top: 5px; display: inline-block; }
-        #loading { position: fixed; top: 10px; right: 10px; font-size: 0.6rem; color: var(--accent); display: none; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; z-index: 1000; }
-        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .login-box { background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; }
-        .login-btn { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-weight: 600; }
-        .login-btn:hover { background: var(--accent); color: #000; }
-        .Shahzeb { color: #86efac; } .Samad { color: #d8b4fe; } .Abubakar { color: #fca5a5; } .Sohail { color: #fde047; } .Mansoor { color: #93c5fd; }
+        /* LIGHT THEME */
+        :root { 
+            --bg: #f8fafc; 
+            --text-main: #0f172a; 
+            --text-muted: #475569; 
+            --border: #cbd5e1;
+            --accent: #0d9488; 
+            --accent-glow: rgba(13, 148, 136, 0.15);
+            --danger: #ef4444; 
+            --success: #10b981;
+            --input-bg: #e2e8f0; 
+            --nav-bg: rgba(255, 255, 255, 0.95);
+        }
+        
+        /* DARK THEME */
+        [data-theme="dark"] {
+            --bg: #0b0f1a; 
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8; 
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #2dd4bf; 
+            --accent-glow: rgba(45, 212, 191, 0.25);
+            --danger: #fb7185; 
+            --success: #4ade80;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --nav-bg: rgba(30, 41, 59, 0.95);
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        
+        html, body { overflow-x: hidden; }
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background-color 0.3s, color 0.3s; overflow-x: clip; max-width: 100vw; }
+        
+        .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
+        
+        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); transition: 0.2s; }
+        .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
+        .action-icon:hover { color: var(--accent); }
+        
+        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
+        #sideMenu.open { left: 0; }
+        #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
+        .menu-link { text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; padding: 12px 15px; border-radius: 12px; transition: 0.2s; display: block; cursor: pointer; }
+        .menu-link:hover, .menu-link:active { background: var(--input-bg); color: var(--text-main); }
+
+        @keyframes highlight-glow { 0% { background-color: var(--accent-glow); } 100% { background-color: transparent; } }
+        .highlight-pulse { animation: highlight-glow 1.5s ease-out; }
+
+        .hero-section { padding: 25px 20px 20px 20px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+        .hero-section::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); filter: blur(100px); opacity: 0.15; z-index: 0; pointer-events: none; }
+        
+        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; position: relative; z-index: 1; }
+        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); position: relative; z-index: 1; }
+        
+        .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 1; }
+        .stat-block { display: flex; flex-direction: column; gap: 4px; }
+        .stat-block .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+        .stat-block .val { font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
+        
+        .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .input-section > * { pointer-events: auto; }
+        
+        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; }
+        
+        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        
+        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; }
+        .chat-textarea::-webkit-scrollbar { display: none; }
+        
+        .chat-btn { background: transparent; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
+        .chat-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
+        
+        .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; }
+        .chat-btn.primary:active { transform: scale(0.95); }
+        
+        .chat-note { width: 100%; background: var(--nav-bg); border: 1px solid var(--border); padding: 10px 15px; color: var(--text-main); font-size: 0.85rem; border-radius: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .chat-note:focus { border-color: var(--accent); }
+        
+        select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; font-size: 1rem; cursor: pointer; }
+        
+        .content-section { padding: 0 20px; transition: background-color 0.3s; }
+        .name-pill { background: var(--input-bg); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: var(--text-main); display: inline-block; white-space: nowrap; }
+        .name-pill.main { background: rgba(45, 212, 191, 0.1); color: var(--accent); border-color: rgba(45, 212, 191, 0.2); }
+        
+        .flow-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .flow-row.no-border { border-bottom: none; }
+        
+        .action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+        .btn-pill { background: transparent; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 0.7rem; color: var(--text-muted); cursor: pointer; font-weight: 700; white-space: nowrap; transition: 0.2s; }
+        .btn-pill:hover { border-color: var(--text-muted); color: var(--text-main); }
+        .btn-pill.primary { border-color: var(--accent); color: var(--accent); background: rgba(45, 212, 191, 0.05); }
+        .btn-pill.success { background: var(--success); color: #000; border-color: var(--success); }
+        
+        .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 15px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
+        .flow-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+        
+        .collapsible-content { display: none; }
+        .expanded > .collapsible-content { display: block; }
+        .expanded > .flow-header .chevron { transform: rotate(180deg); }
+        .chevron { transition: 0.3s; color: var(--text-muted); }
+
+        .archive-item { background: var(--input-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px 20px; margin-bottom: 15px; transition: 0.2s; }
+        .archive-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .archive-details { display: none; padding-top: 15px; margin-top: 15px; border-top: 1px solid var(--border); }
+        .archive-item.expanded .archive-details { display: block; }
+        .archive-item.expanded .chevron { transform: rotate(180deg); }
+
+        .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .user-select-btn { display: flex; align-items: center; gap: 14px; background: transparent; border: 1px solid var(--border); padding: 12px 18px; border-radius: 20px; color: var(--text-main); font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; text-align: left; margin-bottom: 10px; }
+        .user-select-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--text-main); color: var(--bg); display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1rem; }
+
+        .btn-glowing { background: var(--input-bg); color: var(--text-main); padding: 14px 24px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
+
+        .danger-text { color: var(--danger) !important; text-shadow: 0 0 15px rgba(251, 113, 133, 0.3); }
+        .danger-badge { background: var(--danger); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 900; margin-left: 6px; }
+        .count-badge { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; margin-left: 6px; }
+        
+        #loading { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;}
     </style>
 </head>
 <body>
 
-<div id="loading">SYNCING DATA...</div>
+<div id="loading">SYNCING...</div>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h1 style="margin-bottom: 20px;">Who are you?</h1>
-        <button class="login-btn" onclick="setUser('Shahzeb')">Shahzeb</button>
-        <button class="login-btn" onclick="setUser('Samad')">Samad</button>
-        <button class="login-btn" onclick="setUser('Abubakar')">Abubakar</button>
-        <button class="login-btn" onclick="setUser('Sohail')">Sohail</button>
-        <button class="login-btn" onclick="setUser('Mansoor')">Mansoor</button>
+<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:340px; text-align:center;">
+        <h2 style="margin:0 0 25px 0; font-size: 1.4rem; font-weight:900; letter-spacing:-0.5px;">Select User</h2>
+        <div id="userButtons" style="display: flex; flex-direction: column;"></div>
     </div>
 </div>
 
+<div id="menuOverlay" onclick="toggleMenu()"></div>
+<div id="sideMenu">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+        <div>
+            <h2 id="menuUserName" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--accent); text-transform:uppercase; letter-spacing:1px;"></h2>
+        </div>
+        <button class="action-icon" onclick="toggleMenu()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    
+    <a href="#" class="menu-link" style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); background: var(--input-bg); margin-bottom: 15px;" onclick="toggleTheme(); event.preventDefault();">
+        <span>Toggle Theme</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </a>
+
+    <a href="#" class="menu-link" onclick="jumpToSection(event, 'heroSection')">Dashboard</a>
+    <a href="#" class="menu-link" onclick="jumpToSection(event, 'settlementsWrapper')">Settlement Reports</a>
+    <a href="#" class="menu-link" onclick="jumpToSection(event, 'currentExpensesWrapper')">Current Expenses</a>
+    <a href="#" class="menu-link" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
+    <a href="#" class="menu-link" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
+    
+    <div style="flex-grow: 1;"></div>
+    <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4); margin-top: 15px;" onclick="logout(); event.preventDefault();">Switch User</a>
+</div>
+
 <div class="wrapper">
-    <div class="section">
-        <h1>House Expenses</h1>
-        <div id="startDateDisplay" class="cycle-info">Cycle Start: --/--/----</div>
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <input type="text" id="curSearch" placeholder="Search Currency..." style="margin-bottom:0; font-size:0.8rem;" onkeyup="filterCurrency()">
-            <select id="currency" style="width:120px; margin-bottom:0;" onchange="render()">
-                <option value="£">GBP (£)</option>
-                <option value="$">USD ($)</option>
-                <option value="PKR">PKR (Rs)</option>
-                <option value="€">EUR (€)</option>
-                <option value="₹">INR (₹)</option>
-                <option value="AED">AED (د.إ)</option>
+    <div class="glass-nav">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button class="action-icon" onclick="toggleMenu()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <span id="topUserName" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem;"></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="action-icon" onclick="loadData()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="hero-section" id="heroSection">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+            <span class="hero-label">Total House Bill</span>
+            <select id="currency" onchange="render()">
+                <option value="GBP">£ GBP</option>
+                <option value="PKR">Rs PKR</option>
+                <option value="USD">$ USD</option>
+                <option value="EUR">€ EUR</option>
+                <option value="AED">AED</option>
             </select>
         </div>
-        <div style="display:flex; gap:10px;">
-            <div class="stat-box"><span id="totalExp" class="stat-val">0</span><span style="font-size:0.6rem">TOTAL</span></div>
-            <div class="stat-box"><span id="perPerson" class="stat-val">0</span><span style="font-size:0.6rem">PER HEAD</span></div>
+        <div id="totalExp" class="hero-value">0</div>
+        <div class="hero-stats-grid">
+            <div class="stat-block">
+                <span class="label">Per Head</span>
+                <span id="perPerson" class="val">0</span>
+            </div>
+            <div class="stat-block" style="cursor:pointer;" onclick="changeStartDate()">
+                <span class="label">Cycle Started</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span id="startDateDisplay" class="val">--/--</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
         </div>
-        <div id="settlementBox" class="settle-card">
-            <strong>Settlements:</strong>
-            <div id="settleList" style="margin-top:5px; color:#ccc;">Calculating...</div>
-            <button class="btn" id="shareBtn" style="margin-top:10px; font-size:0.65rem; padding:8px; background:rgba(0,242,254,0.15); color:var(--accent); border:1px solid var(--accent); display: none;" onclick="shareSummary()">Copy Full Summary</button>
+        <div style="margin-top: 15px;">
+            <button class="btn-glowing" onclick="endMonth()">END MONTH/START NEW</button>
         </div>
-        <button class="btn" style="font-size: 0.7rem; margin-top:15px; background: rgba(255,255,255,0.1); color:#fff; padding:10px;" onclick="loadFromCloud()">Refresh Cloud Data</button>
     </div>
 
-    <div class="section">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); margin-bottom: 15px; padding-bottom: 5px;">
-            <p id="currentUserDisplay" style="font-weight:800; margin:0;"></p>
-            <button onclick="logout()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color:var(--accent); font-size:0.65rem; cursor:pointer; padding: 4px 8px; border-radius: 8px; text-transform: uppercase;">Switch User</button>
+    <div class="content-section" id="settlementsWrapper">
+        <div class="flow-header" onclick="toggleSection(this)">
+            <h3 class="flow-title">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button class="action-icon" style="color:var(--accent);" onclick="event.stopPropagation(); copySummary()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+                <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
         </div>
-        <textarea id="amtInput" placeholder="Paste text here...&#10;Example: 23 Tesco 66 Gas £120 Rent"></textarea>
-        <input type="text" id="descInput" placeholder="Overall Group Note (Optional)">
-        <label style="font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px;">Receipt (Optional):</label>
-        <input type="file" id="receiptInput" accept="image/*" style="border:none; background:none; font-size:0.7rem; color:#888;">
-        <button class="btn" id="addBtn" onclick="addExpense()" style="margin-top:10px; padding:15px;">Add Expense</button>
+        <div class="collapsible-content">
+            <div id="settleList"></div>
+            <div id="unpaidDebtsNoticeWrapper" style="display:none; padding-top: 5px; margin-bottom: 10px;">
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 14px; text-align: center; cursor: pointer;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
+                    <span style="color:var(--danger); font-size:0.85rem; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Unpaid Past Debts <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="section">
-        <h1>Current Month</h1>
-        <div id="expenseList"></div>
-        <button class="btn" style="background: #ff5f5f22; color:#ff5f5f; font-size: 0.7rem; border: 1px solid #ff5f5f; margin-top:10px; padding:10px;" onclick="startNewCycle()">End Month / Start New</button>
+    <div class="content-section expanded" id="currentExpensesWrapper">
+        <div class="flow-header" onclick="toggleSection(this)">
+            <h3 class="flow-title">Current Expenses</h3>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="collapsible-content">
+            <div id="expenseList" style="border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0;"></div>
+        </div>
     </div>
 
-    <div class="section">
-        <h1>Past 2 Archives</h1>
-        <div id="archiveList"></div>
+    <div class="content-section" id="unpaidArchivesSection" style="display:none; padding-top: 15px; border-top: 1px solid var(--border);">
+        <div class="flow-header" onclick="toggleSection(this)">
+            <h3 class="flow-title danger-text">Unpaid Past Debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></h3>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="collapsible-content">
+            <div id="unpaidArchivesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+    </div>
+
+    <div class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
+        <div class="flow-header" onclick="toggleSection(this)">
+            <h3 class="flow-title">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="collapsible-content">
+            <div id="archiveList"></div>
+        </div>
+    </div>
+</div>
+
+<div class="input-section" id="inputSection">
+    <input type="text" id="groupNote" class="chat-note" style="display:none;" placeholder="General Note (Optional)" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
+    <div class="chat-row">
+        <div class="chat-input-wrapper">
+            <button class="chat-btn" onclick="toggleNoteField()" title="Add Note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+            <button class="chat-btn" onclick="document.getElementById('receiptInput').click()" title="Attach Receipt"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>
+            <input type="file" id="receiptInput" accept="image/*" style="display:none;">
+            <textarea id="amtInput" class="chat-textarea" placeholder="12 asda 32 tesco..." oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
+        </div>
+        <button class="chat-btn primary" onclick="addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
     </div>
 </div>
 
 <script>
     const BIN_ID = '69dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
-    
-    let db = { startDate: "", expenses: [], archives: [] };
-    let currentUser = "";
+    const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
+    let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
     const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    function checkUser() {
-        const savedUser = localStorage.getItem('expenseUser');
-        if (savedUser) setUser(savedUser);
+    let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {} };
+    let currentUser = localStorage.getItem('house_user') || "";
+    let needsSync = localStorage.getItem('house_needs_sync') === 'true';
+    let toastTimeout;
+
+    function showToast(msg, duration = 0) {
+        const loader = document.getElementById('loading');
+        loader.innerText = msg; loader.style.display = 'block';
+        clearTimeout(toastTimeout);
+        if (duration > 0) toastTimeout = setTimeout(() => { loader.style.display = 'none'; }, duration);
     }
 
-    function setUser(name) {
-        currentUser = name;
-        localStorage.setItem('expenseUser', name);
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('currentUserDisplay').innerHTML = `User: <span class="${name}">${name}</span>`;
+    function setNeedsSync(val) { needsSync = val; localStorage.setItem('house_needs_sync', val); }
+    function saveLocalBackup() { localStorage.setItem('house_db_backup', JSON.stringify(db)); }
+    function loadLocalBackup() {
+        const backup = localStorage.getItem('house_db_backup');
+        if (backup) { db = JSON.parse(backup); initializeDB(); render(); }
     }
 
-    function logout() {
-        localStorage.removeItem('expenseUser');
-        document.getElementById('loginOverlay').style.display = 'flex';
+    function toggleNoteField() {
+        const note = document.getElementById('groupNote');
+        note.style.display = note.style.display === 'none' ? 'block' : 'none';
+        if(note.style.display === 'block') note.focus();
     }
 
-    async function loadFromCloud() {
-        showLoading(true);
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } });
-            db = await res.json();
-            render();
-        } catch (e) { console.error("Cloud Load Error"); }
-        showLoading(false);
+    function toggleTheme() {
+        let current = document.documentElement.getAttribute('data-theme');
+        let next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('house_theme', next);
     }
 
-    async function saveToCloud() {
-        showLoading(true);
-        try {
-            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                body: JSON.stringify(db)
+    function toggleMenu() {
+        const menu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('menuOverlay');
+        const isOpen = menu.classList.contains('open');
+        menu.classList.toggle('open');
+        overlay.style.display = isOpen ? 'none' : 'block';
+    }
+    
+    function toggleSection(headerEl) {
+        const parent = headerEl.parentElement;
+        const wasExpanded = parent.classList.contains('expanded');
+        if (parent.classList.contains('content-section')) {
+            document.querySelectorAll('.content-section.expanded').forEach(el => {
+                if (el !== parent && !(el.id === 'currentExpensesWrapper' && db.expenses.length > 0)) el.classList.remove('expanded');
             });
-        } catch (e) { alert("Cloud Save Error."); }
-        showLoading(false);
+        } else if (parent.classList.contains('archive-item')) {
+            document.querySelectorAll('.archive-item.expanded').forEach(el => { if (el !== parent) el.classList.remove('expanded'); });
+        }
+        parent.classList.toggle('expanded');
+    }
+    
+    function jumpToSection(event, id) {
+        event.preventDefault();
+        const menu = document.getElementById('sideMenu');
+        if (menu.classList.contains('open')) toggleMenu(); 
+        const el = document.getElementById(id);
+        if (el) {
+            if (id !== 'inputSection' && el.classList.contains('content-section')) {
+                document.querySelectorAll('.content-section.expanded').forEach(sec => {
+                    if (sec !== el && !(sec.id === 'currentExpensesWrapper' && db.expenses.length > 0)) sec.classList.remove('expanded');
+                });
+            }
+            if (!el.classList.contains('expanded') && el.querySelector('.flow-header')) el.classList.add('expanded');
+            if (id !== 'inputSection') el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.add('highlight-pulse');
+            setTimeout(() => el.classList.remove('highlight-pulse'), 1500);
+        }
+    }
+
+    function formatDescDisplay(desc) {
+        if (!desc) return "";
+        let cleanInput = desc.replace(/[•]/g, ' ').replace(/&bull;/g, ' ').replace(/\n+/g, ' ').trim();
+        let tokens = cleanInput.split(/\s+/).filter(Boolean);
+        let processedDesc = tokens[0] || '';
+        for (let i = 1; i < tokens.length; i++) {
+            if (/^(?:£|\$|€|Rs)?\d/.test(tokens[i])) processedDesc += ' &bull; ' + tokens[i];
+            else processedDesc += ' ' + tokens[i];
+        }
+        return processedDesc;
+    }
+    
+    function formatNiceDate(dateStr) {
+        if (!dateStr) return "";
+        const parts = dateStr.split('/');
+        if (parts.length !== 3) return dateStr;
+        const date = new Error("Invalid").toString() === "" ? new Date() : new Date(parts[2], parts[1] - 1, parts[0]);
+        if (isNaN(date)) return dateStr;
+        const d = date.getDate(), m = date.toLocaleString('default', { month: 'short' }), y = date.getFullYear();
+        const nth = (d > 3 && d < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][d % 10] || 'th';
+        return `${d}${nth} ${m} ${y}`;
+    }
+
+    async function copyToClipboard(text) {
+        try {
+            if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
+            const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+        } catch (e) { alert("Clipboard block. Please copy manually."); }
+    }
+
+    function initializeDB() {
+        if (!db.expenses) db.expenses = []; if (!db.archives) db.archives = [];
+        if (!db.paidStatus) db.paidStatus = {};
+        if (!db.startDate) db.startDate = new Date().toLocaleDateString('en-GB'); 
+    }
+
+    function loadData() {
+        if (!navigator.onLine) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); return; }
+        showToast("SYNCING...");
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } })
+        .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+        .then(data => {
+            if (needsSync) { loadLocalBackup(); saveData(); } 
+            else { db = data; initializeDB(); saveLocalBackup(); render(); document.getElementById('loading').style.display = 'none'; }
+        })
+        .catch(() => { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); });
+    }
+
+    function saveData() {
+        saveLocalBackup(); 
+        if (!navigator.onLine) { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); return; }
+        showToast("SYNCING...");
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+            body: JSON.stringify(db)
+        })
+        .then(res => { if (!res.ok) throw new Error(); setNeedsSync(false); document.getElementById('loading').style.display = 'none'; })
+        .catch(() => { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); });
+    }
+
+    function getSettlements(expenses, total) {
+        let balances = {}; users.forEach(u => balances[u] = -(total / 5));
+        expenses.forEach(e => balances[e.name] += e.amount);
+        let debtors = [], creditors = [];
+        for (let u in balances) {
+            if (balances[u] < -0.01) debtors.push({ name: u, amt: Math.abs(balances[u]) });
+            else if (balances[u] > 0.01) creditors.push({ name: u, amt: balances[u] });
+        }
+        let txs = [], d = 0, c = 0;
+        debtors.sort((a,b) => b.amt - a.amt); creditors.sort((a,b) => b.amt - a.amt);
+        while (d < debtors.length && c < creditors.length) {
+            let amount = Math.min(debtors[d].amt, creditors[c].amt);
+            txs.push({ from: debtors[d].name, to: creditors[c].name, amt: amount });
+            debtors[d].amt -= amount; creditors[c].amt -= amount;
+            if (debtors[d].amt <= 0.01) d++; if (creditors[c].amt <= 0.01) c++;
+        }
+        return txs;
     }
 
     function render() {
-        const symbol = document.getElementById('currency').value;
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+        document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
+        let totalBase = 0;
         const list = document.getElementById('expenseList');
-        const shareBtn = document.getElementById('shareBtn');
-        document.getElementById('startDateDisplay').innerText = `Cycle Started: ${db.startDate || 'Unknown'}`;
-        shareBtn.style.display = db.expenses.length > 0 ? 'block' : 'none';
-
-        let total = 0;
-        let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
-        list.innerHTML = "";
-        db.expenses.forEach((ex, i) => {
-            total += ex.amount;
-            userTotals[ex.name] += ex.amount;
-            list.innerHTML += `<div class="expense-card"><div class="card-btns"><button class="single-share-btn" onclick="shareSingle(${i})">📤</button><button class="del-btn" onclick="deleteEx(${i})">✕</button></div><div class="ex-main"><span class="${ex.name}">${ex.name}</span><span>${symbol}${ex.amount.toFixed(2)}</span></div><span style="font-size:0.8rem; color:#aaa; white-space: pre-line;">${ex.desc}</span>${ex.receipt ? `<br><span class="receipt-btn" onclick="viewImg('${ex.receipt}')">View Receipt</span>` : ''}</div>`;
+        if (!db.expenses || db.expenses.length === 0) {
+            document.getElementById('currentExpensesWrapper').classList.remove('expanded');
+            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses logged.</div>";
+        } else {
+            document.getElementById('currentExpensesWrapper').classList.add('expanded');
+            list.innerHTML = db.expenses.map((ex, i) => {
+                totalBase += ex.amount;
+                return `<div class="flow-row no-border"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main">${ex.name}</span><span style="font-size:1.1rem; font-weight:800; color:var(--text-main);">${sym}${(ex.amount * rate).toFixed(2)}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${formatDescDisplay(ex.desc)}</div></div><div style="display:flex; flex-direction:column; align-items:center; gap:12px;"><button class="action-icon" style="color:var(--accent);" onclick="copyExpense(${i})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><button class="action-icon" style="color:var(--danger);" onclick="deleteEx(${i})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>${ex.receipt ? `<button class="action-icon" style="color:var(--accent);" onclick="viewImg('${ex.receipt}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>` : ''}</div></div>`;
+            }).join('');
+        }
+        document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
+        document.getElementById('perPerson').innerText = sym + (totalBase / 5 * rate).toFixed(0);
+        const txs = getSettlements(db.expenses, totalBase);
+        let credMap = {};
+        txs.forEach(t => {
+            if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
+            credMap[t.to].totalOwed += t.amt;
+            const key = `${t.from}_${t.to}`, paid = (db.paidStatus && db.paidStatus[key]) || 0;
+            if (paid > 0) credMap[t.to].received += paid;
+            credMap[t.to].txs.push({ ...t, paid, key });
         });
+        document.getElementById('settlementCount').innerText = Object.keys(credMap).length;
+        document.getElementById('settlementCount').style.display = Object.keys(credMap).length > 0 ? 'inline-block' : 'none';
+        let sHtml = "";
+        for (let c in credMap) {
+            const data = credMap[c], rem = data.totalOwed - data.received, can = currentUser === c;
+            sHtml += `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toFixed(2)}</div></div>`;
+            data.txs.forEach((t, ti) => {
+                const tr = t.amt - t.paid, isS = tr <= 0.01;
+                sHtml += `<div class="flow-row" style="${ti === 0 ? 'border-top: 1px dashed var(--border);' : ''} border-bottom:none; opacity: ${isS ? 0.4 : 1}"><div><div style="font-size:0.9rem;"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}">${sym}${(tr * rate).toFixed(2)}</b></div></div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
+            });
+            sHtml += `</div>`;
+        }
+        document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
+        renderArchives(sym, rate);
+    }
 
-        const perHead = total / 5;
-        document.getElementById('totalExp').innerText = symbol + total.toFixed(2);
-        document.getElementById('perPerson').innerText = symbol + perHead.toFixed(2);
+    function renderArchives(sym, rate) {
+        const arcDiv = document.getElementById('archiveList');
+        let gUHtml = "", hasU = false, tU = 0;
+        document.getElementById('archivesCount').innerText = db.archives.length;
+        document.getElementById('archivesCount').style.display = db.archives.length > 0 ? 'inline-block' : 'none';
+        if (!db.archives || db.archives.length === 0) {
+            arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>";
+        } else {
+            arcDiv.innerHTML = db.archives.map((a, idx) => {
+                const txs = getSettlements(a.details, a.total);
+                let cMap = {}, curU = false, curUHtml = "";
+                txs.forEach(t => {
+                    const key = `${t.from}_${t.to}`, paid = (a.paidStatus && a.paidStatus[key]) || 0;
+                    if (t.amt - paid > 0.01) {
+                        hasU = true; curU = true; tU++;
+                        curUHtml += `<div class="flow-row" style="border:none;"><div><div style="font-size:0.9rem;"><b>${t.from}</b> owes <b>${t.to}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800;">${sym}${((t.amt - paid) * rate).toFixed(2)}</div></div><div>${currentUser === t.to ? `<div class="action-group"><button class="btn-pill" onclick="logArchivePayment(${idx}, '${key}', ${(t.amt - paid) * rate}, ${rate})">Partial</button><button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Paid</button></div>` : '<span class="name-pill">Pending</span>'}</div></div>`;
+                    }
+                });
+                if (curU) gUHtml += `<div class="archive-item"><div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); margin-bottom: 8px;">${formatNiceDate(a.start)} &rarr; ${formatNiceDate(a.end)}</div>${curUHtml}</div>`;
+                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header" onclick="toggleSection(this)"><div><div style="font-size:0.65rem; color:var(--text-muted); font-weight:600;">${formatNiceDate(a.start)} &rarr; ${formatNiceDate(a.end)}</div><div style="font-size:1.6rem; font-weight:900;">${sym}${(a.total * rate).toFixed(0)}</div></div><div style="display:flex; gap:10px;"><button class="action-icon" onclick="downloadArchive(event, ${idx})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button><button class="action-icon" style="color:var(--danger);" onclick="deleteArchive(event, ${idx})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button><svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div>${a.details.map(d => `<div class="flow-row" style="border:none;"><div><div style="display:flex; align-items:center; gap:10px;"><span class="name-pill">${d.name}</span><span style="font-weight:800;">${sym}${(d.amount * rate).toFixed(2)}</span></div><div style="font-size:0.85rem; color:var(--text-muted);">${formatDescDisplay(d.desc)}</div></div>${d.receipt ? `<button class="action-icon" onclick="viewImg('${d.receipt}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>` : ''}</div>`).join('')}</div></div></div>`;
+            }).join('');
+        }
+        document.getElementById('unpaidGlobalCount').innerText = tU; document.getElementById('unpaidGlobalCount').style.display = tU > 0 ? 'inline-block' : 'none';
+        document.getElementById('unpaidArchivesSection').style.display = hasU ? 'block' : 'none';
+        document.getElementById('unpaidArchivesList').innerHTML = gUHtml;
+        document.getElementById('unpaidDebtsNoticeWrapper').style.display = hasU ? 'block' : 'none';
+    }
 
-        let settleHtml = "";
-        users.forEach(u => {
-            const diff = userTotals[u] - perHead;
-            if (diff > 0) settleHtml += `<div><b class="${u}">${u}</b> gets back <b style="color:var(--accent)">${symbol}${diff.toFixed(2)}</b></div>`;
-            else if (diff < 0) settleHtml += `<div><b class="${u}">${u}</b> owes <b style="color:#ff5f5f">${symbol}${Math.abs(diff).toFixed(2)}</b></div>`;
-        });
-        document.getElementById('settleList').innerHTML = settleHtml || "Everyone is even!";
-
-        const arcList = document.getElementById('archiveList');
-        arcList.innerHTML = db.archives.length ? "" : "<p style='font-size:0.7rem;text-align:center;color:#666;'>No archives found.</p>";
-        db.archives.forEach((arc, i) => {
-            arcList.innerHTML += `<div class="arc-item"><div onclick="viewArchive(${i})" style="cursor:pointer">📁 <strong>${arc.start} - ${arc.end}</strong><br><span style="color:#888">Total: ${symbol}${arc.total}</span></div><button class="arc-del" onclick="deleteArchive(${i})">🗑</button></div>`;
-        });
+    async function downloadArchive(ev, idx) {
+        ev.stopPropagation(); const card = document.getElementById(`archive-card-${idx}`), was = card.classList.contains('expanded');
+        if (!was) card.classList.add('expanded'); showToast("SNAP...", 2000); await new Promise(r => setTimeout(r, 350));
+        try {
+            const canvas = await html2canvas(card, { backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc', scale: 2 });
+            const link = document.createElement('a'); link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+        } catch (e) { alert("Snapshot failed."); }
+        if (!was) card.classList.remove('expanded');
     }
 
     async function addExpense() {
-        const rawInput = document.getElementById('amtInput').value;
-        const generalNote = document.getElementById('descInput').value;
-        const file = document.getElementById('receiptInput').files[0];
-        const symbol = document.getElementById('currency').value;
-        if(!rawInput.trim()) return;
-
-        let totalAmt = 0;
-        let breakdownRows = [];
-        const regex = /(?:[£$]|Rs)?\s*(\d+(\.\d+)?)\s*([^0-9\n]*)/gi;
-        let match;
-        while ((match = regex.exec(rawInput)) !== null) {
-            const amount = parseFloat(match[1]);
-            const label = match[3].trim().replace(/^[£$]|Rs/i, '');
-            if (!isNaN(amount)) { totalAmt += amount; breakdownRows.push(`${symbol}${amount} ${label}`); }
-        }
-        if (totalAmt === 0) return;
-
-        try {
-            let finalDesc = breakdownRows.join('\n');
-            if (generalNote) finalDesc = generalNote + "\n---\n" + finalDesc;
-            let receiptData = null;
-            if (file) { showLoading(true); receiptData = await compressImage(file); }
-            db.expenses.unshift({ name: currentUser, amount: totalAmt, desc: finalDesc, receipt: receiptData, date: new Date().toLocaleDateString() });
-            render(); await saveToCloud();
-            document.getElementById('amtInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('receiptInput').value = "";
-        } catch(e) { console.error(e); }
-        showLoading(false);
-    }
-
-    function shareSingle(i) {
-        const ex = db.expenses[i];
-        const symbol = document.getElementById('currency').value;
-        let text = `🧾 *EXPENSE DETAILS*\nUser: ${ex.name}\nTotal: ${symbol}${ex.amount.toFixed(2)}\nDate: ${ex.date}\n\n*Breakdown:*\n${ex.desc}`;
-        navigator.clipboard.writeText(text).then(() => alert("Details copied!"));
-    }
-
-    function shareSummary() {
-        if (db.expenses.length === 0) return;
-        const symbol = document.getElementById('currency').value;
-        const totalText = document.getElementById('totalExp').innerText;
-        const perHeadText = document.getElementById('perPerson').innerText;
-        let text = `🏠 *HOUSE EXPENSES SUMMARY*\nCycle: ${db.startDate} to ${new Date().toLocaleDateString()}\nTotal Spent: ${totalText}\nPer Person: ${perHeadText}\n\n*Settlements:*\n`;
-        const totalVal = parseFloat(totalText.replace(symbol, '').replace(/,/g, ''));
-        const perHeadVal = totalVal / 5;
-        let userTotals = { Shahzeb:0, Samad:0, Abubakar:0, Sohail:0, Mansoor:0 };
-        db.expenses.forEach(ex => userTotals[ex.name] += ex.amount);
-        users.forEach(u => {
-            const diff = userTotals[u] - perHeadVal;
-            const status = diff > 0 ? `Gets back ${symbol}${diff.toFixed(2)}` : `Owes ${symbol}${Math.abs(diff).toFixed(2)}`;
-            text += `\n*${u}* (${status})`;
-        });
-        navigator.clipboard.writeText(text).then(() => alert("Summary copied!"));
+        const rawInput = document.getElementById('amtInput').value, gNote = document.getElementById('groupNote').value, file = document.getElementById('receiptInput').files[0], rate = rates[document.getElementById('currency').value];
+        if (!rawInput.trim()) { alert("Please enter an expense amount."); return; }
+        const matches = rawInput.match(/\d+(\.\d+)?/g); if(!matches) { alert("No valid amount."); return; }
+        let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate, receiptData = file ? await compressImage(file) : null;
+        db.expenses.unshift({ name: currentUser, amount: baseAmt, desc: gNote ? `[${gNote}] \n ${rawInput}` : rawInput, receipt: receiptData });
+        const ai = document.getElementById('amtInput'); ai.value = ""; ai.style.height = "40px";
+        document.getElementById('groupNote').value = ""; document.getElementById('receiptInput').value = ""; document.getElementById('groupNote').style.display = "none";
+        render(); saveData();
     }
 
     function compressImage(file) {
         return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onerror = () => { alert("File error."); resolve(null); };
             reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
+                const img = new Image(); img.src = e.target.result;
+                img.onerror = () => { alert("Image error."); resolve(null); };
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width, height = img.height;
-                    if (width > 600) { height *= 600 / width; width = 600; }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.5));
+                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                    if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6));
                 };
             };
         });
     }
 
-    async function startNewCycle() {
-        if(!confirm("Archive this month?")) return;
-        let totalAmt = db.expenses.reduce((acc, ex) => acc + ex.amount, 0);
-        db.archives.unshift({ start: db.startDate, end: new Date().toLocaleDateString(), total: totalAmt.toFixed(2), details: db.expenses.map(ex => ({ name: ex.name, amount: ex.amount, desc: ex.desc })) });
+    async function copyExpense(i) {
+        const ex = db.expenses[i], rate = rates[document.getElementById('currency').value], sym = curSymbols[document.getElementById('currency').value];
+        let rc = formatDescDisplay(ex.desc).split('&bull;').map(p => '• ' + p.trim()).join('\n').replace(/^• \[/g, '[');
+        await copyToClipboard(`Expense: ${ex.name}\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${rc}`);
+        alert("Copied!");
+    }
+
+    async function copySummary() {
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+        let totalBase = 0; db.expenses.forEach(e => totalBase += e.amount);
+        let bals = {}, today = new Date();
+        users.forEach(u => bals[u] = -(totalBase / 5)); db.expenses.forEach(e => bals[e.name] += e.amount);
+        const tdStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
+        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(tdStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\n\n*BALANCES:*\n`;
+        users.forEach(u => {
+            let b = bals[u] * rate;
+            txt += b < -0.01 ? `${u}: ❌ Owes ${sym}${Math.abs(b).toFixed(2)}\n` : b > 0.01 ? `${u}: ➕ Gets ${sym}${b.toFixed(2)}\n` : `${u}: ✅ Settled\n`;
+        });
+        txt += `\n*SETTLEMENTS:*\n`;
+        const txs = getSettlements(db.expenses, totalBase);
+        txs.forEach(t => {
+            const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0;
+            txt += `${t.from} -> ${t.to}: ${sym}${((t.amt - pd) * rate).toFixed(2)}${t.amt - pd <= 0.01 ? ' (Settled)' : pd > 0.01 ? ` (Paid: ${sym}${(pd * rate).toFixed(2)})` : ''}\n`;
+        });
+        await copyToClipboard(txt); alert("Summary Copied!");
+    }
+
+    function deleteEx(i) { if(confirm("Delete?")) { db.expenses.splice(i,1); render(); saveData(); } }
+    function deleteArchive(ev, i) { ev.stopPropagation(); if(confirm("Delete archive?")) { db.archives.splice(i,1); render(); saveData(); } }
+    function changeStartDate() { const val = prompt("Start Date (DD/MM/YYYY):", db.startDate); if(val) { db.startDate = val; render(); saveData(); } }
+    function viewImg(data) { const w = window.open(""); w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh;"></body>`); }
+    
+    function endMonth() {
+        if (!db.expenses || db.expenses.length === 0) { alert("No expenses yet."); return; }
+        if(!confirm("End month?")) return;
+        let total = 0; db.expenses.forEach(e => total += e.amount);
+        const today = new Date(); const tdStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
+        db.archives.unshift({ start: db.startDate, end: tdStr, total: total, details: [...db.expenses], paidStatus: {...db.paidStatus} });
         if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
-        db.expenses = []; db.startDate = new Date().toLocaleDateString();
-        render(); await saveToCloud();
+        db.expenses = []; db.paidStatus = {}; db.startDate = tdStr; render(); saveData();
     }
 
-    function viewArchive(i) {
-        const arc = db.archives[i];
-        const symbol = document.getElementById('currency').value;
-        let msg = `ARCHIVE: ${arc.start} - ${arc.end}\nTotal: ${symbol}${arc.total}\n\n`;
-        arc.details.forEach(d => msg += `• ${d.name}: ${symbol}${d.amount.toFixed(2)} (${d.desc})\n`);
-        alert(msg);
-    }
+    function logout() { localStorage.removeItem('house_user'); location.reload(); }
+    function login(u) { currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = u; document.getElementById('menuUserName').innerText = u; render(); }
 
-    async function deleteArchive(i) { if(confirm("Delete?")) { db.archives.splice(i, 1); render(); await saveToCloud(); } }
-    function deleteEx(i) { if(confirm("Delete?")) { db.expenses.splice(i, 1); render(); saveToCloud(); } }
-    function filterCurrency() {
-        const input = document.getElementById('curSearch').value.toUpperCase();
-        const opts = document.getElementById('currency').options;
-        for (let i = 0; i < opts.length; i++) opts[i].style.display = opts[i].text.toUpperCase().includes(input) ? "" : "none";
-    }
-    function viewImg(data) { const w = window.open(""); w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh"></body>`); }
-    function showLoading(s) { document.getElementById('loading').style.display = s ? 'block' : 'none'; }
-
-    window.onload = () => { checkUser(); loadFromCloud(); };
+    window.addEventListener('online', () => { if (needsSync) { showToast("RESTORING SYNC..."); saveData(); } else loadData(); });
+    window.addEventListener('offline', () => showToast("YOU ARE OFFLINE", 2000));
+    window.onload = () => {
+        const btns = document.getElementById('userButtons');
+        users.forEach(u => btns.innerHTML += `<button class="user-select-btn" onclick="login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`);
+        if(currentUser) login(currentUser); loadData();
+    };
 </script>
 </body>
 </html>
