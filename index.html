@@ -7,11 +7,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="1.1">
+    <meta name="app-version" content="1.2">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <script>
         const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -78,10 +79,6 @@
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
         .action-icon:hover { color: var(--accent); }
 
-        .btn-circle { background: transparent; border: 1px solid var(--border); border-radius: 50%; color: var(--text-muted); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
-        .btn-circle:hover { background: rgba(0,0,0,0.05); color: var(--text-main); border-color: var(--text-main); }
-        [data-theme="dark"] .btn-circle:hover { background: rgba(255,255,255,0.05); }
-        
         #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
@@ -129,9 +126,7 @@
         .swipe-content { width: 100%; flex-shrink: 0; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; }
         .swipe-actions { flex-shrink: 0; scroll-snap-align: end; display: flex; align-items: center; gap: 6px; padding-left: 15px; }
 
-        .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .input-section > * { pointer-events: auto; }
-        
+        .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; }
         .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
         .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; }
@@ -212,6 +207,19 @@
 <body>
 
 <div id="loading">SYNCING...</div>
+
+<div id="passcodeOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10001; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
+        <div style="margin-bottom: 15px; display:flex; justify-content:center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h3 id="passcodeMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Enter House Passcode</h3>
+        <input type="password" id="passcodeInput" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.5rem; font-weight: bold; letter-spacing: 4px;" autocomplete="off">
+        <div style="display:flex; gap:10px;">
+            <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000; width: 100%;" onclick="triggerHaptic(); submitPasscode()">Unlock</button>
+        </div>
+    </div>
+</div>
 
 <div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:340px; text-align:center;">
@@ -432,17 +440,19 @@
 </div>
 
 <script>
-    const APP_VERSION = "1.1";
+    const APP_VERSION = "1.2";
     const BIN_ID = '69dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
     let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
     const defaultUsers = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [] };
+    let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], userLinks: {} };
     let currentUser = localStorage.getItem('house_user') || "";
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
     let swipeActionsEnabled = localStorage.getItem('house_swipe_actions') === 'true';
+    let housePasscode = localStorage.getItem('house_passcode') || "";
+    let pendingAction = null;
     let toastTimeout;
     let editingIndex = -1;
     let myViewActive = false;
@@ -498,6 +508,31 @@
     }
     document.getElementById('promptInput').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') { triggerHaptic(); executePrompt(); }
+    });
+    
+    function showPasscodePrompt(action) {
+        pendingAction = action;
+        const msg = action === "save" ? "Set House Passcode to Secure Data" : "Enter House Passcode to Unlock";
+        document.getElementById('passcodeMessage').innerText = msg;
+        const input = document.getElementById('passcodeInput');
+        input.value = "";
+        document.getElementById('passcodeOverlay').style.display = 'flex';
+        setTimeout(() => input.focus(), 100);
+    }
+    function submitPasscode() {
+        const val = document.getElementById('passcodeInput').value.trim();
+        if (!val) return;
+        housePasscode = val;
+        localStorage.setItem('house_passcode', housePasscode);
+        document.getElementById('passcodeOverlay').style.display = 'none';
+        
+        if (pendingAction === "load") loadData();
+        else if (pendingAction === "save") saveData();
+        
+        pendingAction = null;
+    }
+    document.getElementById('passcodeInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') { triggerHaptic(); submitPasscode(); }
     });
 
     function openSettings() {
@@ -557,11 +592,30 @@
     }
 
     function setNeedsSync(val) { needsSync = val; localStorage.setItem('house_needs_sync', val); }
-    function saveLocalBackup() { localStorage.setItem('house_db_backup', JSON.stringify(db)); }
+    function saveLocalBackup() { 
+        if (housePasscode) {
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(db), housePasscode).toString();
+            localStorage.setItem('house_db_backup', encrypted);
+        } else {
+            localStorage.setItem('house_db_backup', JSON.stringify(db));
+        }
+    }
     
     function loadLocalBackup() {
         const backup = localStorage.getItem('house_db_backup');
-        if (backup) { try { db = JSON.parse(backup); initializeDB(); renderUsers(); render(); } catch (e) {} }
+        if (backup) { 
+            try { 
+                if (backup.startsWith('U2Fsd')) {
+                    if (housePasscode) {
+                        const bytes = CryptoJS.AES.decrypt(backup, housePasscode);
+                        db = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+                    }
+                } else {
+                    db = JSON.parse(backup); 
+                }
+                initializeDB(); renderUsers(); render(); 
+            } catch (e) { }
+        }
     }
 
     function toggleMyView() {
@@ -667,7 +721,8 @@
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:bold; color:var(--text-main);">${u}</span>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-pill" onclick="triggerHaptic(); editUser('${u}')">Edit</button>
+                    <button class="btn-pill ${db.userLinks && db.userLinks[u] ? 'success' : ''}" onclick="triggerHaptic(); editUserLink('${u}')">Link</button>
+                    <button class="btn-pill" onclick="triggerHaptic(); editUser('${u}')">Rename</button>
                     <button class="btn-pill danger" onclick="triggerHaptic(); deleteUser('${u}')">Remove</button>
                 </div>
             </div>
@@ -694,6 +749,11 @@
             
             db.users[db.users.indexOf(oldName)] = n;
             if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
+            
+            if (db.userLinks && db.userLinks[oldName] !== undefined) {
+                db.userLinks[newName] = db.userLinks[oldName];
+                delete db.userLinks[oldName];
+            }
             
             db.expenses.forEach(ex => {
                 if (ex.name === oldName) ex.name = n;
@@ -735,6 +795,19 @@
             renderUsers(); openManageUsers(); render(); saveData();
         });
     }
+    
+    function editUserLink(name) {
+        let currentLink = (db.userLinks && db.userLinks[name]) ? db.userLinks[name] : "";
+        customPrompt(`Paste payment link for ${name} (e.g., monzo.me/name):`, currentLink, (val) => {
+            if (val === null) return;
+            if (!db.userLinks) db.userLinks = {};
+            db.userLinks[name] = val.trim();
+            showToast("Payment Link Saved", 2000);
+            openManageUsers(); 
+            render();
+            saveData();
+        });
+    }
 
     function deleteUser(name) {
         if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
@@ -743,6 +816,8 @@
             if (idx > -1) db.users.splice(idx, 1);
             const aIdx = db.activeUsers.indexOf(name);
             if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
+            
+            if (db.userLinks) delete db.userLinks[name];
 
             if (currentUser === name) { closeManageUsers(); logout(); } 
             else { renderUsers(); openManageUsers(); render(); saveData(); }
@@ -829,6 +904,7 @@
         if (!db.startDate) db.startDate = new Date().toLocaleDateString('en-GB'); 
         if (!db.users || db.users.length === 0) db.users = [...defaultUsers];
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
+        if (!db.userLinks) db.userLinks = {};
     }
 
     function renderSkeletons() {
@@ -856,7 +932,27 @@
             if (!res.ok) throw new Error("Fetch failed");
             
             const data = await res.json();
-            db = data.record ? data.record : data;
+            
+            if (data.encrypted && data.payload) {
+                if (!housePasscode) {
+                    showPasscodePrompt("load");
+                    return;
+                }
+                try {
+                    const bytes = CryptoJS.AES.decrypt(data.payload, housePasscode);
+                    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
+                    if (!decryptedString) throw new Error("Decryption failed");
+                    db = JSON.parse(decryptedString);
+                } catch (err) {
+                    showToast("INCORRECT PASSCODE", 3000);
+                    localStorage.removeItem('house_passcode');
+                    housePasscode = "";
+                    showPasscodePrompt("load");
+                    return;
+                }
+            } else {
+                db = data.record ? data.record : data;
+            }
             
             initializeDB(); renderUsers(); saveLocalBackup(); render(); 
             document.getElementById('loading').style.display = 'none'; 
@@ -869,15 +965,23 @@
     }
 
     function saveData() {
+        if (!housePasscode) {
+            showPasscodePrompt("save");
+            return;
+        }
+
         saveLocalBackup(); 
         if (!navigator.onLine) { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); return; }
         
         const syncIcon = document.getElementById('syncIconElement');
         if(syncIcon) syncIcon.classList.add('spin');
         
+        const encryptedPayload = CryptoJS.AES.encrypt(JSON.stringify(db), housePasscode).toString();
+        const secureData = { encrypted: true, payload: encryptedPayload };
+
         fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-            body: JSON.stringify(db)
+            body: JSON.stringify(secureData)
         })
         .then(res => { if (!res.ok) throw new Error(); setNeedsSync(false); document.getElementById('loading').style.display = 'none'; })
         .catch(() => { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); })
@@ -1097,7 +1201,13 @@
                     }
                     sHtmlTemp += `<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
                 } else {
-                    sHtmlTemp += `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
+                    let payLinkHtml = "";
+                    if (!isS && t.from === currentUser && db.userLinks && db.userLinks[t.to]) {
+                        let link = db.userLinks[t.to];
+                        if (!link.startsWith('http')) link = 'https://' + link;
+                        payLinkHtml = `<button class="btn-pill primary" onclick="triggerHaptic(); window.open('${link}', '_blank')">Pay</button>`;
+                    }
+                    sHtmlTemp += `${payLinkHtml}<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
                 }
                 
                 sHtmlTemp += `</div></div></div>`;
@@ -1259,7 +1369,15 @@
                                             <button class="btn-pill" onclick="sendNudge('${t.from}', ${remainingLocal}, '${sym}')">Nudge</button>
                                             <button class="btn-pill" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
                                             <button class="btn-pill primary" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
-                                    ` : `<span class="name-pill">Pending</span>`}
+                                    ` : (() => {
+                                        let payLinkHtml = "";
+                                        if (t.from === currentUser && db.userLinks && db.userLinks[t.to]) {
+                                            let link = db.userLinks[t.to];
+                                            if (!link.startsWith('http')) link = 'https://' + link;
+                                            payLinkHtml = `<button class="btn-pill primary" onclick="triggerHaptic(); window.open('${link}', '_blank')">Pay</button>`;
+                                        }
+                                        return `${payLinkHtml}<span class="name-pill">Pending</span>`;
+                                    })()}
                                     </div>
                                 </div>
                             </div>`;
@@ -1776,7 +1894,8 @@
     
     window.onload = () => {
         const backup = localStorage.getItem('house_db_backup');
-        if (backup) { try { db = JSON.parse(backup); } catch(e){} }
+        if (backup) { try { loadLocalBackup(); } catch(e){} }
+        
         initializeDB();
         renderUsers();
 
