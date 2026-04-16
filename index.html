@@ -13,9 +13,48 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script>
-        let savedTheme = localStorage.getItem('house_theme');
-        if (!savedTheme) savedTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
+        const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        let themeTimeout;
+
+        function applyTheme() {
+            // Clear out the old permanent save so it doesn't conflict
+            localStorage.removeItem('house_theme');
+
+            const savedTime = sessionStorage.getItem('house_theme_time');
+            let savedTheme = sessionStorage.getItem('house_theme');
+
+            // Check if 10 minutes (600,000 ms) have passed
+            if (savedTime && (Date.now() - parseInt(savedTime) > 600000)) {
+                sessionStorage.removeItem('house_theme');
+                sessionStorage.removeItem('house_theme_time');
+                savedTheme = null;
+            }
+
+            const theme = savedTheme || (themeQuery.matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            // Updates the status bar to match
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0b0f1a' : '#f8fafc');
+
+            // If manually toggled, start the 10-minute reversion timer
+            if (savedTheme) {
+                clearTimeout(themeTimeout);
+                const timeLeft = 600000 - (Date.now() - parseInt(savedTime));
+                themeTimeout = setTimeout(() => {
+                    sessionStorage.removeItem('house_theme');
+                    sessionStorage.removeItem('house_theme_time');
+                    applyTheme(); // Snap back to system theme
+                }, Math.max(timeLeft, 0));
+            }
+        }
+
+        applyTheme();
+        
+        // Listen for phone shifting from Day to Night mode
+        themeQuery.addEventListener('change', () => {
+            if (!sessionStorage.getItem('house_theme')) applyTheme();
+        });
     </script>
     
     <style>
@@ -123,6 +162,18 @@
         .expanded > .collapsible-content { display: block; }
         .expanded > .flow-header .chevron { transform: rotate(180deg); }
         .chevron { transition: 0.3s; color: var(--text-muted); }
+
+        /* Modern Timeline Design (Tightly Spaced) */
+        #currentExpensesWrapper .collapsible-content { padding-top: 0; }
+        .timeline-wrapper { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 10px; margin-top: 0; }
+        .date-marker { position: relative; display: flex; align-items: center; gap: 10px; margin-left: -32px; margin-bottom: 8px; }
+        .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
+        .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
+        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .linear-row:last-child { border-bottom: none; }
+        .item-main { flex: 1; padding-right: 10px; }
+        .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
+        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
 
         .archive-item { background: var(--input-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px 20px; margin-bottom: 15px; transition: 0.2s; }
         .archive-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
@@ -253,7 +304,7 @@
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
-            <div id="expenseList" style="border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0;"></div>
+            <div id="expenseList" style="padding-bottom: 10px;"></div>
         </div>
     </div>
 
@@ -326,8 +377,11 @@
     function toggleTheme() {
         let current = document.documentElement.getAttribute('data-theme');
         let next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('house_theme', next);
+        
+        sessionStorage.setItem('house_theme', next);
+        sessionStorage.setItem('house_theme_time', Date.now().toString());
+        
+        if (typeof applyTheme === 'function') applyTheme();
     }
 
     function toggleMenu() {
@@ -382,14 +436,23 @@
     }
     
     function formatNiceDate(dateStr) {
-        if (!dateStr) return "";
+        if (!dateStr || dateStr === "Unknown Date") return "Unknown Date";
         const parts = dateStr.split('/');
         if (parts.length !== 3) return dateStr;
-        const date = new Error("Invalid").toString() === "" ? new Date() : new Date(parts[2], parts[1] - 1, parts[0]);
-        if (isNaN(date)) return dateStr;
-        const d = date.getDate(), m = date.toLocaleString('default', { month: 'short' }), y = date.getFullYear();
-        const nth = (d > 3 && d < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][d % 10] || 'th';
-        return `${d}${nth} ${m} ${y}`;
+        
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        const dateObj = new Date(y, m, d);
+        
+        if (isNaN(dateObj.getTime())) return dateStr;
+        
+        const day = dateObj.getDate();
+        const month = dateObj.toLocaleString('default', { month: 'short' });
+        const year = dateObj.getFullYear();
+        const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th';
+        
+        return `${day}${nth} ${month} ${year}`;
     }
 
     async function copyToClipboard(text) {
@@ -453,18 +516,53 @@
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
         let totalBase = 0;
         const list = document.getElementById('expenseList');
+        
         if (!db.expenses || db.expenses.length === 0) {
             document.getElementById('currentExpensesWrapper').classList.remove('expanded');
             list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses logged.</div>";
         } else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
-            list.innerHTML = db.expenses.map((ex, i) => {
+            let listHtml = `<div class="timeline-wrapper">`;
+            let currentGroupDate = null;
+
+            db.expenses.forEach((ex, i) => {
                 totalBase += ex.amount;
-                return `<div class="flow-row no-border"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main">${ex.name}</span><span style="font-size:1.1rem; font-weight:800; color:var(--text-main);">${sym}${(ex.amount * rate).toFixed(2)}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${formatDescDisplay(ex.desc)}</div></div><div style="display:flex; flex-direction:column; align-items:center; gap:12px;"><button class="action-icon" style="color:var(--accent);" onclick="copyExpense(${i})" title="Share Details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><button class="action-icon" style="color:var(--danger);" onclick="deleteEx(${i})" title="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>${ex.receipt ? `<button class="action-icon" style="color:var(--accent);" onclick="viewImg('${ex.receipt}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>` : ''}</div></div>`;
-            }).join('');
+                let displayDesc = formatDescDisplay(ex.desc);
+                
+                let exDate = ex.date || db.startDate || "Unknown Date"; 
+                if (exDate !== currentGroupDate) {
+                    let mt = i === 0 ? '5px' : '20px';
+                    listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`;
+                    currentGroupDate = exDate;
+                }
+
+                listHtml += `
+                    <div class="linear-row">
+                        <div class="item-main">
+                            <span class="name-pill main" style="margin-bottom: 6px;">${ex.name}</span>
+                            <div class="item-amt">${sym}${(ex.amount * rate).toFixed(2)}</div>
+                            <div class="item-desc">${displayDesc}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button class="action-icon" style="color:var(--accent);" onclick="copyExpense(${i})" title="Share Details">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            </button>
+                            <button class="action-icon" style="color:var(--danger);" onclick="deleteEx(${i})" title="Delete">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                            ${ex.receipt ? `
+                            <button class="action-icon" style="color:var(--accent);" onclick="viewImg('${ex.receipt}')" title="View Receipt">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            </button>` : ''}
+                        </div>
+                    </div>`;
+            });
+            list.innerHTML = listHtml + `</div>`;
         }
+
         document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
         document.getElementById('perPerson').innerText = sym + (totalBase / 5 * rate).toFixed(0);
+
         const txs = getSettlements(db.expenses, totalBase);
         let credMap = {};
         txs.forEach(t => {
@@ -474,15 +572,17 @@
             if (paid > 0) credMap[t.to].received += paid;
             credMap[t.to].txs.push({ ...t, paid, key });
         });
+
         document.getElementById('settlementCount').innerText = Object.keys(credMap).length;
         document.getElementById('settlementCount').style.display = Object.keys(credMap).length > 0 ? 'inline-block' : 'none';
+
         let sHtml = "";
         for (let c in credMap) {
             const data = credMap[c], rem = data.totalOwed - data.received, can = currentUser === c;
             sHtml += `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toFixed(2)}</div></div>`;
             data.txs.forEach((t, ti) => {
-                const tr = t.amt - t.paid, isS = tr <= 0.01;
-                sHtml += `<div class="flow-row" style="${ti === 0 ? 'border-top: 1px dashed var(--border);' : ''} border-bottom:none; opacity: ${isS ? 0.4 : 1}"><div><div style="font-size:0.9rem;"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}">${sym}${(tr * rate).toFixed(2)}</b></div></div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
+                const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
+                sHtml += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toFixed(2)}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${(t.paid * rate).toFixed(2)}</div>` : ''}</div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
             });
             sHtml += `</div>`;
         }
@@ -492,431 +592,184 @@
 
     function toggleFullPaid(key, totalBaseAmt) {
         if(!db.paidStatus) db.paidStatus = {};
-        const current = db.paidStatus[key] || 0;
-        if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } 
-        else { db.paidStatus[key] = totalBaseAmt; }
+        db.paidStatus[key] = (totalBaseAmt - (db.paidStatus[key] || 0)) <= 0.01 ? 0 : totalBaseAmt;
         render(); saveData();
     }
 
     function logPayment(key, remainingLocal, rate) {
         let val = prompt(`Log Partial Payment\nRemaining balance: ${remainingLocal.toFixed(2)}\n\nEnter amount received (Type 0 to clear record):`, remainingLocal.toFixed(2));
         if (val === null || val.trim() === "") return;
-        let amtLocal = parseFloat(val);
-        if (isNaN(amtLocal) || amtLocal < 0) return;
-
+        let amt = parseFloat(val); if (isNaN(amt) || amt < 0) return;
         if(!db.paidStatus) db.paidStatus = {};
-        if (amtLocal === 0) { db.paidStatus[key] = 0; } 
-        else {
-            if(!db.paidStatus[key]) db.paidStatus[key] = 0;
-            db.paidStatus[key] += (amtLocal / rate);
-        }
+        if (amt === 0) { db.paidStatus[key] = 0; } else { db.paidStatus[key] = (db.paidStatus[key] || 0) + (amt / rate); }
         render(); saveData();
     }
 
     function toggleArchiveFullPaid(arcIdx, key, totalBaseAmt) {
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
-        const current = db.archives[arcIdx].paidStatus[key] || 0;
-        if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } 
-        else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
+        db.archives[arcIdx].paidStatus[key] = (totalBaseAmt - (db.archives[arcIdx].paidStatus[key] || 0)) <= 0.01 ? 0 : totalBaseAmt;
         render(); saveData();
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
         let val = prompt(`Log Partial Payment (Archive)\nRemaining balance: ${remainingLocal.toFixed(2)}\n\nEnter amount received (Type 0 to clear record):`, remainingLocal.toFixed(2));
         if (val === null || val.trim() === "") return;
-        let amtLocal = parseFloat(val);
-        if (isNaN(amtLocal) || amtLocal < 0) return;
-
+        let amt = parseFloat(val); if (isNaN(amt) || amt < 0) return;
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
-        if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } 
-        else {
-            if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0;
-            db.archives[arcIdx].paidStatus[key] += (amtLocal / rate);
-        }
+        if (amt === 0) { db.archives[arcIdx].paidStatus[key] = 0; } else { db.archives[arcIdx].paidStatus[key] = (db.archives[arcIdx].paidStatus[key] || 0) + (amt / rate); }
         render(); saveData();
     }
 
     function renderArchives(sym, rate) {
         const arcDiv = document.getElementById('archiveList');
-        let globalUnpaidHtml = "";
-        let hasUnpaidPast = false;
-        let totalUnpaidCount = 0;
+        let globalUnpaidHtml = "", hasUnpaidPast = false, totalUnpaidCount = 0;
 
-        const arcCount = db.archives ? db.archives.length : 0;
-        const arcBadge = document.getElementById('archivesCount');
-        if(arcBadge) {
-            arcBadge.innerText = arcCount;
-            arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none';
-        }
+        document.getElementById('archivesCount').innerText = db.archives.length;
+        document.getElementById('archivesCount').style.display = db.archives.length > 0 ? 'inline-block' : 'none';
 
         if (!db.archives || db.archives.length === 0) {
             arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>";
         } else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
                 const txs = getSettlements(a.details, a.total);
-                let credMap = {};
-                const displayStart = formatNiceDate(a.start);
-                const displayEnd = formatNiceDate(a.end);
-                
-                let cycleHasUnpaid = false;
-                let cycleUnpaidHtml = "";
+                let credMap = {}, cycleHasUnpaid = false, cycleUnpaidHtml = "";
 
                 txs.forEach(t => {
                     if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
                     credMap[t.to].totalOwed += t.amt;
-                    const key = `${t.from}_${t.to}`;
-                    const amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
+                    const key = `${t.from}_${t.to}`, amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
                     if (amountPaidBase > 0) credMap[t.to].received += amountPaidBase;
                     credMap[t.to].txs.push({ ...t, amountPaidBase, key });
 
                     const txRemainingBase = t.amt - amountPaidBase;
                     if (txRemainingBase > 0.01) {
-                        hasUnpaidPast = true;
-                        cycleHasUnpaid = true;
-                        totalUnpaidCount++;
-                        const canMarkGlobal = currentUser === t.to;
-                        const remainingLocal = txRemainingBase * rate;
-                        const paidLocal = amountPaidBase * rate;
-                        
-                        cycleUnpaidHtml += `
-                        <div class="flow-row" style="padding: 12px 0; border:none;">
-                            <div>
-                                <div style="font-size:0.9rem; color:var(--text-main);">
-                                    <b>${t.from}</b> owes <b>${t.to}</b>
-                                </div>
-                                <div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">
-                                    ${sym}${remainingLocal.toFixed(2)}
-                                </div>
-                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${paidLocal.toFixed(2)}</div>` : ''}
-                            </div>
-                            <div>
-                                ${canMarkGlobal ? `
-                                    <div class="action-group">
-                                        <button class="btn-pill" onclick="logArchivePayment(${idx}, '${key}', ${remainingLocal}, ${rate})">Partial</button>
-                                        <button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
-                                    </div>
-                                ` : `<span class="name-pill">Pending</span>`}
-                            </div>
-                        </div>`;
+                        hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
+                        const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
+                        cycleUnpaidHtml += `<div class="flow-row" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toFixed(2)}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${pdLocal.toFixed(2)}</div>` : ''}</div><div>${canMarkGlobal ? `<div class="action-group"><button class="btn-pill" onclick="logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button></div>` : `<span class="name-pill">Pending</span>`}</div></div>`;
                     }
                 });
 
                 if (cycleHasUnpaid) {
-                    globalUnpaidHtml += `
-                    <div class="archive-item" style="margin-bottom: 8px;">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${displayStart} &rarr; ${displayEnd}</div>
-                        ${cycleUnpaidHtml}
-                    </div>`;
+                    globalUnpaidHtml += `<div class="archive-item" style="margin-bottom: 8px;"><div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${formatNiceDate(a.start)} &rarr; ${formatNiceDate(a.end)}</div>${cycleUnpaidHtml}</div>`;
                 }
 
-                let archiveSettleHtml = "";
-                let hasUnpaidInArchive = false;
-                let archiveUnpaidCount = 0;
-
+                let archiveSettleHtml = "", hasUnpaidInArchive = false, archiveUnpaidCount = 0;
                 for (let cred in credMap) {
-                    const data = credMap[cred];
-                    data.txs.forEach(t => {
+                    credMap[cred].txs.forEach(t => {
                         const txRemainingBase = t.amt - t.amountPaidBase;
                         if (txRemainingBase > 0.01) {
-                            hasUnpaidInArchive = true;
-                            archiveUnpaidCount++;
-                            const remainingLocal = txRemainingBase * rate;
-                            const paidLocal = t.amountPaidBase * rate;
-                            const canMark = currentUser === cred;
-
-                            archiveSettleHtml += `
-                            <div class="flow-row" style="padding: 12px 0; border:none;">
-                                <div>
-                                    <div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div>
-                                    <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toFixed(2)}</div>
-                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${paidLocal.toFixed(2)}</div>` : ''}
-                                </div>
-                                <div>
-                                    ${canMark ? `
-                                        <div class="action-group">
-                                            <button class="btn-pill" onclick="logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
-                                            <button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
-                                        </div>
-                                    ` : `<span class="name-pill">Pending</span>`}
-                                </div>
-                            </div>`;
+                            hasUnpaidInArchive = true; archiveUnpaidCount++;
+                            const remLocal = txRemainingBase * rate, pdLocal = t.amountPaidBase * rate, canMark = currentUser === cred;
+                            archiveSettleHtml += `<div class="flow-row" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remLocal.toFixed(2)}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${pdLocal.toFixed(2)}</div>` : ''}</div><div>${canMark ? `<div class="action-group"><button class="btn-pill" onclick="logArchivePayment(${idx}, '${t.key}', ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button></div>` : `<span class="name-pill">Pending</span>`}</div></div>`;
                         }
                     });
                 }
 
-                let finalUnpaidBlock = "";
-                if (hasUnpaidInArchive) {
-                    finalUnpaidBlock = `
-                    <h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">
-                        Unpaid Debts
-                        <span class="danger-badge" style="display:${archiveUnpaidCount > 0 ? 'inline-block' : 'none'};">${archiveUnpaidCount}</span>
-                    </h4>
-                    ${archiveSettleHtml}`;
-                }
+                let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
 
-                let logsHtml = (a.details || []).map(d => {
-                    let displayDesc = formatDescDisplay(d.desc);
-                    return `
-                    <div class="flow-row" style="padding:10px 0; border:none;">
-                        <div style="flex-grow:1; padding-right:15px;">
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                                <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${d.name}</span>
-                                <span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toFixed(2)}</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
-                        </div>
-                        ${d.receipt ? `
-                        <button class="action-icon" style="color:var(--accent);" onclick="viewImg('${d.receipt}')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        </button>` : ''}
-                    </div>`
-                }).join('');
+                let logsHtml = (a.details || []).map(d => `<div class="flow-row" style="padding:10px 0; border:none;"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${d.name}</span><span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toFixed(2)}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${formatDescDisplay(d.desc)}</div></div>${d.receipt ? `<button class="action-icon" style="color:var(--accent);" onclick="viewImg('${d.receipt}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>` : ''}</div>`).join('');
 
-                return `
-                <div class="archive-item" id="archive-card-${idx}">
-                    <div class="archive-header" onclick="toggleSection(this)">
-                        <div>
-                            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div>
-                            <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toFixed(0)}</div>
-                        </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <button class="action-icon" onclick="downloadArchive(event, ${idx})" title="Snapshot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>
-                            <button class="action-icon" style="color:var(--danger);" onclick="deleteArchive(event, ${idx})" title="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                            <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </div>
-                    </div>
-                    <div class="archive-details" onclick="event.stopPropagation()">
-                        ${finalUnpaidBlock}
-                        <div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};">
-                            <h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4>
-                            <div>
-                                ${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
+                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header" onclick="toggleSection(this)"><div><div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${formatNiceDate(a.start)} &rarr; ${formatNiceDate(a.end)}</div><div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toFixed(0)}</div></div><div style="display:flex; gap:10px; align-items:center;"><button class="action-icon" onclick="downloadArchive(event, ${idx})" title="Snapshot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button><button class="action-icon" style="color:var(--danger);" onclick="deleteArchive(event, ${idx})" title="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button><svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()">${finalUnpaidBlock}<div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};"><h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4><div>${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}</div></div></div></div>`;
             }).join('');
         }
 
-        const unpaidSection = document.getElementById('unpaidArchivesSection');
-        const unpaidList = document.getElementById('unpaidArchivesList');
-        const unpaidNoticeWrapper = document.getElementById('unpaidDebtsNoticeWrapper');
-        const globalUnpaidBadge = document.getElementById('unpaidGlobalCount');
-        
-        if (globalUnpaidBadge) {
-            globalUnpaidBadge.innerText = totalUnpaidCount;
-            globalUnpaidBadge.style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none';
-        }
-
-        if (hasUnpaidPast) {
-            unpaidSection.style.display = 'block';
-            unpaidList.innerHTML = globalUnpaidHtml;
-            if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'block';
-        } else {
-            unpaidSection.style.display = 'none';
-            unpaidList.innerHTML = "";
-            if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'none';
-        }
+        document.getElementById('unpaidGlobalCount').innerText = totalUnpaidCount;
+        document.getElementById('unpaidGlobalCount').style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none';
+        document.getElementById('unpaidArchivesSection').style.display = hasUnpaidPast ? 'block' : 'none';
+        document.getElementById('unpaidArchivesList').innerHTML = globalUnpaidHtml;
+        document.getElementById('unpaidDebtsNoticeWrapper').style.display = hasUnpaidPast ? 'block' : 'none';
     }
 
     async function downloadArchive(ev, idx) {
-        ev.stopPropagation();
-        const card = document.getElementById(`archive-card-${idx}`);
-        const wasExpanded = card.classList.contains('expanded');
-        
-        if (!wasExpanded) card.classList.add('expanded');
-        
-        const loader = document.getElementById('loading');
-        loader.innerText = "SNAP...";
-        loader.style.display = 'block';
-
-        await new Promise(r => setTimeout(r, 350));
-
-        const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc';
+        ev.stopPropagation(); const card = document.getElementById(`archive-card-${idx}`), was = card.classList.contains('expanded');
+        if (!was) card.classList.add('expanded'); showToast("SNAP...", 2000); await new Promise(r => setTimeout(r, 350));
         try {
-            const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2 });
-            const link = document.createElement('a');
-            link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } catch (e) { alert("Failed to capture snapshot."); }
-
-        if (!wasExpanded) card.classList.remove('expanded');
-        loader.innerText = "SYNCING";
-        loader.style.display = 'none';
+            const canvas = await html2canvas(card, { backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc', scale: 2 });
+            const link = document.createElement('a'); link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+        } catch (e) { alert("Snapshot failed."); }
+        if (!was) card.classList.remove('expanded');
     }
 
     async function addExpense() {
-        const rawInput = document.getElementById('amtInput').value;
-        const gNote = document.getElementById('groupNote').value;
-        const file = document.getElementById('receiptInput').files[0];
-        const cur = document.getElementById('currency').value;
-        const rate = rates[cur];
-        
-        if (!rawInput.trim()) {
-            alert("Please enter an expense amount.");
-            return;
-        }
-        
-        const matches = rawInput.match(/\d+(\.\d+)?/g);
-        if(!matches) {
-            alert("Please include a valid amount.");
-            return;
-        }
-        
-        let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate;
-        let receiptData = file ? await compressImage(file) : null;
-        
+        const rawInput = document.getElementById('amtInput').value, gNote = document.getElementById('groupNote').value, file = document.getElementById('receiptInput').files[0], rate = rates[document.getElementById('currency').value];
+        if (!rawInput.trim()) { alert("Please enter an expense amount."); return; }
+        const matches = rawInput.match(/\d+(\.\d+)?/g); if(!matches) { alert("No valid amount."); return; }
+        let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate, receiptData = file ? await compressImage(file) : null;
         let descToSave = gNote ? `[${gNote}] \n ${rawInput}` : rawInput;
         
-        db.expenses.unshift({ name: currentUser, amount: baseAmt, desc: descToSave, receipt: receiptData });
+        const today = new Date();
+        const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
         
-        const amtInputEl = document.getElementById('amtInput');
-        amtInputEl.value = ""; 
-        amtInputEl.style.height = "40px";
-        document.getElementById('groupNote').value = ""; 
-        document.getElementById('receiptInput').value = "";
-        document.getElementById('groupNote').style.display = "none";
-        
+        db.expenses.unshift({ name: currentUser, amount: baseAmt, desc: descToSave, receipt: receiptData, date: dateStr });
+        const ai = document.getElementById('amtInput'); ai.value = ""; ai.style.height = "40px";
+        document.getElementById('groupNote').value = ""; document.getElementById('receiptInput').value = ""; document.getElementById('groupNote').style.display = "none";
         render(); saveData();
     }
 
     function compressImage(file) {
         return new Promise((resolve) => {
-            const reader = new FileReader(); 
-            reader.readAsDataURL(file);
-            reader.onerror = () => {
-                alert("Failed to read image file.");
-                resolve(null);
-            };
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onerror = () => { alert("File error."); resolve(null); };
             reader.onload = (e) => {
-                const img = new Image(); 
-                img.src = e.target.result;
-                img.onerror = () => {
-                    alert("Failed to process image.");
-                    resolve(null);
-                };
+                const img = new Image(); img.src = e.target.result;
+                img.onerror = () => { alert("Image error."); resolve(null); };
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; }
-                    canvas.width = w; canvas.height = h;
-                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                    if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6));
                 };
             };
         });
     }
 
     async function copyExpense(i) {
-        const ex = db.expenses[i];
-        const cur = document.getElementById('currency').value;
-        const sym = curSymbols[cur];
-        const rate = rates[cur];
-        const amount = (ex.amount * rate).toFixed(2);
-        
-        let rawClean = formatDescDisplay(ex.desc);
-        let cleanDesc = rawClean.split('&bull;')
-                                .map(part => '• ' + part.trim())
-                                .join('\n')
-                                .replace(/^• \[/g, '['); 
-        
-        let txt = `Expense logged by ${ex.name}:\nAmount: ${sym}${amount}\nDetails:\n${cleanDesc}`;
-        
-        await copyToClipboard(txt); 
-        alert("Expense details copied!");
+        const ex = db.expenses[i], rate = rates[document.getElementById('currency').value], sym = curSymbols[document.getElementById('currency').value];
+        let rc = formatDescDisplay(ex.desc).split('&bull;').map(p => '• ' + p.trim()).join('\n').replace(/^• \[/g, '[');
+        await copyToClipboard(`Expense: ${ex.name}\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${rc}`);
+        alert("Copied!");
     }
 
     async function copySummary() {
-        const cur = document.getElementById('currency').value;
-        const sym = curSymbols[cur]; const rate = rates[cur];
-        let totalBase = 0; db.expenses.forEach(e => { totalBase += e.amount; });
-        const perHead = totalBase / 5;
-        
-        let balances = {};
-        users.forEach(u => balances[u] = -(totalBase / 5));
-        db.expenses.forEach(e => balances[e.name] += e.amount);
-
-        const today = new Date();
-        const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-        const niceToday = formatNiceDate(todayStr);
-
-        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${niceToday})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(perHead * rate).toFixed(2)}\n\n*BALANCES:*\n`;
-        
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+        let totalBase = 0; db.expenses.forEach(e => totalBase += e.amount);
+        let bals = {}, today = new Date(), tdS = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
+        users.forEach(u => bals[u] = -(totalBase / 5)); db.expenses.forEach(e => bals[e.name] += e.amount);
+        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(tdS)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(totalBase / 5 * rate).toFixed(2)}\n\n*BALANCES:*\n`;
         users.forEach(u => {
-            let bal = balances[u] * rate;
-            if (bal < -0.01) {
-                txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`;
-            } else if (bal > 0.01) {
-                txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`;
-            } else {
-                txt += `${u}: ✅ Settled\n`;
-            }
+            let b = bals[u] * rate;
+            txt += b < -0.01 ? `${u}: ❌ Owes ${sym}${Math.abs(b).toFixed(2)}\n` : b > 0.01 ? `${u}: ➕ Gets ${sym}${b.toFixed(2)}\n` : `${u}: ✅ Settled\n`;
         });
-
         txt += `\n*SETTLEMENTS:*\n`;
         const txs = getSettlements(db.expenses, totalBase);
-        
         txs.forEach(t => {
-            const amountPaidBase = (db.paidStatus && db.paidStatus[`${t.from}_${t.to}`]) || 0;
-            const remainingBase = t.amt - amountPaidBase;
-            let status = remainingBase <= 0.01 ? '(Settled)' : amountPaidBase > 0.01 ? `(Paid: ${sym}${(amountPaidBase * rate).toFixed(2)})` : '';
-            txt += `${t.from} -> ${t.to}: ${sym}${(remainingBase * rate).toFixed(2)} ${status}\n`;
+            const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0;
+            txt += `${t.from} -> ${t.to}: ${sym}${((t.amt - pd) * rate).toFixed(2)}${t.amt - pd <= 0.01 ? ' (Settled)' : pd > 0.01 ? ` (Paid: ${sym}${(pd * rate).toFixed(2)})` : ''}\n`;
         });
-        
         if (txs.length === 0) txt += "All debts are settled.\n";
-
         await copyToClipboard(txt); alert("Summary Copied!");
     }
 
     function deleteEx(i) { if(confirm("Delete?")) { db.expenses.splice(i,1); render(); saveData(); } }
     function deleteArchive(ev, i) { ev.stopPropagation(); if(confirm("Delete archive?")) { db.archives.splice(i,1); render(); saveData(); } }
     function changeStartDate() { const val = prompt("Start Date (DD/MM/YYYY):", db.startDate); if(val) { db.startDate = val; render(); saveData(); } }
-    function viewImg(data) { 
-        const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc';
-        const w = window.open(""); w.document.write(`<body style="margin:0;background:${bgColor};display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh;"></body>`); 
-    }
+    function viewImg(data) { const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc'; const w = window.open(""); w.document.write(`<body style="margin:0;background:${bgColor};display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh;"></body>`); }
     
     function endMonth() {
-        if (!db.expenses || db.expenses.length === 0) {
-            alert("No expenses yet.");
-            return;
-        }
+        if (!db.expenses || db.expenses.length === 0) { alert("No expenses yet."); return; }
         if(!confirm("End month and archive?")) return;
-        
         let total = 0; db.expenses.forEach(e => total += e.amount);
-        if(!db.archives) db.archives = [];
-        const today = new Date();
-        const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-        
-        db.archives.unshift({ start: db.startDate, end: endDateStr, total: total, details: [...db.expenses], paidStatus: {...db.paidStatus} });
-        
-        // KEEP ONLY THE LAST 2 ARCHIVES AUTOMATICALLY
-        if (db.archives.length > 2) {
-            db.archives = db.archives.slice(0, 2);
-        }
-        
-        db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr;
-        render(); saveData();
+        const today = new Date(), tdStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
+        db.archives.unshift({ start: db.startDate, end: tdStr, total: total, details: [...db.expenses], paidStatus: {...db.paidStatus} });
+        if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
+        db.expenses = []; db.paidStatus = {}; db.startDate = tdStr; render(); saveData();
     }
 
     function logout() { localStorage.removeItem('house_user'); location.reload(); }
-    function login(u) { 
-        currentUser = u; 
-        localStorage.setItem('house_user', u); 
-        document.getElementById('loginOverlay').style.display='none'; 
-        document.getElementById('topUserName').innerText = u; 
-        
-        const menuUser = document.getElementById('menuUserName');
-        if(menuUser) menuUser.innerText = u;
-        
-        render(); 
-    }
+    function login(u) { currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = u; document.getElementById('menuUserName').innerText = u; render(); }
 
-    window.onload = () => {
-        const btns = document.getElementById('userButtons');
-        users.forEach(u => btns.innerHTML += `<button class="user-select-btn" onclick="login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`);
-        if(currentUser) login(currentUser); loadData();
-    };
+    window.addEventListener('online', () => { if (needsSync) { showToast("RESTORING SYNC..."); saveData(); } else loadData(); });
+    window.addEventListener('offline', () => showToast("YOU ARE OFFLINE", 2000));
+    window.onload = () => { const btns = document.getElementById('userButtons'); users.forEach(u => btns.innerHTML += `<button class="user-select-btn" onclick="login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`); if(currentUser) login(currentUser); loadData(); };
 </script>
 </body>
 </html>
