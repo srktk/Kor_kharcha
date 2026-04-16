@@ -17,13 +17,11 @@
         let themeTimeout;
 
         function applyTheme() {
-            // Clear out the old permanent save so it doesn't conflict
             localStorage.removeItem('house_theme');
 
             const savedTime = sessionStorage.getItem('house_theme_time');
             let savedTheme = sessionStorage.getItem('house_theme');
 
-            // Check if 10 minutes (600,000 ms) have passed
             if (savedTime && (Date.now() - parseInt(savedTime) > 600000)) {
                 sessionStorage.removeItem('house_theme');
                 sessionStorage.removeItem('house_theme_time');
@@ -33,147 +31,119 @@
             const theme = savedTheme || (themeQuery.matches ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
             
-            // Updates the status bar to match
             const metaTheme = document.querySelector('meta[name="theme-color"]');
             if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0b0f1a' : '#f8fafc');
 
-            // If manually toggled, start the 10-minute reversion timer
             if (savedTheme) {
                 clearTimeout(themeTimeout);
                 const timeLeft = 600000 - (Date.now() - parseInt(savedTime));
                 themeTimeout = setTimeout(() => {
                     sessionStorage.removeItem('house_theme');
                     sessionStorage.removeItem('house_theme_time');
-                    applyTheme(); // Snap back to system theme
+                    applyTheme();
                 }, Math.max(timeLeft, 0));
             }
         }
 
         applyTheme();
         
-        // Listen for phone shifting from Day to Night mode
         themeQuery.addEventListener('change', () => {
             if (!sessionStorage.getItem('house_theme')) applyTheme();
         });
     </script>
     
     <style>
-        /* LIGHT THEME */
         :root { 
-            --bg: #f8fafc; 
-            --text-main: #0f172a; 
-            --text-muted: #475569; 
-            --border: #cbd5e1;
-            --accent: #0d9488; 
-            --accent-glow: rgba(13, 148, 136, 0.15);
-            --danger: #ef4444; 
-            --success: #10b981;
-            --input-bg: #e2e8f0; 
+            --bg: #f8fafc; --text-main: #0f172a; --text-muted: #475569; 
+            --border: #cbd5e1; --accent: #0d9488; --accent-glow: rgba(13, 148, 136, 0.15);
+            --danger: #ef4444; --success: #10b981; --input-bg: #e2e8f0; 
             --nav-bg: rgba(255, 255, 255, 0.95);
         }
-        
-        /* DARK THEME */
         [data-theme="dark"] {
-            --bg: #0b0f1a; 
-            --text-main: #f8fafc; 
-            --text-muted: #94a3b8; 
-            --border: rgba(255, 255, 255, 0.1);
-            --accent: #2dd4bf; 
-            --accent-glow: rgba(45, 212, 191, 0.25);
-            --danger: #fb7185; 
-            --success: #4ade80;
-            --input-bg: rgba(255, 255, 255, 0.05);
+            --bg: #0b0f1a; --text-main: #f8fafc; --text-muted: #94a3b8; 
+            --border: rgba(255, 255, 255, 0.1); --accent: #2dd4bf; 
+            --accent-glow: rgba(45, 212, 191, 0.25); --danger: #fb7185; 
+            --success: #4ade80; --input-bg: rgba(255, 255, 255, 0.05);
             --nav-bg: rgba(30, 41, 59, 0.95);
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        html, body { overflow-x: hidden; }
-        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
-        
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background-color 0.3s, color 0.3s; overflow-x: clip; max-width: 100vw; }
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; }
         
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
-        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        
-        .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); transition: 0.2s; }
+        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
         .action-icon:hover { color: var(--accent); }
         
-        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
+        .btn-circle { background: transparent; border: 1px solid var(--border); border-radius: 50%; color: var(--text-muted); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+        .btn-circle:hover { background: rgba(0,0,0,0.05); color: var(--text-main); border-color: var(--text-main); }
+        [data-theme="dark"] .btn-circle:hover { background: rgba(255,255,255,0.05); }
+
+        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
         .menu-link { text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; padding: 12px 15px; border-radius: 12px; transition: 0.2s; display: block; cursor: pointer; }
-        .menu-link:hover, .menu-link:active { background: var(--input-bg); color: var(--text-main); }
+        .menu-link:hover { background: var(--input-bg); color: var(--text-main); }
 
         @keyframes highlight-glow { 0% { background-color: var(--accent-glow); } 100% { background-color: transparent; } }
         .highlight-pulse { animation: highlight-glow 1.5s ease-out; }
 
         .hero-section { padding: 25px 20px 20px 20px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
-        .hero-section::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); filter: blur(100px); opacity: 0.15; z-index: 0; pointer-events: none; }
-        
-        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; position: relative; z-index: 1; }
-        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); position: relative; z-index: 1; }
-        
-        .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 1; }
+        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; }
+        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); }
+        .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .stat-block { display: flex; flex-direction: column; gap: 4px; }
         .stat-block .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
         .stat-block .val { font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
         
+        #currentExpensesWrapper .collapsible-content { padding-top: 0; }
+        .timeline-wrapper { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 10px; margin-top: 0; margin-bottom: 15px; }
+        .date-marker { position: relative; display: flex; align-items: center; gap: 10px; margin-left: -32px; margin-bottom: 8px; }
+        .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
+        .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
+        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: none; }
+        .item-main { flex: 1; padding-right: 10px; }
+        .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
+        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+        .linear-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 105px; }
+
         .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
         .input-section > * { pointer-events: auto; }
-        
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; }
-        
-        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-        
-        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; }
+        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; line-height: 1.4; scrollbar-width: none; }
         .chat-textarea::-webkit-scrollbar { display: none; }
-        
         .chat-btn { background: transparent; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
         .chat-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
+        .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; transition: 0.2s; }
+        .chat-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; }
-        .chat-btn.primary:active { transform: scale(0.95); }
-        
-        .chat-note { width: 100%; background: var(--nav-bg); border: 1px solid var(--border); padding: 10px 15px; color: var(--text-main); font-size: 0.85rem; border-radius: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .chat-note { width: 100%; background: transparent; border: 1px solid var(--border); padding: 12px 15px; color: var(--text-main); font-size: 0.95rem; border-radius: 16px; outline: none; transition: 0.3s; }
         .chat-note:focus { border-color: var(--accent); }
         
         select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; font-size: 1rem; cursor: pointer; }
         
         .content-section { padding: 0 20px; transition: background-color 0.3s; }
-        .name-pill { background: var(--input-bg); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: var(--text-main); display: inline-block; white-space: nowrap; }
-        .name-pill.main { background: rgba(45, 212, 191, 0.1); color: var(--accent); border-color: rgba(45, 212, 191, 0.2); }
+        .name-pill { background: var(--input-bg); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; color: var(--text-main); display: inline-block; white-space: nowrap; margin-bottom: 4px; cursor: pointer; transition: 0.2s;}
+        .name-pill.main { background: rgba(45, 212, 191, 0.1); color: var(--accent); }
         
         .flow-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .flow-row.no-border { border-bottom: none; }
-        
         .action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
         .btn-pill { background: transparent; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 0.7rem; color: var(--text-muted); cursor: pointer; font-weight: 700; white-space: nowrap; transition: 0.2s; }
         .btn-pill:hover { border-color: var(--text-muted); color: var(--text-main); }
         .btn-pill.primary { border-color: var(--accent); color: var(--accent); background: rgba(45, 212, 191, 0.05); }
-        .btn-pill.success { background: var(--success); color: #000; border-color: var(--success); }
         
-        .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 15px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
+        .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 5px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
         .flow-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
-        
         .collapsible-content { display: none; }
         .expanded > .collapsible-content { display: block; }
         .expanded > .flow-header .chevron { transform: rotate(180deg); }
         .chevron { transition: 0.3s; color: var(--text-muted); }
-
-        /* Modern Timeline Design (Tightly Spaced) */
-        #currentExpensesWrapper .collapsible-content { padding-top: 0; }
-        .timeline-wrapper { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 10px; margin-top: 0; }
-        .date-marker { position: relative; display: flex; align-items: center; gap: 10px; margin-left: -32px; margin-bottom: 8px; }
-        .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
-        .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
-        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
-        .linear-row:last-child { border-bottom: none; }
-        .item-main { flex: 1; padding-right: 10px; }
-        .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
-        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
 
         .archive-item { background: var(--input-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px 20px; margin-bottom: 15px; transition: 0.2s; }
         .archive-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
@@ -181,29 +151,65 @@
         .archive-item.expanded .archive-details { display: block; }
         .archive-item.expanded .chevron { transform: rotate(180deg); }
 
-        .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); }
         .user-select-btn { display: flex; align-items: center; gap: 14px; background: transparent; border: 1px solid var(--border); padding: 12px 18px; border-radius: 20px; color: var(--text-main); font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; text-align: left; margin-bottom: 10px; }
         .user-select-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
         .user-select-btn:active { transform: scale(0.98); }
         .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--text-main); color: var(--bg); display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1rem; }
 
         .btn-glowing { background: var(--input-bg); color: var(--text-main); padding: 14px 24px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
-
         .danger-text { color: var(--danger) !important; text-shadow: 0 0 15px rgba(251, 113, 133, 0.3); }
         .danger-badge { background: var(--danger); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 900; margin-left: 6px; }
         .count-badge { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; margin-left: 6px; }
         
-        #loading { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;}
+        #loading { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; pointer-events: auto;}
+        
+        .split-label { cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     </style>
 </head>
 <body>
 
 <div id="loading">SYNCING...</div>
 
-<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(10px);">
+<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:340px; text-align:center;">
         <h2 style="margin:0 0 25px 0; font-size: 1.4rem; font-weight:900; letter-spacing:-0.5px;">Select User</h2>
         <div id="userButtons" style="display: flex; flex-direction: column;"></div>
+    </div>
+</div>
+
+<div id="manageUsersOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:340px;">
+        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Manage Housemates</h2>
+        <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
+        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <button class="btn-glowing" style="width:auto; padding:10px 15px; margin:0;" onclick="addUser()">Add</button>
+        </div>
+        <button class="btn-glowing" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="closeManageUsers()">Done</button>
+    </div>
+</div>
+
+<div id="confirmOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
+        <div style="margin-bottom: 15px; display:flex; justify-content:center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h3 id="confirmMessage" style="margin: 0 0 20px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Are you sure?</h3>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="closeConfirm()">Cancel</button>
+            <button class="btn-glowing" style="background: var(--danger); border-color: var(--danger); color: #fff;" onclick="executeConfirm()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="promptOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
+        <h3 id="promptMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;"></h3>
+        <input type="text" id="promptInput" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
+        <div style="display:flex; gap:10px;">
+            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="closePrompt()">Cancel</button>
+            <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="executePrompt()">OK</button>
+        </div>
     </div>
 </div>
 
@@ -230,7 +236,9 @@
     <a href="#" class="menu-link" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
     <div style="flex-grow: 1;"></div>
-    <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4); margin-top: 15px;" onclick="logout(); event.preventDefault();">Switch User</a>
+    <a href="#" class="menu-link" style="color:var(--accent); text-align: center; border: 1px dashed var(--accent); margin-bottom: 10px;" onclick="openManageUsers(); event.preventDefault();">Manage Housemates</a>
+    <a href="#" class="menu-link" style="color:var(--success); text-align: center; border: 1px dashed rgba(16, 185, 129, 0.4); margin-bottom: 10px;" onclick="exportCSV(); event.preventDefault();">Export to Excel (CSV)</a>
+    <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="logout(); event.preventDefault();">Switch User</a>
 </div>
 
 <div class="wrapper">
@@ -239,7 +247,7 @@
             <button class="action-icon" onclick="toggleMenu()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <span id="topUserName" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem;"></span>
+            <span id="topUserName" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer;" onclick="toggleMyView()" title="Toggle My View"></span>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <button class="action-icon" onclick="loadData()">
@@ -282,16 +290,24 @@
         <div class="flow-header" onclick="toggleSection(this)">
             <h3 class="flow-title">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
             <div style="display:flex; align-items:center; gap:15px;">
-                <button class="action-icon" style="color:var(--accent);" onclick="event.stopPropagation(); copySummary()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <button class="btn-circle" style="color:var(--text-muted); width: 28px; height: 28px; border-color: var(--border);" onclick="event.stopPropagation(); copySummary()" title="Copy Summary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 </button>
                 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
         </div>
         <div class="collapsible-content">
+            
+            <div style="margin-bottom: 15px;">
+                <button class="badge" onclick="const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Active Housemates
+                </button>
+                <div id="cycleSplitCheckboxes" style="display: none; flex-wrap: wrap; gap: 10px;"></div>
+            </div>
+
             <div id="settleList"></div>
-            <div id="unpaidDebtsNoticeWrapper" style="display:none; padding-top: 5px; margin-bottom: 10px;">
-                <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 14px; text-align: center; cursor: pointer;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
+            <div id="unpaidDebtsNoticeWrapper" style="display:none; padding-top: 5px; margin-bottom: 10px;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 14px; text-align: center; cursor: pointer;">
                     <span style="color:var(--danger); font-size:0.85rem; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Unpaid Past Debts <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span>
                 </div>
             </div>
@@ -330,15 +346,22 @@
 </div>
 
 <div class="input-section" id="inputSection">
-    <input type="text" id="groupNote" class="chat-note" style="display:none; margin-bottom: 8px;" placeholder="General Note (Optional)" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
+    <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <input type="text" id="groupNote" class="chat-note" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
+        <button class="btn-glowing" style="padding: 10px; font-size: 0.85rem;" onclick="document.getElementById('receiptInput').click()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
+            Attach Photo
+        </button>
+    </div>
     <div class="chat-row">
         <div class="chat-input-wrapper">
-            <button class="chat-btn" onclick="toggleNoteField()" title="Add Note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-            <button class="chat-btn" onclick="document.getElementById('receiptInput').click()" title="Attach Receipt"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>
+            <textarea id="amtInput" class="chat-textarea" placeholder="Write Amount here" oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
             <input type="file" id="receiptInput" accept="image/*" style="display:none;">
-            <textarea id="amtInput" class="chat-textarea" placeholder="12 asda 32 tesco..." oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
+            <button class="chat-btn" onclick="toggleOptionsMenu()" title="More Options">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+            </button>
         </div>
-        <button class="chat-btn primary" onclick="addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        <button id="mainAddBtn" class="chat-btn primary" onclick="addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
     </div>
 </div>
 
@@ -347,40 +370,127 @@
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
     let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
-    const users = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
+    const defaultUsers = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {} };
+    let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [] };
     let currentUser = localStorage.getItem('house_user') || "";
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
     let toastTimeout;
+    let editingIndex = -1;
+    let myViewActive = false;
+
+    // Custom Modals Handlers
+    let confirmAction = null;
+    function customConfirm(msg, action) {
+        document.getElementById('confirmMessage').innerHTML = msg;
+        confirmAction = action;
+        document.getElementById('confirmOverlay').style.display = 'flex';
+    }
+    function closeConfirm() {
+        document.getElementById('confirmOverlay').style.display = 'none';
+        confirmAction = null;
+    }
+    function executeConfirm() {
+        if (confirmAction) confirmAction();
+        closeConfirm();
+    }
+
+    let promptAction = null;
+    function customPrompt(msg, defaultValue, action, inputMode = "text") {
+        document.getElementById('promptMessage').innerHTML = msg;
+        const input = document.getElementById('promptInput');
+        input.value = defaultValue || "";
+        input.inputMode = inputMode;
+        promptAction = action;
+        document.getElementById('promptOverlay').style.display = 'flex';
+        setTimeout(() => input.focus(), 100);
+    }
+    function closePrompt() {
+        document.getElementById('promptOverlay').style.display = 'none';
+        promptAction = null;
+    }
+    function executePrompt() {
+        if (promptAction) promptAction(document.getElementById('promptInput').value);
+        closePrompt();
+    }
+    document.getElementById('promptInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') executePrompt();
+    });
+
+    async function fetchLiveRates() {
+        try {
+            const res = await fetch('https://open.er-api.com/v6/latest/GBP');
+            const data = await res.json();
+            if (data && data.rates) {
+                rates.PKR = data.rates.PKR || rates.PKR;
+                rates.USD = data.rates.USD || rates.USD;
+                rates.EUR = data.rates.EUR || rates.EUR;
+                rates.AED = data.rates.AED || rates.AED;
+                render(); 
+            }
+        } catch(e) {}
+    }
+
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('optionsMenu');
+        const inputSection = document.getElementById('inputSection');
+        if (menu && menu.style.display === 'block' && inputSection && !inputSection.contains(event.target)) {
+            menu.style.display = 'none';
+        }
+    });
 
     function showToast(msg, duration = 0) {
         const loader = document.getElementById('loading');
-        loader.innerText = msg; loader.style.display = 'block';
+        loader.innerHTML = msg;
+        loader.style.display = 'block';
         clearTimeout(toastTimeout);
         if (duration > 0) toastTimeout = setTimeout(() => { loader.style.display = 'none'; }, duration);
     }
 
     function setNeedsSync(val) { needsSync = val; localStorage.setItem('house_needs_sync', val); }
     function saveLocalBackup() { localStorage.setItem('house_db_backup', JSON.stringify(db)); }
+    
     function loadLocalBackup() {
         const backup = localStorage.getItem('house_db_backup');
-        if (backup) { db = JSON.parse(backup); initializeDB(); render(); }
+        if (backup) { 
+            try { 
+                db = JSON.parse(backup); 
+                initializeDB(); 
+                renderUsers();
+                render(); 
+            } catch (e) { 
+                console.error("Corrupt local backup", e); 
+            }
+        }
     }
 
-    function toggleNoteField() {
-        const note = document.getElementById('groupNote');
-        note.style.display = note.style.display === 'none' ? 'block' : 'none';
-        if(note.style.display === 'block') note.focus();
+    function toggleMyView() {
+        myViewActive = !myViewActive;
+        const el = document.getElementById('topUserName');
+        if (myViewActive) {
+            el.style.background = 'var(--accent)';
+            el.style.color = '#000';
+            showToast("MY VIEW: ON", 1500);
+        } else {
+            el.style.background = 'rgba(45, 212, 191, 0.1)';
+            el.style.color = 'var(--accent)';
+            showToast("HOUSE VIEW", 1500);
+        }
+        render();
+    }
+
+    function toggleOptionsMenu(forceOpen = false) {
+        const menu = document.getElementById('optionsMenu');
+        const isOpening = forceOpen || menu.style.display === 'none';
+        menu.style.display = isOpening ? 'block' : 'none';
+        if (isOpening) document.getElementById('groupNote').focus();
     }
 
     function toggleTheme() {
         let current = document.documentElement.getAttribute('data-theme');
         let next = current === 'dark' ? 'light' : 'dark';
-        
         sessionStorage.setItem('house_theme', next);
         sessionStorage.setItem('house_theme_time', Date.now().toString());
-        
         if (typeof applyTheme === 'function') applyTheme();
     }
 
@@ -423,14 +533,143 @@
         }
     }
 
-    function formatDescDisplay(desc) {
+    function openManageUsers() {
+        const menu = document.getElementById('sideMenu');
+        if (menu.classList.contains('open')) toggleMenu();
+        
+        const list = document.getElementById('manageUserList');
+        list.innerHTML = db.users.map(u => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+                <span style="font-weight:bold; color:var(--text-main);">${u}</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="action-icon" style="color:var(--text-muted); padding:2px;" onclick="editUser('${u}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
+                    <button class="action-icon" style="color:var(--danger); padding:2px;" onclick="deleteUser('${u}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('manageUsersOverlay').style.display = 'flex';
+    }
+
+    function closeManageUsers() {
+        document.getElementById('manageUsersOverlay').style.display = 'none';
+    }
+
+    function addUser() {
+        customPrompt("Enter new housemate's name:", "", (val) => {
+            const n = val.trim();
+            if (!n) return;
+            if (db.users.includes(n)) { showToast("User already exists.", 3000); return; }
+            db.users.push(n);
+            db.activeUsers.push(n);
+            renderUsers();
+            openManageUsers();
+            render();
+            saveData();
+        });
+    }
+
+    function editUser(oldName) {
+        customPrompt(`Rename ${oldName} to:`, oldName, (newName) => {
+            if (!newName || newName.trim() === "" || newName === oldName) return;
+            const n = newName.trim();
+            if (db.users.includes(n)) { showToast("Name already exists.", 3000); return; }
+            
+            db.users[db.users.indexOf(oldName)] = n;
+            if (db.activeUsers.includes(oldName)) {
+                db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
+            }
+            
+            db.expenses.forEach(ex => {
+                if (ex.name === oldName) ex.name = n;
+            });
+            
+            db.archives.forEach(arc => {
+                if (arc.activeUsers && arc.activeUsers.includes(oldName)) {
+                    arc.activeUsers[arc.activeUsers.indexOf(oldName)] = n;
+                }
+                arc.details.forEach(ex => {
+                    if (ex.name === oldName) ex.name = n;
+                });
+                let arcPaid = {};
+                for (let key in arc.paidStatus) {
+                    let [from, to] = key.split('_');
+                    if (from === oldName) from = n;
+                    if (to === oldName) to = n;
+                    arcPaid[`${from}_${to}`] = arc.paidStatus[key];
+                }
+                arc.paidStatus = arcPaid;
+            });
+
+            let newPaid = {};
+            for (let key in db.paidStatus) {
+                let [from, to] = key.split('_');
+                if (from === oldName) from = n;
+                if (to === oldName) to = n;
+                newPaid[`${from}_${to}`] = db.paidStatus[key];
+            }
+            db.paidStatus = newPaid;
+            
+            if (currentUser === oldName) {
+                currentUser = n;
+                localStorage.setItem('house_user', n);
+                document.getElementById('topUserName').innerText = n;
+                const menuUser = document.getElementById('menuUserName');
+                if(menuUser) menuUser.innerText = n;
+            }
+            
+            renderUsers();
+            openManageUsers();
+            render();
+            saveData();
+        });
+    }
+
+    function deleteUser(name) {
+        if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
+        customConfirm(`Remove ${name} from housemates? Past expenses are kept.`, () => {
+            const idx = db.users.indexOf(name);
+            if (idx > -1) db.users.splice(idx, 1);
+            
+            const aIdx = db.activeUsers.indexOf(name);
+            if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
+
+            if (currentUser === name) {
+                closeManageUsers();
+                logout();
+            } else {
+                renderUsers();
+                openManageUsers();
+                render();
+                saveData();
+            }
+        });
+    }
+
+    function renderUsers() {
+        const btns = document.getElementById('userButtons');
+        btns.innerHTML = '';
+        const usersList = (db.users && db.users.length > 0) ? db.users : defaultUsers;
+        usersList.forEach(u => {
+            btns.innerHTML += `<button class="user-select-btn" onclick="login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`;
+        });
+    }
+
+    function formatDescDisplay(desc, origSym = '') {
         if (!desc) return "";
-        let cleanInput = desc.replace(/[•]/g, ' ').replace(/&bull;/g, ' ').replace(/\n+/g, ' ').trim();
+        let cleanInput = desc.replace(/[•+]/g, ' ').replace(/&bull;/g, ' ').replace(/\n+/g, ' ').trim();
         let tokens = cleanInput.split(/\s+/).filter(Boolean);
+        
         let processedDesc = tokens[0] || '';
+        if (/^\d+(\.\d+)?$/.test(processedDesc)) processedDesc = origSym + processedDesc;
+
         for (let i = 1; i < tokens.length; i++) {
-            if (/^(?:£|\$|€|Rs)?\d/.test(tokens[i])) processedDesc += ' &bull; ' + tokens[i];
-            else processedDesc += ' ' + tokens[i];
+            let t = tokens[i];
+            if (/^(?:£|\$|€|Rs)?\d/.test(t)) {
+                if (/^\d+(\.\d+)?$/.test(t)) t = origSym + t;
+                processedDesc += ' &bull; ' + t;
+            } else {
+                processedDesc += ' ' + t;
+            }
         }
         return processedDesc;
     }
@@ -439,19 +678,11 @@
         if (!dateStr || dateStr === "Unknown Date") return "Unknown Date";
         const parts = dateStr.split('/');
         if (parts.length !== 3) return dateStr;
-        
-        const d = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10) - 1;
-        const y = parseInt(parts[2], 10);
+        const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
         const dateObj = new Date(y, m, d);
-        
         if (isNaN(dateObj.getTime())) return dateStr;
-        
-        const day = dateObj.getDate();
-        const month = dateObj.toLocaleString('default', { month: 'short' });
-        const year = dateObj.getFullYear();
+        const day = dateObj.getDate(), month = dateObj.toLocaleString('default', { month: 'short' }), year = dateObj.getFullYear();
         const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th';
-        
         return `${day}${nth} ${month} ${year}`;
     }
 
@@ -459,25 +690,63 @@
         try {
             if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
             const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-        } catch (e) { alert("Clipboard block. Please copy manually."); }
+        } catch (e) { showToast("Copy manually.", 3000); }
     }
 
     function initializeDB() {
-        if (!db.expenses) db.expenses = []; if (!db.archives) db.archives = [];
+        if (!db.expenses) db.expenses = []; 
+        if (!db.archives) db.archives = [];
         if (!db.paidStatus) db.paidStatus = {};
         if (!db.startDate) db.startDate = new Date().toLocaleDateString('en-GB'); 
+        if (!db.users || db.users.length === 0) db.users = [...defaultUsers];
+        if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
     }
 
-    function loadData() {
+    async function loadData() {
         if (!navigator.onLine) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); return; }
         showToast("SYNCING...");
-        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': false } })
-        .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-        .then(data => {
-            if (needsSync) { loadLocalBackup(); saveData(); } 
-            else { db = data; initializeDB(); saveLocalBackup(); render(); document.getElementById('loading').style.display = 'none'; }
-        })
-        .catch(() => { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); });
+        
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
+                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' } 
+            });
+            if (!res.ok) throw new Error("Fetch failed");
+            
+            const data = await res.json();
+            let cloudDb = data.record ? data.record : data;
+            
+            // Offline merge safety check
+            if (needsSync && db.expenses && db.expenses.length > 0) {
+                if (!cloudDb.expenses) cloudDb.expenses = [];
+                let cloudIds = new Set(cloudDb.expenses.map(e => e.id).filter(Boolean));
+                let cloudExMap = {};
+                cloudDb.expenses.forEach(e => { if(e.id) cloudExMap[e.id] = e; });
+                
+                db.expenses.forEach(localEx => {
+                    if (!localEx.id) { localEx.id = Date.now().toString(36) + Math.random().toString(36).substring(2); localEx.timestamp = Date.now(); }
+                    if (!cloudIds.has(localEx.id)) { cloudDb.expenses.push(localEx); } 
+                    else if ((localEx.timestamp || 0) > (cloudExMap[localEx.id].timestamp || 0)) { Object.assign(cloudExMap[localEx.id], localEx); }
+                });
+                
+                cloudDb.expenses.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                for (let key in db.paidStatus) { cloudDb.paidStatus[key] = Math.max(cloudDb.paidStatus[key] || 0, db.paidStatus[key] || 0); }
+                db = cloudDb;
+                saveData(); 
+            } else {
+                db = cloudDb;
+                initializeDB();
+                renderUsers();
+                saveLocalBackup(); 
+                render(); 
+                document.getElementById('loading').style.display = 'none'; 
+            }
+            
+            processUploadQueue(); // Attempt any failed uploads
+        } catch (e) {
+            console.error("Data Load Error:", e);
+            showToast("OFFLINE - LOCAL MODE", 2000); 
+            loadLocalBackup();
+        }
     }
 
     function saveData() {
@@ -492,16 +761,29 @@
         .catch(() => { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); });
     }
 
-    function getSettlements(expenses, total) {
-        let balances = {}; users.forEach(u => balances[u] = -(total / 5));
-        expenses.forEach(e => balances[e.name] += e.amount);
+    function getSettlements(expenses, totalBase, specificActiveUsers = null) {
+        let balances = {}; 
+        let active = specificActiveUsers || db.activeUsers || db.users;
+        
+        active.forEach(u => balances[u] = 0);
+        expenses.forEach(e => { if (balances[e.name] === undefined) balances[e.name] = 0; });
+        
+        let perHead = totalBase / active.length;
+        active.forEach(u => balances[u] -= perHead);
+        
+        expenses.forEach(e => {
+            if (balances[e.name] !== undefined) balances[e.name] += e.amount;
+        });
+
         let debtors = [], creditors = [];
         for (let u in balances) {
             if (balances[u] < -0.01) debtors.push({ name: u, amt: Math.abs(balances[u]) });
             else if (balances[u] > 0.01) creditors.push({ name: u, amt: balances[u] });
         }
+        
         let txs = [], d = 0, c = 0;
         debtors.sort((a,b) => b.amt - a.amt); creditors.sort((a,b) => b.amt - a.amt);
+        
         while (d < debtors.length && c < creditors.length) {
             let amount = Math.min(debtors[d].amt, creditors[c].amt);
             txs.push({ from: debtors[d].name, to: creditors[c].name, amt: amount });
@@ -511,27 +793,65 @@
         return txs;
     }
 
+    function toggleActiveUser(u) {
+        if (!db.activeUsers) db.activeUsers = [...db.users];
+        const idx = db.activeUsers.indexOf(u);
+        if (idx > -1) {
+            if (db.activeUsers.length === 1) { showToast("At least 1 must be active.", 3000); return; }
+            db.activeUsers.splice(idx, 1);
+        } else {
+            db.activeUsers.push(u);
+        }
+        render();
+        saveData();
+    }
+
     function render() {
         const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
+        
+        if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
+        
+        const chkContainer = document.getElementById('cycleSplitCheckboxes');
+        chkContainer.innerHTML = db.users.map(u => {
+            const isChecked = db.activeUsers.includes(u);
+            const opac = isChecked ? '1' : '0.4';
+            return `<label class="split-label" style="opacity: ${opac};"><input type="checkbox" style="display:none;" onchange="toggleActiveUser('${u}')" ${isChecked ? 'checked' : ''}> <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${u}</span></label>`;
+        }).join('');
+
         let totalBase = 0;
         const list = document.getElementById('expenseList');
         
-        if (!db.expenses || db.expenses.length === 0) {
+        db.expenses.forEach(ex => { totalBase += ex.amount; });
+
+        let displayExpenses = [];
+        db.expenses.forEach((ex, originalIndex) => {
+            let isMine = true;
+            if (myViewActive) {
+                // Strictly filter to expenses logged by the current user
+                isMine = ex.name === currentUser;
+            }
+            if (isMine) displayExpenses.push({ ex, originalIndex });
+        });
+
+        if (!displayExpenses || displayExpenses.length === 0) {
             document.getElementById('currentExpensesWrapper').classList.remove('expanded');
-            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses logged.</div>";
+            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses.</div>";
         } else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
             let listHtml = `<div class="timeline-wrapper">`;
             let currentGroupDate = null;
 
-            db.expenses.forEach((ex, i) => {
-                totalBase += ex.amount;
-                let displayDesc = formatDescDisplay(ex.desc);
+            displayExpenses.forEach((item, renderIndex) => {
+                let ex = item.ex;
+                let originalIndex = item.originalIndex;
+                
+                let exSym = ex.originalSym || sym;
+                let displayDesc = formatDescDisplay(ex.desc, exSym);
                 
                 let exDate = ex.date || db.startDate || "Unknown Date"; 
                 if (exDate !== currentGroupDate) {
-                    let mt = i === 0 ? '5px' : '20px';
+                    let mt = (renderIndex === 0) ? '0px' : '20px';
                     listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`;
                     currentGroupDate = exDate;
                 }
@@ -540,19 +860,24 @@
                     <div class="linear-row">
                         <div class="item-main">
                             <span class="name-pill main" style="margin-bottom: 6px;">${ex.name}</span>
+                            ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
                             <div class="item-amt">${sym}${(ex.amount * rate).toFixed(2)}</div>
                             <div class="item-desc">${displayDesc}</div>
                         </div>
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <button class="action-icon" style="color:var(--accent);" onclick="copyExpense(${i})" title="Share Details">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        <div class="linear-meta">
+                            <button class="btn-circle" style="color: var(--text-muted); border-color: var(--border);" onclick="copyExpense(${originalIndex})" title="Share Details">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                             </button>
-                            <button class="action-icon" style="color:var(--danger);" onclick="deleteEx(${i})" title="Delete">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            ${ex.name === currentUser ? `
+                            <button class="btn-circle" style="color: var(--text-muted); border-color: var(--border);" onclick="editEx(${originalIndex})" title="Edit">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            </button>` : ''}
+                            <button class="btn-circle" style="color: var(--danger); border-color: var(--border);" onclick="deleteEx(${originalIndex})" title="Delete">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
                             ${ex.receipt ? `
-                            <button class="action-icon" style="color:var(--accent);" onclick="viewImg('${ex.receipt}')" title="View Receipt">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <button class="btn-circle" style="color:var(--accent); border-color: var(--border);" onclick="viewImg('${ex.receipt}')" title="View Receipt">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle></svg>
                             </button>` : ''}
                         </div>
                     </div>`;
@@ -561,9 +886,9 @@
         }
 
         document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
-        document.getElementById('perPerson').innerText = sym + (totalBase / 5 * rate).toFixed(0);
-
-        const txs = getSettlements(db.expenses, totalBase);
+        document.getElementById('perPerson').innerText = sym + ((totalBase / db.activeUsers.length) * rate).toFixed(0);
+        
+        const txs = getSettlements(db.expenses, totalBase, db.activeUsers);
         let credMap = {};
         txs.forEach(t => {
             if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
@@ -575,201 +900,620 @@
 
         document.getElementById('settlementCount').innerText = Object.keys(credMap).length;
         document.getElementById('settlementCount').style.display = Object.keys(credMap).length > 0 ? 'inline-block' : 'none';
-
+        
         let sHtml = "";
         for (let c in credMap) {
             const data = credMap[c], rem = data.totalOwed - data.received, can = currentUser === c;
-            sHtml += `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toFixed(2)}</div></div>`;
+            
+            let showCreditor = !myViewActive || (c === currentUser) || data.txs.some(t => t.from === currentUser);
+            if (!showCreditor) continue;
+
+            let sHtmlTemp = `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toFixed(2)}</div></div>`;
+            let hasVisibleTxs = false;
+
             data.txs.forEach((t, ti) => {
+                if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
+                hasVisibleTxs = true;
                 const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
-                sHtml += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toFixed(2)}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${(t.paid * rate).toFixed(2)}</div>` : ''}</div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
+                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem;"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}">${sym}${(tr * rate).toFixed(2)}</b></div></div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
             });
-            sHtml += `</div>`;
+            sHtmlTemp += `</div>`;
+            
+            if (hasVisibleTxs) sHtml += sHtmlTemp;
         }
-        document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
+        document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All clear.</div>";
+        
         renderArchives(sym, rate);
     }
 
     function toggleFullPaid(key, totalBaseAmt) {
         if(!db.paidStatus) db.paidStatus = {};
-        db.paidStatus[key] = (totalBaseAmt - (db.paidStatus[key] || 0)) <= 0.01 ? 0 : totalBaseAmt;
+        const current = db.paidStatus[key] || 0;
+        if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } 
+        else { db.paidStatus[key] = totalBaseAmt; }
         render(); saveData();
     }
 
     function logPayment(key, remainingLocal, rate) {
-        let val = prompt(`Log Partial Payment\nRemaining balance: ${remainingLocal.toFixed(2)}\n\nEnter amount received (Type 0 to clear record):`, remainingLocal.toFixed(2));
-        if (val === null || val.trim() === "") return;
-        let amt = parseFloat(val); if (isNaN(amt) || amt < 0) return;
-        if(!db.paidStatus) db.paidStatus = {};
-        if (amt === 0) { db.paidStatus[key] = 0; } else { db.paidStatus[key] = (db.paidStatus[key] || 0) + (amt / rate); }
-        render(); saveData();
+        customPrompt(`Log Partial Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
+            if (val === null || val.trim() === "") return;
+            let amtLocal = parseFloat(val);
+            if (isNaN(amtLocal) || amtLocal < 0) return;
+
+            if(!db.paidStatus) db.paidStatus = {};
+            if (amtLocal === 0) { db.paidStatus[key] = 0; } 
+            else {
+                if(!db.paidStatus[key]) db.paidStatus[key] = 0;
+                db.paidStatus[key] += (amtLocal / rate);
+            }
+            render(); saveData();
+        }, "decimal");
     }
 
     function toggleArchiveFullPaid(arcIdx, key, totalBaseAmt) {
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
-        db.archives[arcIdx].paidStatus[key] = (totalBaseAmt - (db.archives[arcIdx].paidStatus[key] || 0)) <= 0.01 ? 0 : totalBaseAmt;
+        const current = db.archives[arcIdx].paidStatus[key] || 0;
+        if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } 
+        else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
         render(); saveData();
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
-        let val = prompt(`Log Partial Payment (Archive)\nRemaining balance: ${remainingLocal.toFixed(2)}\n\nEnter amount received (Type 0 to clear record):`, remainingLocal.toFixed(2));
-        if (val === null || val.trim() === "") return;
-        let amt = parseFloat(val); if (isNaN(amt) || amt < 0) return;
-        if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
-        if (amt === 0) { db.archives[arcIdx].paidStatus[key] = 0; } else { db.archives[arcIdx].paidStatus[key] = (db.archives[arcIdx].paidStatus[key] || 0) + (amt / rate); }
-        render(); saveData();
+        customPrompt(`Log Archive Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
+            if (val === null || val.trim() === "") return;
+            let amtLocal = parseFloat(val);
+            if (isNaN(amtLocal) || amtLocal < 0) return;
+
+            if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
+            if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } 
+            else {
+                if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0;
+                db.archives[arcIdx].paidStatus[key] += (amtLocal / rate);
+            }
+            render(); saveData();
+        }, "decimal");
     }
 
     function renderArchives(sym, rate) {
         const arcDiv = document.getElementById('archiveList');
         let globalUnpaidHtml = "", hasUnpaidPast = false, totalUnpaidCount = 0;
 
-        document.getElementById('archivesCount').innerText = db.archives.length;
-        document.getElementById('archivesCount').style.display = db.archives.length > 0 ? 'inline-block' : 'none';
+        const arcCount = db.archives ? db.archives.length : 0;
+        const arcBadge = document.getElementById('archivesCount');
+        if(arcBadge) {
+            arcBadge.innerText = arcCount;
+            arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none';
+        }
 
         if (!db.archives || db.archives.length === 0) {
             arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>";
         } else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
-                const txs = getSettlements(a.details, a.total);
-                let credMap = {}, cycleHasUnpaid = false, cycleUnpaidHtml = "";
+                const pastActive = a.activeUsers || db.users;
+                const txs = getSettlements(a.details, a.total, pastActive);
+                let credMap = {};
+                const displayStart = formatNiceDate(a.start);
+                const displayEnd = formatNiceDate(a.end);
+                
+                let cycleHasUnpaid = false;
+                let cycleUnpaidHtml = "";
 
                 txs.forEach(t => {
                     if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
                     credMap[t.to].totalOwed += t.amt;
-                    const key = `${t.from}_${t.to}`, amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
+                    const key = `${t.from}_${t.to}`;
+                    const amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
                     if (amountPaidBase > 0) credMap[t.to].received += amountPaidBase;
                     credMap[t.to].txs.push({ ...t, amountPaidBase, key });
 
                     const txRemainingBase = t.amt - amountPaidBase;
                     if (txRemainingBase > 0.01) {
+                        if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
+                        
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
-                        cycleUnpaidHtml += `<div class="flow-row" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toFixed(2)}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${pdLocal.toFixed(2)}</div>` : ''}</div><div>${canMarkGlobal ? `<div class="action-group"><button class="btn-pill" onclick="logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button></div>` : `<span class="name-pill">Pending</span>`}</div></div>`;
+                        
+                        cycleUnpaidHtml += `
+                        <div class="flow-row" style="padding: 12px 0; border:none;">
+                            <div>
+                                <div style="font-size:0.9rem; color:var(--text-main);">
+                                    <b>${t.from}</b> owes <b>${t.to}</b>
+                                </div>
+                                <div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">
+                                    ${sym}${remLocal.toFixed(2)}
+                                </div>
+                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${pdLocal.toFixed(2)}</div>` : ''}
+                            </div>
+                            <div>
+                                ${canMarkGlobal ? `
+                                    <div class="action-group">
+                                        <button class="btn-pill" onclick="logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
+                                        <button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
+                                    </div>
+                                ` : `<span class="name-pill">Pending</span>`}
+                            </div>
+                        </div>`;
                     }
                 });
 
-                if (cycleHasUnpaid) {
-                    globalUnpaidHtml += `<div class="archive-item" style="margin-bottom: 8px;"><div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${formatNiceDate(a.start)} &rarr; ${formatNiceDate(a.end)}</div>${cycleUnpaidHtml}</div>`;
+                if (cycleHasUnpaid && cycleUnpaidHtml !== "") {
+                    globalUnpaidHtml += `
+                    <div class="archive-item" style="margin-bottom: 8px;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${displayStart} &rarr; ${displayEnd}</div>
+                        ${cycleUnpaidHtml}
+                    </div>`;
                 }
 
                 let archiveSettleHtml = "", hasUnpaidInArchive = false, archiveUnpaidCount = 0;
+
                 for (let cred in credMap) {
-                    credMap[cred].txs.forEach(t => {
+                    const data = credMap[cred];
+                    data.txs.forEach(t => {
                         const txRemainingBase = t.amt - t.amountPaidBase;
                         if (txRemainingBase > 0.01) {
+                            if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
+                            
                             hasUnpaidInArchive = true; archiveUnpaidCount++;
-                            const remLocal = txRemainingBase * rate, pdLocal = t.amountPaidBase * rate, canMark = currentUser === cred;
-                            archiveSettleHtml += `<div class="flow-row" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remLocal.toFixed(2)}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${pdLocal.toFixed(2)}</div>` : ''}</div><div>${canMark ? `<div class="action-group"><button class="btn-pill" onclick="logArchivePayment(${idx}, '${t.key}', ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button></div>` : `<span class="name-pill">Pending</span>`}</div></div>`;
+                            const remainingLocal = txRemainingBase * rate;
+                            const paidLocal = t.amountPaidBase * rate;
+                            const canMark = currentUser === cred;
+
+                            archiveSettleHtml += `
+                            <div class="flow-row" style="padding: 12px 0; border:none;">
+                                <div>
+                                    <div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div>
+                                    <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toFixed(2)}</div>
+                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${paidLocal.toFixed(2)}</div>` : ''}
+                                </div>
+                                <div>
+                                    ${canMark ? `
+                                        <div class="action-group">
+                                            <button class="btn-pill" onclick="logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
+                                            <button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
+                                        </div>
+                                    ` : `<span class="name-pill">Pending</span>`}
+                                </div>
+                            </div>`;
                         }
                     });
                 }
 
                 let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
 
-                let logsHtml = (a.details || []).map(d => `<div class="flow-row" style="padding:10px 0; border:none;"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${d.name}</span><span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toFixed(2)}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${formatDescDisplay(d.desc)}</div></div>${d.receipt ? `<button class="action-icon" style="color:var(--accent);" onclick="viewImg('${d.receipt}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>` : ''}</div>`).join('');
+                let hasVisibleLogs = false;
+                let logsHtml = (a.details || []).map(d => {
+                    if (myViewActive) {
+                        const isMine = d.name === currentUser;
+                        if (!isMine) return '';
+                    }
+                    hasVisibleLogs = true;
+                    let exSym = d.originalSym || sym;
+                    let displayDesc = formatDescDisplay(d.desc, exSym);
+                    return `
+                    <div class="flow-row" style="padding:10px 0; border:none;">
+                        <div style="flex-grow:1; padding-right:15px;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                                <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${d.name}</span>
+                                <span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toFixed(2)}</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
+                        </div>
+                        ${d.receipt ? `
+                        <button class="btn-circle" style="border-color:var(--border);" onclick="viewImg('${d.receipt}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle></svg>
+                        </button>` : ''}
+                    </div>`
+                }).join('');
 
-                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header" onclick="toggleSection(this)"><div><div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${formatNiceDate(a.start)} &rarr; ${formatNiceDate(a.end)}</div><div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toFixed(0)}</div></div><div style="display:flex; gap:10px; align-items:center;"><button class="action-icon" onclick="downloadArchive(event, ${idx})" title="Snapshot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button><button class="action-icon" style="color:var(--danger);" onclick="deleteArchive(event, ${idx})" title="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button><svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()">${finalUnpaidBlock}<div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};"><h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4><div>${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}</div></div></div></div>`;
+                if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
+
+                return `
+                <div class="archive-item" id="archive-card-${idx}">
+                    <div class="archive-header" onclick="toggleSection(this)">
+                        <div>
+                            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div>
+                            <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toFixed(0)}</div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <button class="btn-circle" style="color:var(--text-muted); border-color:var(--border);" onclick="downloadArchive(event, ${idx})" title="Snapshot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>
+                            <button class="btn-circle" style="color: var(--danger); border-color: var(--border);" onclick="deleteArchive(event, ${idx})" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                    </div>
+                    <div class="archive-details" onclick="event.stopPropagation()">
+                        ${finalUnpaidBlock}
+                        <div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};">
+                            <h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4>
+                            <div>
+                                ${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        document.getElementById('unpaidGlobalCount').innerText = totalUnpaidCount;
-        document.getElementById('unpaidGlobalCount').style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none';
-        document.getElementById('unpaidArchivesSection').style.display = hasUnpaidPast ? 'block' : 'none';
-        document.getElementById('unpaidArchivesList').innerHTML = globalUnpaidHtml;
-        document.getElementById('unpaidDebtsNoticeWrapper').style.display = hasUnpaidPast ? 'block' : 'none';
+        const unpaidSection = document.getElementById('unpaidArchivesSection');
+        const unpaidList = document.getElementById('unpaidArchivesList');
+        const unpaidNoticeWrapper = document.getElementById('unpaidDebtsNoticeWrapper');
+        const globalUnpaidBadge = document.getElementById('unpaidGlobalCount');
+        
+        if (globalUnpaidBadge) {
+            globalUnpaidBadge.innerText = totalUnpaidCount;
+            globalUnpaidBadge.style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none';
+        }
+
+        if (hasUnpaidPast) {
+            unpaidSection.style.display = 'block';
+            unpaidList.innerHTML = globalUnpaidHtml;
+            if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'block';
+        } else {
+            unpaidSection.style.display = 'none';
+            unpaidList.innerHTML = "";
+            if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'none';
+        }
     }
 
     async function downloadArchive(ev, idx) {
-        ev.stopPropagation(); const card = document.getElementById(`archive-card-${idx}`), was = card.classList.contains('expanded');
-        if (!was) card.classList.add('expanded'); showToast("SNAP...", 2000); await new Promise(r => setTimeout(r, 350));
+        ev.stopPropagation();
+        const card = document.getElementById(`archive-card-${idx}`);
+        const wasExpanded = card.classList.contains('expanded');
+        
+        if (!wasExpanded) card.classList.add('expanded');
+        
+        const loader = document.getElementById('loading');
+        loader.innerText = "SNAP...";
+        loader.style.display = 'block';
+
+        await new Promise(r => setTimeout(r, 350));
+
+        const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc';
         try {
-            const canvas = await html2canvas(card, { backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc', scale: 2 });
-            const link = document.createElement('a'); link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`; link.href = canvas.toDataURL('image/png'); link.click();
-        } catch (e) { alert("Snapshot failed."); }
-        if (!was) card.classList.remove('expanded');
+            const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2 });
+            const link = document.createElement('a');
+            link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (e) { showToast("Failed to capture snapshot.", 3000); }
+
+        if (!wasExpanded) card.classList.remove('expanded');
+        loader.innerText = "SYNCING";
+        loader.style.display = 'none';
+    }
+
+    async function processUploadQueue() {
+        let queue = JSON.parse(localStorage.getItem('img_queue') || '[]');
+        if (queue.length === 0 || !navigator.onLine) return;
+        
+        let updatedDb = false;
+        let remainingQueue = [];
+        
+        for (let item of queue) {
+            try {
+                const base64Data = item.image.split(',')[1];
+                const formData = new FormData();
+                formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
+                formData.append("image", base64Data);
+
+                const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
+                const json = await res.json();
+                
+                if (json.success) {
+                    let ex = db.expenses.find(e => e.id === item.id);
+                    if (ex) {
+                        ex.receipt = json.data.url;
+                        ex.receiptDelete = json.data.delete_url;
+                        updatedDb = true;
+                    }
+                } else {
+                    remainingQueue.push(item);
+                }
+            } catch(e) {
+                remainingQueue.push(item);
+            }
+        }
+        
+        localStorage.setItem('img_queue', JSON.stringify(remainingQueue));
+        if (updatedDb) { render(); saveData(); }
+    }
+
+    async function uploadToImgBB(file) {
+        showToast("UPLOADING RECEIPT...", 0);
+        try {
+            const dataUrl = await compressImage(file);
+            if (!dataUrl) { showToast("SYNCING...", 0); return null; }
+            
+            const base64Data = dataUrl.split(',')[1];
+            const formData = new FormData();
+            formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
+            formData.append("image", base64Data);
+
+            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
+            const json = await res.json();
+            if (json.success) return { url: json.data.url, delete_url: json.data.delete_url };
+            else return { failedBase64: dataUrl }; 
+        } catch (e) {
+            return { failedBase64: await compressImage(file) }; 
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
     }
 
     async function addExpense() {
-        const rawInput = document.getElementById('amtInput').value, gNote = document.getElementById('groupNote').value, file = document.getElementById('receiptInput').files[0], rate = rates[document.getElementById('currency').value];
-        if (!rawInput.trim()) { alert("Please enter an expense amount."); return; }
-        const matches = rawInput.match(/\d+(\.\d+)?/g); if(!matches) { alert("No valid amount."); return; }
-        let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate, receiptData = file ? await compressImage(file) : null;
+        const rawInput = document.getElementById('amtInput').value;
+        const gNote = document.getElementById('groupNote').value;
+        const file = document.getElementById('receiptInput').files[0];
+        const cur = document.getElementById('currency').value;
+        const sym = curSymbols[cur];
+        const rate = rates[cur];
+        
+        if (!rawInput.trim()) { showToast("Please enter an amount.", 3000); return; }
+        const matches = rawInput.match(/\d+(\.\d+)?/g);
+        if(!matches) { showToast("No valid amount found.", 3000); return; }
+        
+        const addBtn = document.getElementById('mainAddBtn');
+        addBtn.disabled = true;
+        addBtn.style.opacity = '0.5';
+
+        let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate;
+        
+        let receiptData = null;
+        let receiptDeleteUrl = null;
+        let failedUploadFile = null;
+        
+        if (file) {
+            const uploadRes = await uploadToImgBB(file);
+            if (uploadRes && uploadRes.url) {
+                receiptData = uploadRes.url;
+                receiptDeleteUrl = uploadRes.delete_url;
+            } else if (uploadRes && uploadRes.failedBase64) {
+                failedUploadFile = uploadRes.failedBase64;
+            }
+        }
+        
         let descToSave = gNote ? `[${gNote}] \n ${rawInput}` : rawInput;
+        const expenseId = Date.now().toString(36) + Math.random().toString(36).substring(2);
         
-        const today = new Date();
-        const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+        if (editingIndex > -1) {
+            db.expenses[editingIndex].amount = baseAmt;
+            db.expenses[editingIndex].desc = descToSave;
+            db.expenses[editingIndex].originalSym = sym;
+            db.expenses[editingIndex].edited = true;
+            db.expenses[editingIndex].timestamp = Date.now();
+            
+            if (receiptData) {
+                db.expenses[editingIndex].receipt = receiptData;
+                db.expenses[editingIndex].receiptDelete = receiptDeleteUrl;
+            }
+            if (failedUploadFile) {
+                let q = JSON.parse(localStorage.getItem('img_queue') || '[]');
+                q.push({ id: db.expenses[editingIndex].id, image: failedUploadFile });
+                localStorage.setItem('img_queue', JSON.stringify(q));
+            }
+            editingIndex = -1;
+            showToast("EDIT SAVED", 2000);
+        } else {
+            const today = new Date();
+            const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+            if (!db.startDate || db.startDate === "Unknown Date") db.startDate = dateStr; 
+            
+            db.expenses.unshift({ 
+                id: expenseId,
+                timestamp: Date.now(),
+                name: currentUser, 
+                amount: baseAmt, 
+                desc: descToSave, 
+                originalSym: sym,
+                receipt: receiptData, 
+                receiptDelete: receiptDeleteUrl,
+                date: dateStr 
+            });
+            
+            if (failedUploadFile) {
+                let q = JSON.parse(localStorage.getItem('img_queue') || '[]');
+                q.push({ id: expenseId, image: failedUploadFile });
+                localStorage.setItem('img_queue', JSON.stringify(q));
+            }
+        }
         
-        db.expenses.unshift({ name: currentUser, amount: baseAmt, desc: descToSave, receipt: receiptData, date: dateStr });
-        const ai = document.getElementById('amtInput'); ai.value = ""; ai.style.height = "40px";
-        document.getElementById('groupNote').value = ""; document.getElementById('receiptInput').value = ""; document.getElementById('groupNote').style.display = "none";
+        const amtInputEl = document.getElementById('amtInput');
+        amtInputEl.value = ""; 
+        amtInputEl.style.height = "40px";
+        document.getElementById('groupNote').value = ""; 
+        document.getElementById('receiptInput').value = "";
+        document.getElementById('groupNote').style.display = "none";
+        
+        addBtn.disabled = false; addBtn.style.opacity = '1';
+
         render(); saveData();
+        if(failedUploadFile) processUploadQueue();
     }
 
-    function compressImage(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader(); reader.readAsDataURL(file);
-            reader.onerror = () => { alert("File error."); resolve(null); };
-            reader.onload = (e) => {
-                const img = new Image(); img.src = e.target.result;
-                img.onerror = () => { alert("Image error."); resolve(null); };
-                img.onload = () => {
-                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                    if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6));
-                };
-            };
+    function editEx(originalIndex) {
+        const ex = db.expenses[originalIndex];
+        if (ex.name !== currentUser) { showToast("Cannot edit others' expenses.", 3000); return; }
+        
+        let rawDesc = ex.desc, note = "";
+        const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/);
+        if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
+        
+        document.getElementById('amtInput').value = rawDesc;
+        
+        editingIndex = originalIndex;
+        
+        const noteField = document.getElementById('groupNote');
+        noteField.style.display = 'block';
+        if (note) noteField.value = note;
+
+        document.getElementById('amtInput').focus();
+        showToast("EDITING MODE", 0);
+    }
+
+    function exportCSV() {
+        let csv = "HOUSE EXPENSES EXPORT\n\n";
+        const sym = document.getElementById('currency').value, rate = rates[sym];
+        let totalBase = db.expenses.reduce((a,b)=>a+b.amount,0);
+        let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length;
+        
+        csv += `Cycle Start,${formatNiceDate(db.startDate)}\n`;
+        csv += `Current Total,${sym}${(totalBase * rate).toFixed(2)}\n`;
+        csv += `Per Head (Base),${sym}${(totalBase / activeCount * rate).toFixed(2)}\n`;
+        
+        let momText = "N/A";
+        if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) {
+            const diff = ((totalBase - db.archives[0].total) / db.archives[0].total) * 100;
+            momText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% vs last cycle`;
+        }
+        csv += `Trend,${momText}\n\n`;
+        
+        csv += "Date,Name,Amount,Currency,Description,Status,Receipt URL\n";
+        db.expenses.forEach(e => {
+            let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
+            let receipt = e.receipt || 'None';
+            csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},Current,${receipt}\n`;
         });
-    }
-
-    async function copyExpense(i) {
-        const ex = db.expenses[i], rate = rates[document.getElementById('currency').value], sym = curSymbols[document.getElementById('currency').value];
-        let rc = formatDescDisplay(ex.desc).split('&bull;').map(p => '• ' + p.trim()).join('\n').replace(/^• \[/g, '[');
-        await copyToClipboard(`Expense: ${ex.name}\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${rc}`);
-        alert("Copied!");
-    }
-
-    async function copySummary() {
-        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
-        let totalBase = 0; db.expenses.forEach(e => totalBase += e.amount);
-        let bals = {}, today = new Date(), tdS = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
-        users.forEach(u => bals[u] = -(totalBase / 5)); db.expenses.forEach(e => bals[e.name] += e.amount);
-        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(tdS)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(totalBase / 5 * rate).toFixed(2)}\n\n*BALANCES:*\n`;
-        users.forEach(u => {
-            let b = bals[u] * rate;
-            txt += b < -0.01 ? `${u}: ❌ Owes ${sym}${Math.abs(b).toFixed(2)}\n` : b > 0.01 ? `${u}: ➕ Gets ${sym}${b.toFixed(2)}\n` : `${u}: ✅ Settled\n`;
+        
+        db.archives.forEach(arc => {
+            csv += `\nARCHIVE: ${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`;
+            csv += "Date,Name,Amount,Currency,Description,Status,Receipt URL\n";
+            arc.details.forEach(e => {
+                let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
+                let receipt = e.receipt || 'None';
+                let eDate = e.date || arc.start;
+                csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},Archived,${receipt}\n`;
+            });
         });
-        txt += `\n*SETTLEMENTS:*\n`;
-        const txs = getSettlements(db.expenses, totalBase);
-        txs.forEach(t => {
-            const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0;
-            txt += `${t.from} -> ${t.to}: ${sym}${((t.amt - pd) * rate).toFixed(2)}${t.amt - pd <= 0.01 ? ' (Settled)' : pd > 0.01 ? ` (Paid: ${sym}${(pd * rate).toFixed(2)})` : ''}\n`;
-        });
-        if (txs.length === 0) txt += "All debts are settled.\n";
-        await copyToClipboard(txt); alert("Summary Copied!");
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.setAttribute('href', window.URL.createObjectURL(blob));
+        a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`);
+        a.click();
+        showToast("EXPORTED CSV", 2000);
     }
 
-    function deleteEx(i) { if(confirm("Delete?")) { db.expenses.splice(i,1); render(); saveData(); } }
-    function deleteArchive(ev, i) { ev.stopPropagation(); if(confirm("Delete archive?")) { db.archives.splice(i,1); render(); saveData(); } }
-    function changeStartDate() { const val = prompt("Start Date (DD/MM/YYYY):", db.startDate); if(val) { db.startDate = val; render(); saveData(); } }
+    function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); }; }; }); }
+    
+    async function copyExpense(originalIndex) { 
+        const ex = db.expenses[originalIndex], cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur], exSym = ex.originalSym || sym; 
+        let cleanDesc = formatDescDisplay(ex.desc, exSym).split('&bull;').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
+        let txt = `Expense logged by ${ex.name}:\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${cleanDesc}`;
+        await copyToClipboard(txt); showToast("Copied!", 2000); 
+    }
+    
+    async function copySummary() { const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur]; let totalBase = 0; db.expenses.forEach(e => { totalBase += e.amount; }); const activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; const perHead = totalBase / activeCount; let balances = {}; db.users.forEach(u => balances[u] = 0); let active = db.activeUsers || db.users; active.forEach(u => balances[u] -= perHead); db.expenses.forEach(e => { if (balances[e.name] !== undefined) balances[e.name] += e.amount; }); const todayStr = `${new Date().getDate().toString().padStart(2, '0')}/${(new Date().getMonth() + 1).toString().padStart(2, '0')}/${new Date().getFullYear()}`; let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(perHead * rate).toFixed(2)}\n\n*BALANCES:*\n`; db.users.forEach(u => { let bal = balances[u] * rate; if (bal < -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal > 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; }); txt += `\n*SETTLEMENTS:*\n`; const txs = getSettlements(db.expenses, totalBase, db.activeUsers); txs.forEach(t => { const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0, rem = t.amt - pd; let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; }); if (txs.length === 0) txt += "All debts are settled.\n"; await copyToClipboard(txt); showToast("Summary Copied!", 2000); }
+    
+    let deletedExpenseCache = null;
+    let undoTimeout = null;
+
+    function deleteEx(originalIndex) { 
+        deletedExpenseCache = { index: originalIndex, data: db.expenses[originalIndex] };
+        db.expenses.splice(originalIndex, 1); 
+        render(); saveData(); 
+        
+        showToast(`Deleted <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="undoDelete()">UNDO</span>`, 5000);
+        
+        clearTimeout(undoTimeout);
+        undoTimeout = setTimeout(() => {
+            if (deletedExpenseCache && deletedExpenseCache.data.receiptDelete) {
+                fetch(deletedExpenseCache.data.receiptDelete, { mode: 'no-cors' }).catch(() => {});
+            }
+            deletedExpenseCache = null;
+        }, 5000);
+    }
+
+    function undoDelete() {
+        if (deletedExpenseCache) {
+            db.expenses.splice(deletedExpenseCache.index, 0, deletedExpenseCache.data);
+            deletedExpenseCache = null;
+            clearTimeout(undoTimeout);
+            showToast("RESTORED", 2000);
+            render(); saveData();
+        }
+    }
+    
+    function deleteArchive(ev, i) { 
+        ev.stopPropagation(); 
+        customConfirm("Delete this archive permanently?", () => { 
+            const arc = db.archives[i];
+            arc.details.forEach(ex => { if (ex.receiptDelete) fetch(ex.receiptDelete, { mode: 'no-cors' }).catch(() => {}); });
+            db.archives.splice(i,1); 
+            render(); saveData(); 
+        }); 
+    }
+    
+    function changeStartDate() { 
+        customPrompt("Start Date (DD/MM/YYYY):", db.startDate, (val) => {
+            if(val && val.trim() !== "") { db.startDate = val.trim(); render(); saveData(); }
+        }); 
+    }
+
     function viewImg(data) { const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc'; const w = window.open(""); w.document.write(`<body style="margin:0;background:${bgColor};display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh;"></body>`); }
     
     function endMonth() {
-        if (!db.expenses || db.expenses.length === 0) { alert("No expenses yet."); return; }
-        if(!confirm("End month and archive?")) return;
-        let total = 0; db.expenses.forEach(e => total += e.amount);
-        const today = new Date(), tdStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
-        db.archives.unshift({ start: db.startDate, end: tdStr, total: total, details: [...db.expenses], paidStatus: {...db.paidStatus} });
-        if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
-        db.expenses = []; db.paidStatus = {}; db.startDate = tdStr; render(); saveData();
+        if (!db.expenses || db.expenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
+        
+        customConfirm("End the current month and move expenses to archive?", () => {
+            let total = 0; db.expenses.forEach(e => total += e.amount);
+            if(!db.archives) db.archives = [];
+            const today = new Date();
+            const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+            
+            db.archives.unshift({ 
+                start: db.startDate, end: endDateStr, total: total, 
+                details: [...db.expenses], paidStatus: {...db.paidStatus}, activeUsers: [...(db.activeUsers || db.users)]
+            });
+            
+            if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
+            
+            db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr; db.activeUsers = [...db.users]; 
+            render(); saveData();
+        });
     }
 
     function logout() { localStorage.removeItem('house_user'); location.reload(); }
-    function login(u) { currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = u; document.getElementById('menuUserName').innerText = u; render(); }
+    
+    function login(u) { 
+        currentUser = u; 
+        localStorage.setItem('house_user', u); 
+        document.getElementById('loginOverlay').style.display='none'; 
+        document.getElementById('topUserName').innerText = u; 
+        const menuUser = document.getElementById('menuUserName');
+        if(menuUser) menuUser.innerText = u;
+        render(); 
+    }
 
-    window.addEventListener('online', () => { if (needsSync) { showToast("RESTORING SYNC..."); saveData(); } else loadData(); });
-    window.addEventListener('offline', () => showToast("YOU ARE OFFLINE", 2000));
-    window.onload = () => { const btns = document.getElementById('userButtons'); users.forEach(u => btns.innerHTML += `<button class="user-select-btn" onclick="login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`); if(currentUser) login(currentUser); loadData(); };
+    // Auto-Retry logic hooked into focus and online events
+    window.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible') processUploadQueue();
+    });
+
+    window.addEventListener('online', () => { 
+        if (needsSync) { showToast("RESTORING SYNC..."); saveData(); } 
+        else { loadData(); processUploadQueue(); }
+    });
+    
+    window.addEventListener('offline', () => { showToast("YOU ARE OFFLINE", 2000); });
+    
+    window.onload = () => {
+        const backup = localStorage.getItem('house_db_backup');
+        if (backup) { try { db = JSON.parse(backup); } catch(e){} }
+        initializeDB();
+        renderUsers();
+
+        if(currentUser) {
+            document.getElementById('loginOverlay').style.display='none';
+            document.getElementById('topUserName').innerText = currentUser;
+            const menuUser = document.getElementById('menuUserName');
+            if(menuUser) menuUser.innerText = currentUser;
+            render(); 
+        } else {
+            document.getElementById('loginOverlay').style.display='flex';
+        }
+        
+        loadData();
+        fetchLiveRates();
+    };
 </script>
 </body>
 </html>
