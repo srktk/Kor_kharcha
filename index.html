@@ -17,12 +17,11 @@
         let themeTimeout;
 
         function applyTheme() {
-            localStorage.removeItem('house_theme');
-
+            localStorage.removeItem('house_theme'); 
             const savedTime = sessionStorage.getItem('house_theme_time');
             let savedTheme = sessionStorage.getItem('house_theme');
 
-            if (savedTime && (Date.now() - parseInt(savedTime) > 600000)) {
+            if (savedTime && (Date.now() - parseInt(savedTime) > 600000)) { 
                 sessionStorage.removeItem('house_theme');
                 sessionStorage.removeItem('house_theme_time');
                 savedTheme = null;
@@ -68,13 +67,12 @@
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
         html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; }
         
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
-        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
         .action-icon:hover { color: var(--accent); }
@@ -92,6 +90,9 @@
         @keyframes highlight-glow { 0% { background-color: var(--accent-glow); } 100% { background-color: transparent; } }
         .highlight-pulse { animation: highlight-glow 1.5s ease-out; }
 
+        @keyframes input-glow { 0% { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: var(--border); } 50% { box-shadow: 0 0 15px 2px var(--accent); border-color: var(--accent); } 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: var(--border); } }
+        .intro-glow { animation: input-glow 2.5s ease-in-out infinite; }
+
         .hero-section { padding: 25px 20px 20px 20px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
         .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; }
         .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); }
@@ -106,15 +107,15 @@
         .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
         .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
         .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: none; }
-        .item-main { flex: 1; padding-right: 10px; }
+        .item-main { flex: 1; padding-right: 10px; min-width: 0; }
         .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
-        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
-        .linear-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 105px; }
+        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; word-wrap: break-word; }
+        .linear-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 150px; }
 
         .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
         .input-section > * { pointer-events: auto; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; }
-        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); }
         .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; line-height: 1.4; scrollbar-width: none; }
         .chat-textarea::-webkit-scrollbar { display: none; }
         .chat-btn { background: transparent; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
@@ -134,9 +135,13 @@
         .flow-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .flow-row.no-border { border-bottom: none; }
         .action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
-        .btn-pill { background: transparent; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 0.7rem; color: var(--text-muted); cursor: pointer; font-weight: 700; white-space: nowrap; transition: 0.2s; }
-        .btn-pill:hover { border-color: var(--text-muted); color: var(--text-main); }
+        
+        .btn-pill { background: transparent; border: 1px solid var(--border); border-radius: 16px; padding: 5px 12px; font-size: 0.65rem; color: var(--text-muted); cursor: pointer; font-weight: 800; white-space: nowrap; transition: 0.2s; }
+        .btn-pill:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(0,0,0,0.03); }
+        [data-theme="dark"] .btn-pill:hover { background: rgba(255,255,255,0.05); border-color: var(--text-main); color: var(--text-main); }
         .btn-pill.primary { border-color: var(--accent); color: var(--accent); background: rgba(45, 212, 191, 0.05); }
+        .btn-pill.danger { border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .btn-pill.success { background: var(--success); color: #000; border-color: var(--success); }
         
         .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 5px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
         .flow-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
@@ -171,7 +176,7 @@
 
 <div id="loading">SYNCING...</div>
 
-<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:340px; text-align:center;">
         <h2 style="margin:0 0 25px 0; font-size: 1.4rem; font-weight:900; letter-spacing:-0.5px;">Select User</h2>
         <div id="userButtons" style="display: flex; flex-direction: column;"></div>
@@ -183,6 +188,7 @@
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Manage Housemates</h2>
         <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
         <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <input type="text" id="newUserName" class="chat-note" placeholder="New housemate..." style="flex:1; padding:10px 12px; margin:0; border:1px solid var(--border);">
             <button class="btn-glowing" style="width:auto; padding:10px 15px; margin:0;" onclick="addUser()">Add</button>
         </div>
         <button class="btn-glowing" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="closeManageUsers()">Done</button>
@@ -290,9 +296,7 @@
         <div class="flow-header" onclick="toggleSection(this)">
             <h3 class="flow-title">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
             <div style="display:flex; align-items:center; gap:15px;">
-                <button class="btn-circle" style="color:var(--text-muted); width: 28px; height: 28px; border-color: var(--border);" onclick="event.stopPropagation(); copySummary()" title="Copy Summary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                </button>
+                <button class="btn-pill" style="margin:0; padding:4px 10px;" onclick="event.stopPropagation(); copySummary()">Copy Summary</button>
                 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
         </div>
@@ -336,7 +340,7 @@
 
     <div class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
         <div class="flow-header" onclick="toggleSection(this)">
-            <h3 class="flow-title">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
+            <h3 class="flow-title" onclick="triggerSecretBackup(event)">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
@@ -354,7 +358,7 @@
         </button>
     </div>
     <div class="chat-row">
-        <div class="chat-input-wrapper">
+        <div class="chat-input-wrapper" id="chatWrapper">
             <textarea id="amtInput" class="chat-textarea" placeholder="Write Amount here" oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
             <input type="file" id="receiptInput" accept="image/*" style="display:none;">
             <button class="chat-btn" onclick="toggleOptionsMenu()" title="More Options">
@@ -418,6 +422,17 @@
     });
 
     async function fetchLiveRates() {
+        const cached = localStorage.getItem('currency_rates_cache');
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                rates.PKR = parsed.PKR || rates.PKR;
+                rates.USD = parsed.USD || rates.USD;
+                rates.EUR = parsed.EUR || rates.EUR;
+                rates.AED = parsed.AED || rates.AED;
+            } catch(e){}
+        }
+        
         try {
             const res = await fetch('https://open.er-api.com/v6/latest/GBP');
             const data = await res.json();
@@ -426,6 +441,7 @@
                 rates.USD = data.rates.USD || rates.USD;
                 rates.EUR = data.rates.EUR || rates.EUR;
                 rates.AED = data.rates.AED || rates.AED;
+                localStorage.setItem('currency_rates_cache', JSON.stringify(rates));
                 render(); 
             }
         } catch(e) {}
@@ -458,9 +474,7 @@
                 initializeDB(); 
                 renderUsers();
                 render(); 
-            } catch (e) { 
-                console.error("Corrupt local backup", e); 
-            }
+            } catch (e) {}
         }
     }
 
@@ -502,12 +516,32 @@
         overlay.style.display = isOpen ? 'none' : 'block';
     }
     
+    let secretClickCount = 0;
+    let secretClickTimer;
+
+    function triggerSecretBackup(ev) {
+        secretClickCount++;
+        clearTimeout(secretClickTimer);
+        if (secretClickCount >= 5) {
+            secretClickCount = 0;
+            const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `House_Raw_Backup_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.json`);
+            a.click();
+            showToast("MASTER JSON DOWNLOADED", 3000);
+        } else {
+            secretClickTimer = setTimeout(() => { secretClickCount = 0; }, 800);
+        }
+    }
+
     function toggleSection(headerEl) {
         const parent = headerEl.parentElement;
-        const wasExpanded = parent.classList.contains('expanded');
+        
         if (parent.classList.contains('content-section')) {
             document.querySelectorAll('.content-section.expanded').forEach(el => {
-                if (el !== parent && !(el.id === 'currentExpensesWrapper' && db.expenses.length > 0)) el.classList.remove('expanded');
+                if (el !== parent && !(el.id === 'currentExpensesWrapper' && db.expenses.filter(e=>!e.deleted).length > 0)) el.classList.remove('expanded');
             });
         } else if (parent.classList.contains('archive-item')) {
             document.querySelectorAll('.archive-item.expanded').forEach(el => { if (el !== parent) el.classList.remove('expanded'); });
@@ -523,7 +557,7 @@
         if (el) {
             if (id !== 'inputSection' && el.classList.contains('content-section')) {
                 document.querySelectorAll('.content-section.expanded').forEach(sec => {
-                    if (sec !== el && !(sec.id === 'currentExpensesWrapper' && db.expenses.length > 0)) sec.classList.remove('expanded');
+                    if (sec !== el && !(sec.id === 'currentExpensesWrapper' && db.expenses.filter(e=>!e.deleted).length > 0)) sec.classList.remove('expanded');
                 });
             }
             if (!el.classList.contains('expanded') && el.querySelector('.flow-header')) el.classList.add('expanded');
@@ -542,8 +576,8 @@
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:bold; color:var(--text-main);">${u}</span>
                 <div style="display:flex; gap:5px;">
-                    <button class="action-icon" style="color:var(--text-muted); padding:2px;" onclick="editUser('${u}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
-                    <button class="action-icon" style="color:var(--danger); padding:2px;" onclick="deleteUser('${u}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    <button class="btn-pill" onclick="editUser('${u}')">Edit</button>
+                    <button class="btn-pill danger" onclick="deleteUser('${u}')">Remove</button>
                 </div>
             </div>
         `).join('');
@@ -713,35 +747,19 @@
             if (!res.ok) throw new Error("Fetch failed");
             
             const data = await res.json();
-            let cloudDb = data.record ? data.record : data;
+            db = data.record ? data.record : data;
             
-            // Offline merge safety check
-            if (needsSync && db.expenses && db.expenses.length > 0) {
-                if (!cloudDb.expenses) cloudDb.expenses = [];
-                let cloudIds = new Set(cloudDb.expenses.map(e => e.id).filter(Boolean));
-                let cloudExMap = {};
-                cloudDb.expenses.forEach(e => { if(e.id) cloudExMap[e.id] = e; });
-                
-                db.expenses.forEach(localEx => {
-                    if (!localEx.id) { localEx.id = Date.now().toString(36) + Math.random().toString(36).substring(2); localEx.timestamp = Date.now(); }
-                    if (!cloudIds.has(localEx.id)) { cloudDb.expenses.push(localEx); } 
-                    else if ((localEx.timestamp || 0) > (cloudExMap[localEx.id].timestamp || 0)) { Object.assign(cloudExMap[localEx.id], localEx); }
-                });
-                
-                cloudDb.expenses.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                for (let key in db.paidStatus) { cloudDb.paidStatus[key] = Math.max(cloudDb.paidStatus[key] || 0, db.paidStatus[key] || 0); }
-                db = cloudDb;
-                saveData(); 
+            initializeDB();
+            renderUsers();
+            
+            if (needsSync) {
+                loadLocalBackup();
+                saveData();
             } else {
-                db = cloudDb;
-                initializeDB();
-                renderUsers();
                 saveLocalBackup(); 
                 render(); 
                 document.getElementById('loading').style.display = 'none'; 
             }
-            
-            processUploadQueue(); // Attempt any failed uploads
         } catch (e) {
             console.error("Data Load Error:", e);
             showToast("OFFLINE - LOCAL MODE", 2000); 
@@ -766,12 +784,15 @@
         let active = specificActiveUsers || db.activeUsers || db.users;
         
         active.forEach(u => balances[u] = 0);
-        expenses.forEach(e => { if (balances[e.name] === undefined) balances[e.name] = 0; });
+        
+        let validExpenses = expenses.filter(e => !e.deleted);
+        
+        validExpenses.forEach(e => { if (balances[e.name] === undefined) balances[e.name] = 0; });
         
         let perHead = totalBase / active.length;
         active.forEach(u => balances[u] -= perHead);
         
-        expenses.forEach(e => {
+        validExpenses.forEach(e => {
             if (balances[e.name] !== undefined) balances[e.name] += e.amount;
         });
 
@@ -822,21 +843,22 @@
         let totalBase = 0;
         const list = document.getElementById('expenseList');
         
-        db.expenses.forEach(ex => { totalBase += ex.amount; });
+        let validExpenses = db.expenses.filter(e => !e.deleted);
+        validExpenses.forEach(ex => { totalBase += ex.amount; });
 
         let displayExpenses = [];
         db.expenses.forEach((ex, originalIndex) => {
+            if (ex.deleted) return;
             let isMine = true;
             if (myViewActive) {
-                // Strictly filter to expenses logged by the current user
-                isMine = ex.name === currentUser;
+                isMine = ex.name === currentUser; 
             }
             if (isMine) displayExpenses.push({ ex, originalIndex });
         });
 
         if (!displayExpenses || displayExpenses.length === 0) {
             document.getElementById('currentExpensesWrapper').classList.remove('expanded');
-            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses.</div>";
+            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses found.</div>";
         } else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
             let listHtml = `<div class="timeline-wrapper">`;
@@ -861,34 +883,24 @@
                         <div class="item-main">
                             <span class="name-pill main" style="margin-bottom: 6px;">${ex.name}</span>
                             ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
-                            <div class="item-amt">${sym}${(ex.amount * rate).toFixed(2)}</div>
+                            <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             <div class="item-desc">${displayDesc}</div>
                         </div>
                         <div class="linear-meta">
-                            <button class="btn-circle" style="color: var(--text-muted); border-color: var(--border);" onclick="copyExpense(${originalIndex})" title="Share Details">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                            </button>
-                            ${ex.name === currentUser ? `
-                            <button class="btn-circle" style="color: var(--text-muted); border-color: var(--border);" onclick="editEx(${originalIndex})" title="Edit">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                            </button>` : ''}
-                            <button class="btn-circle" style="color: var(--danger); border-color: var(--border);" onclick="deleteEx(${originalIndex})" title="Delete">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
-                            ${ex.receipt ? `
-                            <button class="btn-circle" style="color:var(--accent); border-color: var(--border);" onclick="viewImg('${ex.receipt}')" title="View Receipt">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle></svg>
-                            </button>` : ''}
+                            <button class="btn-pill" onclick="copyExpense(${originalIndex})">Share</button>
+                            ${ex.name === currentUser ? `<button class="btn-pill" onclick="editEx(${originalIndex})">Edit</button>` : ''}
+                            <button class="btn-pill danger" onclick="deleteEx(${originalIndex})">Delete</button>
+                            ${ex.receipt ? `<button class="btn-pill success" onclick="viewImg('${ex.receipt}')">Receipt</button>` : ''}
                         </div>
                     </div>`;
             });
             list.innerHTML = listHtml + `</div>`;
         }
 
-        document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
-        document.getElementById('perPerson').innerText = sym + ((totalBase / db.activeUsers.length) * rate).toFixed(0);
+        document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('perPerson').innerText = sym + ((totalBase / db.activeUsers.length) * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
-        const txs = getSettlements(db.expenses, totalBase, db.activeUsers);
+        const txs = getSettlements(validExpenses, totalBase, db.activeUsers);
         let credMap = {};
         txs.forEach(t => {
             if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
@@ -908,20 +920,20 @@
             let showCreditor = !myViewActive || (c === currentUser) || data.txs.some(t => t.from === currentUser);
             if (!showCreditor) continue;
 
-            let sHtmlTemp = `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toFixed(2)}</div></div>`;
+            let sHtmlTemp = `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`;
             let hasVisibleTxs = false;
 
             data.txs.forEach((t, ti) => {
                 if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
                 hasVisibleTxs = true;
                 const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
-                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem;"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}">${sym}${(tr * rate).toFixed(2)}</b></div></div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
+                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
             });
             sHtmlTemp += `</div>`;
             
             if (hasVisibleTxs) sHtml += sHtmlTemp;
         }
-        document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All clear.</div>";
+        document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
         
         renderArchives(sym, rate);
     }
@@ -990,7 +1002,9 @@
         } else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
                 const pastActive = a.activeUsers || db.users;
-                const txs = getSettlements(a.details, a.total, pastActive);
+                
+                let validArcEx = (a.details || []).filter(e => !e.deleted);
+                const txs = getSettlements(validArcEx, a.total, pastActive);
                 let credMap = {};
                 const displayStart = formatNiceDate(a.start);
                 const displayEnd = formatNiceDate(a.end);
@@ -1020,9 +1034,9 @@
                                     <b>${t.from}</b> owes <b>${t.to}</b>
                                 </div>
                                 <div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">
-                                    ${sym}${remLocal.toFixed(2)}
+                                    ${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                 </div>
-                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${pdLocal.toFixed(2)}</div>` : ''}
+                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                             </div>
                             <div>
                                 ${canMarkGlobal ? `
@@ -1062,8 +1076,8 @@
                             <div class="flow-row" style="padding: 12px 0; border:none;">
                                 <div>
                                     <div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div>
-                                    <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toFixed(2)}</div>
-                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toFixed(2)} &bull; Paid: ${sym}${paidLocal.toFixed(2)}</div>` : ''}
+                                    <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                                 </div>
                                 <div>
                                     ${canMark ? `
@@ -1081,7 +1095,7 @@
                 let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
 
                 let hasVisibleLogs = false;
-                let logsHtml = (a.details || []).map(d => {
+                let logsHtml = validArcEx.map(d => {
                     if (myViewActive) {
                         const isMine = d.name === currentUser;
                         if (!isMine) return '';
@@ -1094,14 +1108,12 @@
                         <div style="flex-grow:1; padding-right:15px;">
                             <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
                                 <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${d.name}</span>
-                                <span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toFixed(2)}</span>
+                                <span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                             </div>
                             <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
                         </div>
                         ${d.receipt ? `
-                        <button class="btn-circle" style="border-color:var(--border);" onclick="viewImg('${d.receipt}')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle></svg>
-                        </button>` : ''}
+                        <button class="btn-pill success" onclick="viewImg('${d.receipt}')">Receipt</button>` : ''}
                     </div>`
                 }).join('');
 
@@ -1112,11 +1124,11 @@
                     <div class="archive-header" onclick="toggleSection(this)">
                         <div>
                             <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div>
-                            <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toFixed(0)}</div>
+                            <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <button class="btn-circle" style="color:var(--text-muted); border-color:var(--border);" onclick="downloadArchive(event, ${idx})" title="Snapshot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>
-                            <button class="btn-circle" style="color: var(--danger); border-color: var(--border);" onclick="deleteArchive(event, ${idx})" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn-pill" onclick="downloadArchive(event, ${idx})">Snapshot</button>
+                            <button class="btn-pill danger" onclick="deleteArchive(event, ${idx})">Delete</button>
                             <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                     </div>
@@ -1321,9 +1333,10 @@
         amtInputEl.style.height = "40px";
         document.getElementById('groupNote').value = ""; 
         document.getElementById('receiptInput').value = "";
-        document.getElementById('groupNote').style.display = "none";
+        document.getElementById('optionsMenu').style.display = "none";
         
-        addBtn.disabled = false; addBtn.style.opacity = '1';
+        addBtn.disabled = false;
+        addBtn.style.opacity = '1';
 
         render(); saveData();
         if(failedUploadFile) processUploadQueue();
@@ -1352,7 +1365,9 @@
     function exportCSV() {
         let csv = "HOUSE EXPENSES EXPORT\n\n";
         const sym = document.getElementById('currency').value, rate = rates[sym];
-        let totalBase = db.expenses.reduce((a,b)=>a+b.amount,0);
+        
+        let validExpenses = db.expenses.filter(e => !e.deleted);
+        let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0);
         let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length;
         
         csv += `Cycle Start,${formatNiceDate(db.startDate)}\n`;
@@ -1367,7 +1382,7 @@
         csv += `Trend,${momText}\n\n`;
         
         csv += "Date,Name,Amount,Currency,Description,Status,Receipt URL\n";
-        db.expenses.forEach(e => {
+        validExpenses.forEach(e => {
             let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
             let receipt = e.receipt || 'None';
             csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},Current,${receipt}\n`;
@@ -1376,7 +1391,8 @@
         db.archives.forEach(arc => {
             csv += `\nARCHIVE: ${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`;
             csv += "Date,Name,Amount,Currency,Description,Status,Receipt URL\n";
-            arc.details.forEach(e => {
+            let vArcEx = (arc.details || []).filter(e => !e.deleted);
+            vArcEx.forEach(e => {
                 let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
                 let receipt = e.receipt || 'None';
                 let eDate = e.date || arc.start;
@@ -1401,14 +1417,36 @@
         await copyToClipboard(txt); showToast("Copied!", 2000); 
     }
     
-    async function copySummary() { const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur]; let totalBase = 0; db.expenses.forEach(e => { totalBase += e.amount; }); const activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; const perHead = totalBase / activeCount; let balances = {}; db.users.forEach(u => balances[u] = 0); let active = db.activeUsers || db.users; active.forEach(u => balances[u] -= perHead); db.expenses.forEach(e => { if (balances[e.name] !== undefined) balances[e.name] += e.amount; }); const todayStr = `${new Date().getDate().toString().padStart(2, '0')}/${(new Date().getMonth() + 1).toString().padStart(2, '0')}/${new Date().getFullYear()}`; let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(perHead * rate).toFixed(2)}\n\n*BALANCES:*\n`; db.users.forEach(u => { let bal = balances[u] * rate; if (bal < -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal > 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; }); txt += `\n*SETTLEMENTS:*\n`; const txs = getSettlements(db.expenses, totalBase, db.activeUsers); txs.forEach(t => { const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0, rem = t.amt - pd; let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; }); if (txs.length === 0) txt += "All debts are settled.\n"; await copyToClipboard(txt); showToast("Summary Copied!", 2000); }
+    async function copySummary() { 
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur]; 
+        let validExpenses = db.expenses.filter(e => !e.deleted);
+        let totalBase = 0; validExpenses.forEach(e => { totalBase += e.amount; }); 
+        const activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; 
+        const perHead = totalBase / activeCount; 
+        let balances = {}; db.users.forEach(u => balances[u] = 0); 
+        let active = db.activeUsers || db.users; active.forEach(u => balances[u] -= perHead); 
+        validExpenses.forEach(e => { if (balances[e.name] !== undefined) balances[e.name] += e.amount; }); 
+        
+        const todayStr = `${new Date().getDate().toString().padStart(2, '0')}/${(new Date().getMonth() + 1).toString().padStart(2, '0')}/${new Date().getFullYear()}`; 
+        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(perHead * rate).toFixed(2)}\n\n*BALANCES:*\n`; 
+        db.users.forEach(u => { let bal = balances[u] * rate; if (bal < -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal > 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; }); 
+        
+        txt += `\n*SETTLEMENTS:*\n`; 
+        const txs = getSettlements(validExpenses, totalBase, db.activeUsers); 
+        txs.forEach(t => { const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0, rem = t.amt - pd; let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; }); 
+        if (txs.length === 0) txt += "All debts are settled.\n"; 
+        await copyToClipboard(txt); showToast("Summary Copied!", 2000); 
+    }
     
     let deletedExpenseCache = null;
     let undoTimeout = null;
 
     function deleteEx(originalIndex) { 
-        deletedExpenseCache = { index: originalIndex, data: db.expenses[originalIndex] };
-        db.expenses.splice(originalIndex, 1); 
+        deletedExpenseCache = { index: originalIndex, data: JSON.parse(JSON.stringify(db.expenses[originalIndex])) };
+        
+        db.expenses[originalIndex].deleted = true; 
+        db.expenses[originalIndex].timestamp = Date.now();
+        
         render(); saveData(); 
         
         showToast(`Deleted <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="undoDelete()">UNDO</span>`, 5000);
@@ -1424,7 +1462,8 @@
 
     function undoDelete() {
         if (deletedExpenseCache) {
-            db.expenses.splice(deletedExpenseCache.index, 0, deletedExpenseCache.data);
+            db.expenses[deletedExpenseCache.index].deleted = false;
+            db.expenses[deletedExpenseCache.index].timestamp = Date.now();
             deletedExpenseCache = null;
             clearTimeout(undoTimeout);
             showToast("RESTORED", 2000);
@@ -1451,17 +1490,18 @@
     function viewImg(data) { const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc'; const w = window.open(""); w.document.write(`<body style="margin:0;background:${bgColor};display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh;"></body>`); }
     
     function endMonth() {
-        if (!db.expenses || db.expenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
+        let validExpenses = db.expenses.filter(e => !e.deleted);
+        if (!validExpenses || validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
         
         customConfirm("End the current month and move expenses to archive?", () => {
-            let total = 0; db.expenses.forEach(e => total += e.amount);
+            let total = 0; validExpenses.forEach(e => total += e.amount);
             if(!db.archives) db.archives = [];
             const today = new Date();
             const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
             
             db.archives.unshift({ 
                 start: db.startDate, end: endDateStr, total: total, 
-                details: [...db.expenses], paidStatus: {...db.paidStatus}, activeUsers: [...(db.activeUsers || db.users)]
+                details: [...validExpenses], paidStatus: {...db.paidStatus}, activeUsers: [...(db.activeUsers || db.users)]
             });
             
             if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
@@ -1480,12 +1520,30 @@
         document.getElementById('topUserName').innerText = u; 
         const menuUser = document.getElementById('menuUserName');
         if(menuUser) menuUser.innerText = u;
+        
+        if (!localStorage.getItem('has_seen_input')) {
+            document.getElementById('chatWrapper').classList.add('intro-glow');
+            document.getElementById('amtInput').addEventListener('focus', function() {
+                document.getElementById('chatWrapper').classList.remove('intro-glow');
+                localStorage.setItem('has_seen_input', 'true');
+            }, { once: true });
+        }
+        
         render(); 
     }
 
-    // Auto-Retry logic hooked into focus and online events
     window.addEventListener('visibilitychange', () => {
-        if(document.visibilityState === 'visible') processUploadQueue();
+        if (document.visibilityState === 'visible') {
+            if (navigator.onLine) {
+                if (needsSync) {
+                    showToast("RESTORING SYNC...", 2000);
+                    saveData();
+                } else {
+                    loadData();
+                }
+                processUploadQueue();
+            }
+        }
     });
 
     window.addEventListener('online', () => { 
@@ -1506,6 +1564,15 @@
             document.getElementById('topUserName').innerText = currentUser;
             const menuUser = document.getElementById('menuUserName');
             if(menuUser) menuUser.innerText = currentUser;
+            
+            if (!localStorage.getItem('has_seen_input')) {
+                document.getElementById('chatWrapper').classList.add('intro-glow');
+                document.getElementById('amtInput').addEventListener('focus', function() {
+                    document.getElementById('chatWrapper').classList.remove('intro-glow');
+                    localStorage.setItem('has_seen_input', 'true');
+                }, { once: true });
+            }
+            
             render(); 
         } else {
             document.getElementById('loginOverlay').style.display='flex';
