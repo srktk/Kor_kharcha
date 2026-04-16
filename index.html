@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
+    <meta name="app-version" content="1.1">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
@@ -72,79 +73,103 @@
         
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
-        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
         .action-icon:hover { color: var(--accent); }
-        
+
         .btn-circle { background: transparent; border: 1px solid var(--border); border-radius: 50%; color: var(--text-muted); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
         .btn-circle:hover { background: rgba(0,0,0,0.05); color: var(--text-main); border-color: var(--text-main); }
         [data-theme="dark"] .btn-circle:hover { background: rgba(255,255,255,0.05); }
-
-        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
+        
+        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
         .menu-link { text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; padding: 12px 15px; border-radius: 12px; transition: 0.2s; display: block; cursor: pointer; }
-        .menu-link:hover { background: var(--input-bg); color: var(--text-main); }
+        .menu-link:hover, .menu-link:active { background: var(--input-bg); color: var(--text-main); }
 
         @keyframes highlight-glow { 0% { background-color: var(--accent-glow); } 100% { background-color: transparent; } }
         .highlight-pulse { animation: highlight-glow 1.5s ease-out; }
 
         @keyframes input-glow { 0% { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: var(--border); } 50% { box-shadow: 0 0 15px 2px var(--accent); border-color: var(--accent); } 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: var(--border); } }
         .intro-glow { animation: input-glow 2.5s ease-in-out infinite; }
+        
+        @keyframes skel-pulse { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
+        .skel-block { background: var(--border); border-radius: 8px; animation: skel-pulse 1.5s infinite ease-in-out; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
 
         .hero-section { padding: 25px 20px 20px 20px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
-        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; }
-        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); }
-        .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .hero-section::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); filter: blur(100px); opacity: 0.15; z-index: 0; pointer-events: none; }
+        
+        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; position: relative; z-index: 1; }
+        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); position: relative; z-index: 1; }
+        
+        .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 1; }
         .stat-block { display: flex; flex-direction: column; gap: 4px; }
         .stat-block .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
         .stat-block .val { font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
         
         #currentExpensesWrapper .collapsible-content { padding-top: 0; }
-        .timeline-wrapper { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 10px; margin-top: 0; margin-bottom: 15px; }
+        .timeline-wrapper { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 10px; margin-top: 0; }
         .date-marker { position: relative; display: flex; align-items: center; gap: 10px; margin-left: -32px; margin-bottom: 8px; }
         .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
         .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
-        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: none; }
+        
+        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: none; }
         .item-main { flex: 1; padding-right: 10px; min-width: 0; }
         .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
         .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; word-wrap: break-word; }
         .linear-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 150px; }
 
+        /* Swipe Action CSS */
+        .swipe-track { display: flex; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+        .swipe-track::-webkit-scrollbar { display: none; }
+        .swipe-content { width: 100%; flex-shrink: 0; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; }
+        .swipe-actions { flex-shrink: 0; scroll-snap-align: end; display: flex; align-items: center; gap: 6px; padding-left: 15px; }
+
         .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
         .input-section > * { pointer-events: auto; }
+        
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; }
-        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); }
-        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; line-height: 1.4; scrollbar-width: none; }
+        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; }
         .chat-textarea::-webkit-scrollbar { display: none; }
+        
         .chat-btn { background: transparent; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
         .chat-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
         .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; transition: 0.2s; }
         .chat-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        .chat-note { width: 100%; background: transparent; border: 1px solid var(--border); padding: 12px 15px; color: var(--text-main); font-size: 0.95rem; border-radius: 16px; outline: none; transition: 0.3s; }
+        .chat-note { width: 100%; background: var(--nav-bg); border: 1px solid var(--border); padding: 10px 15px; color: var(--text-main); font-size: 0.85rem; border-radius: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .chat-note:focus { border-color: var(--accent); }
         
         select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; font-size: 1rem; cursor: pointer; }
         
         .content-section { padding: 0 20px; transition: background-color 0.3s; }
-        .name-pill { background: var(--input-bg); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; color: var(--text-main); display: inline-block; white-space: nowrap; margin-bottom: 4px; cursor: pointer; transition: 0.2s;}
-        .name-pill.main { background: rgba(45, 212, 191, 0.1); color: var(--accent); }
+        .name-pill { background: var(--input-bg); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: var(--text-main); display: inline-block; white-space: nowrap; transition: 0.2s;}
+        .name-pill.main { background: rgba(45, 212, 191, 0.1); color: var(--accent); border-color: rgba(45, 212, 191, 0.2); }
         
         .flow-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .flow-row.no-border { border-bottom: none; }
-        .action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
         
+        .action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
         .btn-pill { background: transparent; border: 1px solid var(--border); border-radius: 16px; padding: 5px 12px; font-size: 0.65rem; color: var(--text-muted); cursor: pointer; font-weight: 800; white-space: nowrap; transition: 0.2s; }
         .btn-pill:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(0,0,0,0.03); }
         [data-theme="dark"] .btn-pill:hover { background: rgba(255,255,255,0.05); border-color: var(--text-main); color: var(--text-main); }
+        
         .btn-pill.primary { border-color: var(--accent); color: var(--accent); background: rgba(45, 212, 191, 0.05); }
+        .btn-pill.primary:hover { background: rgba(45, 212, 191, 0.15); }
+        
         .btn-pill.danger { border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .btn-pill.danger:hover { background: rgba(239, 68, 68, 0.15); }
+
         .btn-pill.success { background: var(--success); color: #000; border-color: var(--success); }
         
-        .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 5px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
-        .flow-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+        .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 15px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
+        .flow-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; user-select: none; -webkit-user-select: none; }
+        
         .collapsible-content { display: none; }
         .expanded > .collapsible-content { display: block; }
         .expanded > .flow-header .chevron { transform: rotate(180deg); }
@@ -156,20 +181,32 @@
         .archive-item.expanded .archive-details { display: block; }
         .archive-item.expanded .chevron { transform: rotate(180deg); }
 
-        .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); }
+        .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
         .user-select-btn { display: flex; align-items: center; gap: 14px; background: transparent; border: 1px solid var(--border); padding: 12px 18px; border-radius: 20px; color: var(--text-main); font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; text-align: left; margin-bottom: 10px; }
         .user-select-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
         .user-select-btn:active { transform: scale(0.98); }
         .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--text-main); color: var(--bg); display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1rem; }
 
         .btn-glowing { background: var(--input-bg); color: var(--text-main); padding: 14px 24px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
+
         .danger-text { color: var(--danger) !important; text-shadow: 0 0 15px rgba(251, 113, 133, 0.3); }
         .danger-badge { background: var(--danger); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 900; margin-left: 6px; }
         .count-badge { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; margin-left: 6px; }
         
         #loading { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; pointer-events: auto;}
         
-        .split-label { cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        /* Toggle Switch CSS */
+        .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 24px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .toggle-switch input:checked + .toggle-slider { background-color: var(--accent); }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        /* Native Lightbox Overlay */
+        #lightboxOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10005; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overflow: auto; touch-action: pinch-zoom; }
+        #lightboxImg { max-width: 95vw; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .lightbox-close { position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
     </style>
 </head>
 <body>
@@ -189,9 +226,30 @@
         <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
         <div style="display:flex; gap:10px; margin-bottom: 15px;">
             <input type="text" id="newUserName" class="chat-note" placeholder="New housemate..." style="flex:1; padding:10px 12px; margin:0; border:1px solid var(--border);">
-            <button class="btn-glowing" style="width:auto; padding:10px 15px; margin:0;" onclick="addUser()">Add</button>
+            <button class="btn-glowing" style="width:auto; padding:10px 15px; margin:0;" onclick="triggerHaptic(); addUser()">Add</button>
         </div>
-        <button class="btn-glowing" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="closeManageUsers()">Done</button>
+        <button class="btn-glowing" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeManageUsers()">Close</button>
+    </div>
+</div>
+
+<div id="settingsOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:340px;">
+        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
+            <span style="font-weight:700; font-size: 0.95rem;">Swipe to Reveal Actions</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="swipeToggleInput" onchange="triggerHaptic(); toggleSwipeSetting()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
+            <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
+            <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export to Excel (CSV)</button>
+        </div>
+        
+        <button class="btn-glowing" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); closeSettings()">Done</button>
     </div>
 </div>
 
@@ -202,8 +260,8 @@
         </div>
         <h3 id="confirmMessage" style="margin: 0 0 20px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Are you sure?</h3>
         <div style="display:flex; gap:10px;">
-            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="closeConfirm()">Cancel</button>
-            <button class="btn-glowing" style="background: var(--danger); border-color: var(--danger); color: #fff;" onclick="executeConfirm()">Confirm</button>
+            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closeConfirm()">Cancel</button>
+            <button class="btn-glowing" style="background: var(--danger); border-color: var(--danger); color: #fff;" onclick="triggerHaptic(); executeConfirm()">Confirm</button>
         </div>
     </div>
 </div>
@@ -213,10 +271,15 @@
         <h3 id="promptMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;"></h3>
         <input type="text" id="promptInput" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
         <div style="display:flex; gap:10px;">
-            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="closePrompt()">Cancel</button>
-            <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="executePrompt()">OK</button>
+            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closePrompt()">Cancel</button>
+            <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="triggerHaptic(); executePrompt()">OK</button>
         </div>
     </div>
+</div>
+
+<div id="lightboxOverlay" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">×</button>
+    <img id="lightboxImg" src="" alt="Receipt" onclick="event.stopPropagation()">
 </div>
 
 <div id="menuOverlay" onclick="toggleMenu()"></div>
@@ -225,12 +288,12 @@
         <div>
             <h2 id="menuUserName" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--accent); text-transform:uppercase; letter-spacing:1px;"></h2>
         </div>
-        <button class="action-icon" onclick="toggleMenu()">
+        <button class="action-icon" onclick="triggerHaptic(); toggleMenu()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     </div>
     
-    <a href="#" class="menu-link" style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); background: var(--input-bg); margin-bottom: 15px;" onclick="toggleTheme(); event.preventDefault();">
+    <a href="#" class="menu-link" style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); background: var(--input-bg); margin-bottom: 15px;" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();">
         <span>Toggle Theme</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     </a>
@@ -242,22 +305,21 @@
     <a href="#" class="menu-link" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
     <div style="flex-grow: 1;"></div>
-    <a href="#" class="menu-link" style="color:var(--accent); text-align: center; border: 1px dashed var(--accent); margin-bottom: 10px;" onclick="openManageUsers(); event.preventDefault();">Manage Housemates</a>
-    <a href="#" class="menu-link" style="color:var(--success); text-align: center; border: 1px dashed rgba(16, 185, 129, 0.4); margin-bottom: 10px;" onclick="exportCSV(); event.preventDefault();">Export to Excel (CSV)</a>
-    <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="logout(); event.preventDefault();">Switch User</a>
+    <a href="#" class="menu-link" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
+    <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
 </div>
 
 <div class="wrapper">
     <div class="glass-nav">
         <div style="display:flex; align-items:center; gap:12px;">
-            <button class="action-icon" onclick="toggleMenu()">
+            <button class="action-icon" onclick="triggerHaptic(); toggleMenu()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <span id="topUserName" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer;" onclick="toggleMyView()" title="Toggle My View"></span>
+            <span id="topUserName" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer;" onclick="triggerHaptic(); toggleMyView()" title="Toggle My View"></span>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
-            <button class="action-icon" onclick="loadData()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <button class="action-icon" onclick="triggerHaptic(); loadData()">
+                <svg id="syncIconElement" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
         </div>
     </div>
@@ -279,7 +341,7 @@
                 <span class="label">Per Head</span>
                 <span id="perPerson" class="val">0</span>
             </div>
-            <div class="stat-block" style="cursor:pointer;" onclick="changeStartDate()">
+            <div class="stat-block" style="cursor:pointer;" onclick="triggerHaptic(); changeStartDate()">
                 <span class="label">Cycle Started</span>
                 <div style="display:flex; align-items:center; gap:6px;">
                     <span id="startDateDisplay" class="val">--/--</span>
@@ -288,22 +350,22 @@
             </div>
         </div>
         <div style="margin-top: 15px;">
-            <button class="btn-glowing" onclick="endMonth()">END MONTH/START NEW</button>
+            <button class="btn-glowing" onclick="triggerHaptic(); endMonth()">END MONTH/START NEW</button>
         </div>
     </div>
 
     <div class="content-section" id="settlementsWrapper">
         <div class="flow-header" onclick="toggleSection(this)">
-            <h3 class="flow-title">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
+            <h3 class="flow-title" style="cursor:pointer;" onmousedown="startPress(event)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchstart="startPress(event)" ontouchend="cancelPress()" ontouchcancel="cancelPress()">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
             <div style="display:flex; align-items:center; gap:15px;">
-                <button class="btn-pill" style="margin:0; padding:4px 10px;" onclick="event.stopPropagation(); copySummary()">Copy Summary</button>
+                <button class="btn-pill primary" style="margin:0; padding:4px 10px;" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
                 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
         </div>
         <div class="collapsible-content">
             
             <div style="margin-bottom: 15px;">
-                <button class="badge" onclick="const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
+                <button class="badge" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Active Housemates
                 </button>
                 <div id="cycleSplitCheckboxes" style="display: none; flex-wrap: wrap; gap: 10px;"></div>
@@ -352,7 +414,7 @@
 <div class="input-section" id="inputSection">
     <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <input type="text" id="groupNote" class="chat-note" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
-        <button class="btn-glowing" style="padding: 10px; font-size: 0.85rem;" onclick="document.getElementById('receiptInput').click()">
+        <button class="btn-glowing" style="padding: 10px; font-size: 0.85rem;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
             Attach Photo
         </button>
@@ -361,15 +423,16 @@
         <div class="chat-input-wrapper" id="chatWrapper">
             <textarea id="amtInput" class="chat-textarea" placeholder="Write Amount here" oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
             <input type="file" id="receiptInput" accept="image/*" style="display:none;">
-            <button class="chat-btn" onclick="toggleOptionsMenu()" title="More Options">
+            <button class="chat-btn" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
         </div>
-        <button id="mainAddBtn" class="chat-btn primary" onclick="addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        <button id="mainAddBtn" class="chat-btn primary" onclick="triggerHaptic(); addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
     </div>
 </div>
 
 <script>
+    const APP_VERSION = "1.1";
     const BIN_ID = '69dab988856a682189232cd0';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
@@ -379,11 +442,27 @@
     let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [] };
     let currentUser = localStorage.getItem('house_user') || "";
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
+    let swipeActionsEnabled = localStorage.getItem('house_swipe_actions') === 'true';
     let toastTimeout;
     let editingIndex = -1;
     let myViewActive = false;
+    let lastSubmitTime = 0;
 
-    // Custom Modals Handlers
+    function triggerHaptic() {
+        if (window.navigator && window.navigator.vibrate) navigator.vibrate(40);
+    }
+
+    async function checkForUpdates() {
+        try {
+            const res = await fetch(location.href.split('?')[0] + '?t=' + Date.now(), {cache: "no-store"});
+            const text = await res.text();
+            const match = text.match(/<meta name="app-version" content="([^"]+)">/);
+            if (match && match[1] && match[1] !== APP_VERSION) {
+                showToast(`Update Available <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="location.reload(true)">REFRESH</span>`, 10000);
+            }
+        } catch(e) {}
+    }
+
     let confirmAction = null;
     function customConfirm(msg, action) {
         document.getElementById('confirmMessage').innerHTML = msg;
@@ -418,8 +497,23 @@
         closePrompt();
     }
     document.getElementById('promptInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') executePrompt();
+        if (e.key === 'Enter') { triggerHaptic(); executePrompt(); }
     });
+
+    function openSettings() {
+        const menu = document.getElementById('sideMenu');
+        if (menu.classList.contains('open')) toggleMenu();
+        document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
+        document.getElementById('settingsOverlay').style.display = 'flex';
+    }
+    function closeSettings() {
+        document.getElementById('settingsOverlay').style.display = 'none';
+    }
+    function toggleSwipeSetting() {
+        swipeActionsEnabled = document.getElementById('swipeToggleInput').checked;
+        localStorage.setItem('house_swipe_actions', swipeActionsEnabled);
+        render();
+    }
 
     async function fetchLiveRates() {
         const cached = localStorage.getItem('currency_rates_cache');
@@ -432,7 +526,6 @@
                 rates.AED = parsed.AED || rates.AED;
             } catch(e){}
         }
-        
         try {
             const res = await fetch('https://open.er-api.com/v6/latest/GBP');
             const data = await res.json();
@@ -468,26 +561,17 @@
     
     function loadLocalBackup() {
         const backup = localStorage.getItem('house_db_backup');
-        if (backup) { 
-            try { 
-                db = JSON.parse(backup); 
-                initializeDB(); 
-                renderUsers();
-                render(); 
-            } catch (e) {}
-        }
+        if (backup) { try { db = JSON.parse(backup); initializeDB(); renderUsers(); render(); } catch (e) {} }
     }
 
     function toggleMyView() {
         myViewActive = !myViewActive;
         const el = document.getElementById('topUserName');
         if (myViewActive) {
-            el.style.background = 'var(--accent)';
-            el.style.color = '#000';
+            el.style.background = 'var(--accent)'; el.style.color = '#000';
             showToast("MY VIEW: ON", 1500);
         } else {
-            el.style.background = 'rgba(45, 212, 191, 0.1)';
-            el.style.color = 'var(--accent)';
+            el.style.background = 'rgba(45, 212, 191, 0.1)'; el.style.color = 'var(--accent)';
             showToast("HOUSE VIEW", 1500);
         }
         render();
@@ -515,30 +599,38 @@
         menu.classList.toggle('open');
         overlay.style.display = isOpen ? 'none' : 'block';
     }
-    
-    let secretClickCount = 0;
-    let secretClickTimer;
 
-    function triggerSecretBackup(ev) {
-        secretClickCount++;
-        clearTimeout(secretClickTimer);
-        if (secretClickCount >= 5) {
-            secretClickCount = 0;
-            const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', `House_Raw_Backup_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.json`);
-            a.click();
-            showToast("MASTER JSON DOWNLOADED", 3000);
-        } else {
-            secretClickTimer = setTimeout(() => { secretClickCount = 0; }, 800);
-        }
+    let pressTimer;
+    let isLongPress = false;
+    function startPress(e) {
+        isLongPress = false;
+        pressTimer = setTimeout(() => {
+            isLongPress = true;
+            triggerHaptic();
+            markAllSettled();
+        }, 1000);
     }
+    function cancelPress() { clearTimeout(pressTimer); }
 
+    function markAllSettled() {
+        customConfirm("Mark ALL current house debts as Settled?", () => {
+            let totalBase = 0;
+            let validExpenses = db.expenses.filter(e => !e.deleted);
+            validExpenses.forEach(e => totalBase += e.amount);
+            const txs = getSettlements(validExpenses, totalBase, db.activeUsers);
+            txs.forEach(t => {
+                const key = `${t.from}_${t.to}`;
+                db.paidStatus[key] = t.amt; 
+            });
+            render();
+            saveData();
+            showToast("ALL SETTLED", 2000);
+        });
+    }
+    
     function toggleSection(headerEl) {
+        if (isLongPress) { isLongPress = false; return; }
         const parent = headerEl.parentElement;
-        
         if (parent.classList.contains('content-section')) {
             document.querySelectorAll('.content-section.expanded').forEach(el => {
                 if (el !== parent && !(el.id === 'currentExpensesWrapper' && db.expenses.filter(e=>!e.deleted).length > 0)) el.classList.remove('expanded');
@@ -570,35 +662,27 @@
     function openManageUsers() {
         const menu = document.getElementById('sideMenu');
         if (menu.classList.contains('open')) toggleMenu();
-        
         const list = document.getElementById('manageUserList');
         list.innerHTML = db.users.map(u => `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:bold; color:var(--text-main);">${u}</span>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-pill" onclick="editUser('${u}')">Edit</button>
-                    <button class="btn-pill danger" onclick="deleteUser('${u}')">Remove</button>
+                    <button class="btn-pill" onclick="triggerHaptic(); editUser('${u}')">Edit</button>
+                    <button class="btn-pill danger" onclick="triggerHaptic(); deleteUser('${u}')">Remove</button>
                 </div>
             </div>
         `).join('');
         document.getElementById('manageUsersOverlay').style.display = 'flex';
     }
 
-    function closeManageUsers() {
-        document.getElementById('manageUsersOverlay').style.display = 'none';
-    }
+    function closeManageUsers() { document.getElementById('manageUsersOverlay').style.display = 'none'; }
 
     function addUser() {
         customPrompt("Enter new housemate's name:", "", (val) => {
-            const n = val.trim();
-            if (!n) return;
+            const n = val.trim(); if (!n) return;
             if (db.users.includes(n)) { showToast("User already exists.", 3000); return; }
-            db.users.push(n);
-            db.activeUsers.push(n);
-            renderUsers();
-            openManageUsers();
-            render();
-            saveData();
+            db.users.push(n); db.activeUsers.push(n);
+            renderUsers(); openManageUsers(); render(); saveData();
         });
     }
 
@@ -609,20 +693,18 @@
             if (db.users.includes(n)) { showToast("Name already exists.", 3000); return; }
             
             db.users[db.users.indexOf(oldName)] = n;
-            if (db.activeUsers.includes(oldName)) {
-                db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
-            }
+            if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
             
             db.expenses.forEach(ex => {
                 if (ex.name === oldName) ex.name = n;
+                if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n;
             });
             
             db.archives.forEach(arc => {
-                if (arc.activeUsers && arc.activeUsers.includes(oldName)) {
-                    arc.activeUsers[arc.activeUsers.indexOf(oldName)] = n;
-                }
+                if (arc.activeUsers && arc.activeUsers.includes(oldName)) arc.activeUsers[arc.activeUsers.indexOf(oldName)] = n;
                 arc.details.forEach(ex => {
                     if (ex.name === oldName) ex.name = n;
+                    if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n;
                 });
                 let arcPaid = {};
                 for (let key in arc.paidStatus) {
@@ -650,11 +732,7 @@
                 const menuUser = document.getElementById('menuUserName');
                 if(menuUser) menuUser.innerText = n;
             }
-            
-            renderUsers();
-            openManageUsers();
-            render();
-            saveData();
+            renderUsers(); openManageUsers(); render(); saveData();
         });
     }
 
@@ -663,19 +741,11 @@
         customConfirm(`Remove ${name} from housemates? Past expenses are kept.`, () => {
             const idx = db.users.indexOf(name);
             if (idx > -1) db.users.splice(idx, 1);
-            
             const aIdx = db.activeUsers.indexOf(name);
             if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
 
-            if (currentUser === name) {
-                closeManageUsers();
-                logout();
-            } else {
-                renderUsers();
-                openManageUsers();
-                render();
-                saveData();
-            }
+            if (currentUser === name) { closeManageUsers(); logout(); } 
+            else { renderUsers(); openManageUsers(); render(); saveData(); }
         });
     }
 
@@ -684,7 +754,7 @@
         btns.innerHTML = '';
         const usersList = (db.users && db.users.length > 0) ? db.users : defaultUsers;
         usersList.forEach(u => {
-            btns.innerHTML += `<button class="user-select-btn" onclick="login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`;
+            btns.innerHTML += `<button class="user-select-btn" onclick="triggerHaptic(); login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`;
         });
     }
 
@@ -727,6 +797,31 @@
         } catch (e) { showToast("Copy manually.", 3000); }
     }
 
+    function sendNudge(name, amount, sym) {
+        triggerHaptic();
+        const text = `Hey ${name}, just a heads up you owe ${sym}${amount.toFixed(2)} for the current house cycle. Catch you later!`;
+        if (navigator.share) {
+            navigator.share({ title: 'House Expenses', text: text }).catch(e => {
+                copyToClipboard(text); showToast("Nudge Copied!", 2000);
+            });
+        } else {
+            copyToClipboard(text); showToast("Nudge Copied!", 2000);
+        }
+    }
+
+    function viewImg(url) { 
+        triggerHaptic();
+        const overlay = document.getElementById('lightboxOverlay');
+        document.getElementById('lightboxImg').src = url;
+        overlay.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+        triggerHaptic();
+        document.getElementById('lightboxOverlay').style.display = 'none';
+        document.getElementById('lightboxImg').src = '';
+    }
+
     function initializeDB() {
         if (!db.expenses) db.expenses = []; 
         if (!db.archives) db.archives = [];
@@ -736,64 +831,77 @@
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
     }
 
+    function renderSkeletons() {
+        const list = document.getElementById('expenseList');
+        let html = `<div class="timeline-wrapper">`;
+        for(let i=0; i<4; i++) {
+            let mt = (i === 0) ? '0px' : '20px';
+            html += `<div class="date-marker" style="margin-top: ${mt};"><div class="skel-block" style="width: 80px; height: 12px; margin-left: 8px;"></div></div><div class="linear-row" style="padding: 10px 0; border-bottom: none;"><div style="flex: 1;"><div class="skel-block" style="width: 50px; height: 16px; border-radius: 20px; margin-bottom: 8px;"></div><div class="skel-block" style="width: 70px; height: 20px; margin-bottom: 4px;"></div><div class="skel-block" style="width: 140px; height: 12px;"></div></div></div>`;
+        }
+        html += `</div>`;
+        list.innerHTML = html;
+        document.getElementById('currentExpensesWrapper').classList.add('expanded');
+    }
+
     async function loadData() {
         if (!navigator.onLine) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); return; }
-        showToast("SYNCING...");
+        
+        if (db.expenses.length === 0) renderSkeletons();
+        
+        const syncIcon = document.getElementById('syncIconElement');
+        if(syncIcon) syncIcon.classList.add('spin');
         
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
-                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' } 
-            });
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }, cache: 'no-store' });
             if (!res.ok) throw new Error("Fetch failed");
             
             const data = await res.json();
             db = data.record ? data.record : data;
             
-            initializeDB();
-            renderUsers();
-            
-            if (needsSync) {
-                loadLocalBackup();
-                saveData();
-            } else {
-                saveLocalBackup(); 
-                render(); 
-                document.getElementById('loading').style.display = 'none'; 
-            }
+            initializeDB(); renderUsers(); saveLocalBackup(); render(); 
+            document.getElementById('loading').style.display = 'none'; 
+            processUploadQueue();
         } catch (e) {
-            console.error("Data Load Error:", e);
-            showToast("OFFLINE - LOCAL MODE", 2000); 
-            loadLocalBackup();
+            showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup();
+        } finally {
+            if(syncIcon) syncIcon.classList.remove('spin');
         }
     }
 
     function saveData() {
         saveLocalBackup(); 
         if (!navigator.onLine) { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); return; }
-        showToast("SYNCING...");
+        
+        const syncIcon = document.getElementById('syncIconElement');
+        if(syncIcon) syncIcon.classList.add('spin');
+        
         fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
             body: JSON.stringify(db)
         })
         .then(res => { if (!res.ok) throw new Error(); setNeedsSync(false); document.getElementById('loading').style.display = 'none'; })
-        .catch(() => { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); });
+        .catch(() => { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); })
+        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); });
     }
 
     function getSettlements(expenses, totalBase, specificActiveUsers = null) {
         let balances = {}; 
         let active = specificActiveUsers || db.activeUsers || db.users;
-        
-        active.forEach(u => balances[u] = 0);
-        
+        db.users.forEach(u => balances[u] = 0);
+
         let validExpenses = expenses.filter(e => !e.deleted);
-        
-        validExpenses.forEach(e => { if (balances[e.name] === undefined) balances[e.name] = 0; });
-        
-        let perHead = totalBase / active.length;
-        active.forEach(u => balances[u] -= perHead);
-        
+
         validExpenses.forEach(e => {
-            if (balances[e.name] !== undefined) balances[e.name] += e.amount;
+            if (balances[e.name] === undefined) balances[e.name] = 0;
+            balances[e.name] += e.amount;
+
+            let involved = (e.involved && e.involved.length > 0) ? e.involved : active;
+            let perHead = e.amount / involved.length;
+
+            involved.forEach(u => {
+                if (balances[u] === undefined) balances[u] = 0;
+                balances[u] -= perHead;
+            });
         });
 
         let debtors = [], creditors = [];
@@ -801,20 +909,32 @@
             if (balances[u] < -0.01) debtors.push({ name: u, amt: Math.abs(balances[u]) });
             else if (balances[u] > 0.01) creditors.push({ name: u, amt: balances[u] });
         }
-        
-        let txs = [], d = 0, c = 0;
+
+        let txs = [];
+        for (let i = 0; i < debtors.length; i++) {
+            for (let j = 0; j < creditors.length; j++) {
+                if (debtors[i].amt > 0.01 && creditors[j].amt > 0.01 && Math.abs(debtors[i].amt - creditors[j].amt) < 0.01) {
+                    txs.push({ from: debtors[i].name, to: creditors[j].name, amt: debtors[i].amt });
+                    debtors[i].amt = 0; creditors[j].amt = 0;
+                }
+            }
+        }
+
         debtors.sort((a,b) => b.amt - a.amt); creditors.sort((a,b) => b.amt - a.amt);
-        
+        let d = 0, c = 0;
         while (d < debtors.length && c < creditors.length) {
+            if (debtors[d].amt <= 0.01) { d++; continue; }
+            if (creditors[c].amt <= 0.01) { c++; continue; }
+
             let amount = Math.min(debtors[d].amt, creditors[c].amt);
             txs.push({ from: debtors[d].name, to: creditors[c].name, amt: amount });
             debtors[d].amt -= amount; creditors[c].amt -= amount;
-            if (debtors[d].amt <= 0.01) d++; if (creditors[c].amt <= 0.01) c++;
         }
         return txs;
     }
 
     function toggleActiveUser(u) {
+        triggerHaptic();
         if (!db.activeUsers) db.activeUsers = [...db.users];
         const idx = db.activeUsers.indexOf(u);
         if (idx > -1) {
@@ -825,6 +945,15 @@
         }
         render();
         saveData();
+    }
+
+    function generateActionPills(ex, originalIndex) {
+        let html = `<button class="btn-pill" onclick="triggerHaptic(); copyExpense(${originalIndex})">Share</button>`;
+        if (ex.name === currentUser) {
+            html += `<button class="btn-pill" onclick="triggerHaptic(); editEx(${originalIndex})">Edit</button>
+                     <button class="btn-pill danger" onclick="triggerHaptic(); deleteEx(${originalIndex})">Delete</button>`;
+        }
+        return html;
     }
 
     function render() {
@@ -851,7 +980,8 @@
             if (ex.deleted) return;
             let isMine = true;
             if (myViewActive) {
-                isMine = ex.name === currentUser; 
+                let involved = (ex.involved && ex.involved.length > 0) ? ex.involved : db.activeUsers;
+                isMine = ex.name === currentUser || involved.includes(currentUser);
             }
             if (isMine) displayExpenses.push({ ex, originalIndex });
         });
@@ -871,6 +1001,11 @@
                 let exSym = ex.originalSym || sym;
                 let displayDesc = formatDescDisplay(ex.desc, exSym);
                 
+                let splitNote = "";
+                if (ex.involved && ex.involved.length < db.users.length) {
+                    splitNote = `<div style="font-size:0.65rem; color:var(--accent); margin-top:2px;">Split: ${ex.involved.join(', ')}</div>`;
+                }
+                
                 let exDate = ex.date || db.startDate || "Unknown Date"; 
                 if (exDate !== currentGroupDate) {
                     let mt = (renderIndex === 0) ? '0px' : '20px';
@@ -878,27 +1013,52 @@
                     currentGroupDate = exDate;
                 }
 
-                listHtml += `
+                let pillsHtml = generateActionPills(ex, originalIndex);
+                let receiptHtml = ex.receipt ? `<button class="btn-pill success" onclick="triggerHaptic(); viewImg('${ex.receipt}')">Receipt</button>` : '';
+
+                if (swipeActionsEnabled) {
+                    listHtml += `
+                    <div class="linear-row" style="padding:0;">
+                        <div class="swipe-track">
+                            <div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;">
+                                <div style="display:flex; flex-direction:column; justify-content:center;">
+                                    <span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${ex.name}</span>
+                                    ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
+                                    <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                    <div class="item-desc">${displayDesc}</div>
+                                    ${splitNote}
+                                </div>
+                                ${receiptHtml ? `<div style="padding-right:15px; flex-shrink:0;">${receiptHtml}</div>` : `<div style="padding-right:15px; flex-shrink:0; width:1px;"></div>`}
+                            </div>
+                            <div class="swipe-actions" style="padding: 10px 0 10px 15px;">
+                                ${pillsHtml}
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    listHtml += `
                     <div class="linear-row">
                         <div class="item-main">
                             <span class="name-pill main" style="margin-bottom: 6px;">${ex.name}</span>
                             ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
                             <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             <div class="item-desc">${displayDesc}</div>
+                            ${splitNote}
                         </div>
                         <div class="linear-meta">
-                            <button class="btn-pill" onclick="copyExpense(${originalIndex})">Share</button>
-                            ${ex.name === currentUser ? `<button class="btn-pill" onclick="editEx(${originalIndex})">Edit</button>` : ''}
-                            <button class="btn-pill danger" onclick="deleteEx(${originalIndex})">Delete</button>
-                            ${ex.receipt ? `<button class="btn-pill success" onclick="viewImg('${ex.receipt}')">Receipt</button>` : ''}
+                            ${pillsHtml}
+                            ${receiptHtml}
                         </div>
                     </div>`;
+                }
             });
             list.innerHTML = listHtml + `</div>`;
         }
 
         document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        document.getElementById('perPerson').innerText = sym + ((totalBase / db.activeUsers.length) * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        let avgPerHead = db.activeUsers.length > 0 ? (totalBase / db.activeUsers.length) * rate : 0;
+        document.getElementById('perPerson').innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
         const txs = getSettlements(validExpenses, totalBase, db.activeUsers);
         let credMap = {};
@@ -927,7 +1087,20 @@
                 if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
                 hasVisibleTxs = true;
                 const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
-                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div>${can ? `<div class="action-group">${!isS ? `<button class="btn-pill" onclick="logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>` : ''}<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button></div>` : `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`}</div></div>`;
+                
+                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">`;
+                
+                if (can) {
+                    if (!isS) {
+                        sHtmlTemp += `<button class="btn-pill" onclick="sendNudge('${t.from}', ${tr * rate}, '${sym}')">Nudge</button>
+                                      <button class="btn-pill" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
+                    }
+                    sHtmlTemp += `<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
+                } else {
+                    sHtmlTemp += `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
+                }
+                
+                sHtmlTemp += `</div></div></div>`;
             });
             sHtmlTemp += `</div>`;
             
@@ -1039,12 +1212,13 @@
                                 ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                             </div>
                             <div>
+                                <div class="action-group">
                                 ${canMarkGlobal ? `
-                                    <div class="action-group">
-                                        <button class="btn-pill" onclick="logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
-                                        <button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
-                                    </div>
+                                        <button class="btn-pill" onclick="sendNudge('${t.from}', ${remLocal}, '${sym}')">Nudge</button>
+                                        <button class="btn-pill" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
+                                        <button class="btn-pill primary" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
                                 ` : `<span class="name-pill">Pending</span>`}
+                                </div>
                             </div>
                         </div>`;
                     }
@@ -1080,12 +1254,13 @@
                                     ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                                 </div>
                                 <div>
+                                    <div class="action-group">
                                     ${canMark ? `
-                                        <div class="action-group">
-                                            <button class="btn-pill" onclick="logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
-                                            <button class="btn-pill primary" onclick="toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
-                                        </div>
+                                            <button class="btn-pill" onclick="sendNudge('${t.from}', ${remainingLocal}, '${sym}')">Nudge</button>
+                                            <button class="btn-pill" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
+                                            <button class="btn-pill primary" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
                                     ` : `<span class="name-pill">Pending</span>`}
+                                    </div>
                                 </div>
                             </div>`;
                         }
@@ -1095,9 +1270,10 @@
                 let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
 
                 let hasVisibleLogs = false;
-                let logsHtml = validArcEx.map(d => {
+                let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) {
-                        const isMine = d.name === currentUser;
+                        let involved = (d.involved && d.involved.length > 0) ? d.involved : pastActive;
+                        const isMine = d.name === currentUser || involved.includes(currentUser);
                         if (!isMine) return '';
                     }
                     hasVisibleLogs = true;
@@ -1112,8 +1288,7 @@
                             </div>
                             <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
                         </div>
-                        ${d.receipt ? `
-                        <button class="btn-pill success" onclick="viewImg('${d.receipt}')">Receipt</button>` : ''}
+                        ${d.receipt ? `<button class="btn-pill success" onclick="triggerHaptic(); viewImg('${d.receipt}')">Receipt</button>` : ''}
                     </div>`
                 }).join('');
 
@@ -1127,8 +1302,7 @@
                             <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                         <div style="display:flex; gap:8px; align-items:center;">
-                            <button class="btn-pill" onclick="downloadArchive(event, ${idx})">Snapshot</button>
-                            <button class="btn-pill danger" onclick="deleteArchive(event, ${idx})">Delete</button>
+                            <button class="btn-pill" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>
                             <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                     </div>
@@ -1252,6 +1426,10 @@
     }
 
     async function addExpense() {
+        const now = Date.now();
+        if (now - lastSubmitTime < 1500) return; 
+        lastSubmitTime = now;
+
         const rawInput = document.getElementById('amtInput').value;
         const gNote = document.getElementById('groupNote').value;
         const file = document.getElementById('receiptInput').files[0];
@@ -1269,6 +1447,12 @@
 
         let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate;
         
+        let involvedUsers = [];
+        document.querySelectorAll('.split-chk').forEach(chk => {
+            if (chk.checked) involvedUsers.push(chk.value);
+        });
+        if (involvedUsers.length === 0) involvedUsers = db.users;
+
         let receiptData = null;
         let receiptDeleteUrl = null;
         let failedUploadFile = null;
@@ -1289,6 +1473,7 @@
         if (editingIndex > -1) {
             db.expenses[editingIndex].amount = baseAmt;
             db.expenses[editingIndex].desc = descToSave;
+            db.expenses[editingIndex].involved = involvedUsers;
             db.expenses[editingIndex].originalSym = sym;
             db.expenses[editingIndex].edited = true;
             db.expenses[editingIndex].timestamp = Date.now();
@@ -1315,6 +1500,7 @@
                 name: currentUser, 
                 amount: baseAmt, 
                 desc: descToSave, 
+                involved: involvedUsers,
                 originalSym: sym,
                 receipt: receiptData, 
                 receiptDelete: receiptDeleteUrl,
@@ -1335,8 +1521,7 @@
         document.getElementById('receiptInput').value = "";
         document.getElementById('optionsMenu').style.display = "none";
         
-        addBtn.disabled = false;
-        addBtn.style.opacity = '1';
+        addBtn.disabled = false; addBtn.style.opacity = '1';
 
         render(); saveData();
         if(failedUploadFile) processUploadQueue();
@@ -1351,12 +1536,14 @@
         if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
         
         document.getElementById('amtInput').value = rawDesc;
+        if (note) document.getElementById('groupNote').value = note;
         
         editingIndex = originalIndex;
-        
-        const noteField = document.getElementById('groupNote');
-        noteField.style.display = 'block';
-        if (note) noteField.value = note;
+        toggleOptionsMenu(true);
+
+        document.querySelectorAll('.split-chk').forEach(c => {
+            c.checked = ex.involved ? ex.involved.includes(c.value) : true;
+        });
 
         document.getElementById('amtInput').focus();
         showToast("EDITING MODE", 0);
@@ -1381,22 +1568,24 @@
         }
         csv += `Trend,${momText}\n\n`;
         
-        csv += "Date,Name,Amount,Currency,Description,Status,Receipt URL\n";
+        csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
         validExpenses.forEach(e => {
             let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
+            let split = e.involved ? e.involved.join(' | ') : 'All';
             let receipt = e.receipt || 'None';
-            csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},Current,${receipt}\n`;
+            csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Current,${receipt}\n`;
         });
         
         db.archives.forEach(arc => {
             csv += `\nARCHIVE: ${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`;
-            csv += "Date,Name,Amount,Currency,Description,Status,Receipt URL\n";
+            csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
             let vArcEx = (arc.details || []).filter(e => !e.deleted);
             vArcEx.forEach(e => {
                 let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
+                let split = e.involved ? e.involved.join(' | ') : 'All';
                 let receipt = e.receipt || 'None';
                 let eDate = e.date || arc.start;
-                csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},Archived,${receipt}\n`;
+                csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`;
             });
         });
         
@@ -1411,37 +1600,70 @@
     function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); }; }; }); }
     
     async function copyExpense(originalIndex) { 
+        triggerHaptic();
         const ex = db.expenses[originalIndex], cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur], exSym = ex.originalSym || sym; 
         let cleanDesc = formatDescDisplay(ex.desc, exSym).split('&bull;').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
         let txt = `Expense logged by ${ex.name}:\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${cleanDesc}`;
-        await copyToClipboard(txt); showToast("Copied!", 2000); 
+        if (ex.involved && ex.involved.length < db.users.length) { txt += `\nSplit Between: ${ex.involved.join(', ')}`; }
+        
+        if (navigator.share) {
+            navigator.share({ title: 'House Expense', text: txt }).catch(async e => {
+                await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000);
+            });
+        } else {
+            await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000); 
+        }
     }
     
     async function copySummary() { 
+        triggerHaptic();
         const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur]; 
         let validExpenses = db.expenses.filter(e => !e.deleted);
         let totalBase = 0; validExpenses.forEach(e => { totalBase += e.amount; }); 
-        const activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; 
-        const perHead = totalBase / activeCount; 
+        
         let balances = {}; db.users.forEach(u => balances[u] = 0); 
-        let active = db.activeUsers || db.users; active.forEach(u => balances[u] -= perHead); 
-        validExpenses.forEach(e => { if (balances[e.name] !== undefined) balances[e.name] += e.amount; }); 
+        let active = db.activeUsers || db.users; 
+        
+        validExpenses.forEach(e => { 
+            if (balances[e.name] === undefined) balances[e.name] = 0; 
+            balances[e.name] += e.amount; 
+            
+            let involved = (e.involved && e.involved.length > 0) ? e.involved : active;
+            let perHead = e.amount / involved.length;
+            
+            involved.forEach(u => {
+                if (balances[u] === undefined) balances[u] = 0;
+                balances[u] -= perHead;
+            });
+        }); 
+        
+        const activeCount = active.length; 
+        const perHeadHouse = totalBase / activeCount;
         
         const todayStr = `${new Date().getDate().toString().padStart(2, '0')}/${(new Date().getMonth() + 1).toString().padStart(2, '0')}/${new Date().getFullYear()}`; 
-        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head: ${sym}${(perHead * rate).toFixed(2)}\n\n*BALANCES:*\n`; 
-        db.users.forEach(u => { let bal = balances[u] * rate; if (bal < -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal > 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; }); 
+        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head (Avg): ${sym}${(perHeadHouse * rate).toFixed(2)}\n\n*BALANCES:*\n`; 
+        db.users.forEach(u => { let bal = balances[u] * rate; if (bal <= -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal >= 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; }); 
         
         txt += `\n*SETTLEMENTS:*\n`; 
         const txs = getSettlements(validExpenses, totalBase, db.activeUsers); 
         txs.forEach(t => { const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0, rem = t.amt - pd; let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; }); 
         if (txs.length === 0) txt += "All debts are settled.\n"; 
-        await copyToClipboard(txt); showToast("Summary Copied!", 2000); 
+        
+        if (navigator.share) {
+            navigator.share({ title: 'House Summary', text: txt }).catch(async e => {
+                await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000);
+            });
+        } else {
+            await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000); 
+        }
     }
     
     let deletedExpenseCache = null;
     let undoTimeout = null;
 
     function deleteEx(originalIndex) { 
+        if (db.expenses[originalIndex].name !== currentUser) { showToast("Cannot delete others' expenses.", 3000); return; }
+        
         deletedExpenseCache = { index: originalIndex, data: JSON.parse(JSON.stringify(db.expenses[originalIndex])) };
         
         db.expenses[originalIndex].deleted = true; 
@@ -1449,7 +1671,7 @@
         
         render(); saveData(); 
         
-        showToast(`Deleted <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="undoDelete()">UNDO</span>`, 5000);
+        showToast(`Deleted <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="triggerHaptic(); undoDelete()">UNDO</span>`, 5000);
         
         clearTimeout(undoTimeout);
         undoTimeout = setTimeout(() => {
@@ -1487,8 +1709,6 @@
         }); 
     }
 
-    function viewImg(data) { const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc'; const w = window.open(""); w.document.write(`<body style="margin:0;background:${bgColor};display:flex;align-items:center;justify-content:center"><img src="${data}" style="max-width:100%;max-height:100vh;"></body>`); }
-    
     function endMonth() {
         let validExpenses = db.expenses.filter(e => !e.deleted);
         if (!validExpenses || validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
@@ -1543,6 +1763,7 @@
                 }
                 processUploadQueue();
             }
+            checkForUpdates();
         }
     });
 
@@ -1580,6 +1801,7 @@
         
         loadData();
         fetchLiveRates();
+        checkForUpdates();
     };
 </script>
 </body>
