@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="1.2">
+    <meta name="app-version" content="7.9.3">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <script>
         const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -51,6 +53,25 @@
         themeQuery.addEventListener('change', () => {
             if (!sessionStorage.getItem('house_theme')) applyTheme();
         });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'house-expenses-v7.9.3';
+                    self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['/']))));
+                    self.addEventListener('activate', e => {
+                        e.waitUntil(caches.keys().then(keys => Promise.all(
+                            keys.map(key => { if(key !== CACHE_NAME) return caches.delete(key); })
+                        )));
+                    });
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                    });
+                `;
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+            });
+        }
     </script>
     
     <style>
@@ -69,21 +90,32 @@
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; }
         
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100dvh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; touch-action: pan-x pan-y; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+        
+        input, textarea, select { font-size: 16px !important; -webkit-user-select: auto; user-select: auto; color: var(--text-main) !important; background-color: var(--input-bg) !important; touch-action: manipulation; }
+        
+        button svg, .badge svg, .action-icon svg { pointer-events: none; }
+        button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; }
+
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
-        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; padding-top: max(12px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
-        .action-icon:hover { color: var(--accent); }
+        
+        @media (hover: hover) { .action-icon:hover { color: var(--accent); } }
 
-        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
+        .offline-badge { position: absolute; top: -2px; right: -2px; background: var(--danger); color: white; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
         .menu-link { text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; padding: 12px 15px; border-radius: 12px; transition: 0.2s; display: block; cursor: pointer; }
-        .menu-link:hover, .menu-link:active { background: var(--input-bg); color: var(--text-main); }
+        
+        @media (hover: hover) { .menu-link:hover { background: var(--input-bg); color: var(--text-main); } }
+        .menu-link:active { background: var(--input-bg); color: var(--text-main); }
 
         @keyframes highlight-glow { 0% { background-color: var(--accent-glow); } 100% { background-color: transparent; } }
         .highlight-pulse { animation: highlight-glow 1.5s ease-out; }
@@ -100,13 +132,13 @@
         .hero-section { padding: 25px 20px 20px 20px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
         .hero-section::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); filter: blur(100px); opacity: 0.15; z-index: 0; pointer-events: none; }
         
-        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; position: relative; z-index: 1; }
-        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); position: relative; z-index: 1; }
+        .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; position: relative; z-index: 1; transition: 0.3s; }
+        .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); position: relative; z-index: 1; font-variant-numeric: tabular-nums; word-break: break-all; overflow-wrap: anywhere; }
         
         .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 1; }
         .stat-block { display: flex; flex-direction: column; gap: 4px; }
         .stat-block .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-        .stat-block .val { font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
+        .stat-block .val { font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-variant-numeric: tabular-nums; }
         
         #currentExpensesWrapper .collapsible-content { padding-top: 0; }
         .timeline-wrapper { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 10px; margin-top: 0; }
@@ -117,31 +149,39 @@
         .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: none; }
         .item-main { flex: 1; padding-right: 10px; min-width: 0; }
         .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
-        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; word-wrap: break-word; }
+        .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; }
         .linear-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 150px; }
 
-        /* Swipe Action CSS */
-        .swipe-track { display: flex; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+        .swipe-track { display: flex; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
         .swipe-track::-webkit-scrollbar { display: none; }
-        .swipe-content { width: 100%; flex-shrink: 0; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; }
+        .swipe-content { width: 100%; flex-shrink: 0; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; min-width: 0;}
         .swipe-actions { flex-shrink: 0; scroll-snap-align: end; display: flex; align-items: center; gap: 6px; padding-left: 15px; }
 
-        .input-section { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
-        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; }
-        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; }
+        .input-section { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.1s; }
+        .input-section > * { pointer-events: auto; }
+        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
+        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); min-width: 0; position: relative; }
+        
+        .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main) !important; background-color: transparent !important; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; min-width: 0; font-size: 16px !important; }
         .chat-textarea::-webkit-scrollbar { display: none; }
         
         .chat-btn { background: transparent; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
-        .chat-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
-        .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; transition: 0.2s; }
+        @media (hover: hover) { .chat-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.05); } }
+        
+        .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; transition: 0.2s; flex-shrink: 0; }
         .chat-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        .chat-note { width: 100%; background: var(--nav-bg); border: 1px solid var(--border); padding: 10px 15px; color: var(--text-main); font-size: 0.85rem; border-radius: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .chat-note { width: 100%; background: var(--nav-bg) !important; border: 1px solid var(--border); padding: 10px 15px; color: var(--text-main) !important; border-radius: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-size: 16px !important; }
         .chat-note:focus { border-color: var(--accent); }
         
-        select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; font-size: 1rem; cursor: pointer; }
+        select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; font-size: 16px !important; }
         
+        /* v7.8 Autocomplete Dropdown */
+        #hashtagAutocomplete { position: absolute; bottom: 100%; left: 10px; width: calc(100% - 20px); background: var(--nav-bg); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 8px; max-height: 140px; overflow-y: auto; display: none; flex-direction: column; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.1); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .autocomplete-item { padding: 12px 16px; color: var(--text-main); font-weight: 600; font-size: 0.95rem; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 16px !important; }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:active { background: var(--input-bg); }
+
         .content-section { padding: 0 20px; transition: background-color 0.3s; }
         .name-pill { background: var(--input-bg); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: var(--text-main); display: inline-block; white-space: nowrap; transition: 0.2s;}
         .name-pill.main { background: rgba(45, 212, 191, 0.1); color: var(--accent); border-color: rgba(45, 212, 191, 0.2); }
@@ -151,15 +191,16 @@
         
         .action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
         .btn-pill { background: transparent; border: 1px solid var(--border); border-radius: 16px; padding: 5px 12px; font-size: 0.65rem; color: var(--text-muted); cursor: pointer; font-weight: 800; white-space: nowrap; transition: 0.2s; }
-        .btn-pill:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(0,0,0,0.03); }
-        [data-theme="dark"] .btn-pill:hover { background: rgba(255,255,255,0.05); border-color: var(--text-main); color: var(--text-main); }
+        
+        @media (hover: hover) { 
+            .btn-pill:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(0,0,0,0.03); }
+            [data-theme="dark"] .btn-pill:hover { background: rgba(255,255,255,0.05); border-color: var(--text-main); color: var(--text-main); }
+            .btn-pill.primary:hover { background: rgba(45, 212, 191, 0.15); }
+            .btn-pill.danger:hover { background: rgba(239, 68, 68, 0.15); }
+        }
         
         .btn-pill.primary { border-color: var(--accent); color: var(--accent); background: rgba(45, 212, 191, 0.05); }
-        .btn-pill.primary:hover { background: rgba(45, 212, 191, 0.15); }
-        
         .btn-pill.danger { border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.05); }
-        .btn-pill.danger:hover { background: rgba(239, 68, 68, 0.15); }
-
         .btn-pill.success { background: var(--success); color: #000; border-color: var(--success); }
         
         .flow-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 25px 0 15px 0; user-select: none; position: sticky; top: 65px; background: var(--bg); z-index: 10; transition: background-color 0.3s; }
@@ -177,9 +218,11 @@
         .archive-item.expanded .chevron { transform: rotate(180deg); }
 
         .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-        .user-select-btn { display: flex; align-items: center; gap: 14px; background: transparent; border: 1px solid var(--border); padding: 12px 18px; border-radius: 20px; color: var(--text-main); font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; text-align: left; margin-bottom: 10px; }
-        .user-select-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
-        .user-select-btn:active { transform: scale(0.98); }
+        .user-select-btn { display: flex; align-items: center; gap: 14px; background: transparent; border: 1px solid var(--border); padding: 12px 18px; border-radius: 20px; color: var(--text-main); font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; text-align: left; margin-bottom: 10px; }
+        
+        @media (hover: hover) { .user-select-btn:hover { border-color: var(--accent); background: var(--accent-glow); } }
+        .user-select-btn:active { transform: scale(0.98); border-color: var(--accent); background: var(--accent-glow); }
+        
         .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--text-main); color: var(--bg); display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1rem; }
 
         .btn-glowing { background: var(--input-bg); color: var(--text-main); padding: 14px 24px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
@@ -188,9 +231,8 @@
         .danger-badge { background: var(--danger); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 900; margin-left: 6px; }
         .count-badge { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; margin-left: 6px; }
         
-        #loading { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; pointer-events: auto;}
+        #loading { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: none; z-index: 20000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; pointer-events: auto;}
         
-        /* Toggle Switch CSS */
         .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
         .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 24px; }
@@ -198,25 +240,33 @@
         .toggle-switch input:checked + .toggle-slider { background-color: var(--accent); }
         .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
 
-        /* Native Lightbox Overlay */
-        #lightboxOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10005; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overflow: auto; touch-action: pinch-zoom; }
-        #lightboxImg { max-width: 95vw; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
-        .lightbox-close { position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+        #lightboxOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10005; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); touch-action: none; overflow: hidden; }
+        #lightboxImg { max-width: 95vw; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.1s ease-out; transform-origin: center center; }
+        .lightbox-close { position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2; }
+        .lightbox-rotate { position: absolute; top: 25px; left: 25px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2; }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 40px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; border-radius: 8px; }
+        #lightboxPrev { left: 10px; }
+        #lightboxNext { right: 10px; }
+        
+        .vacation-pill { background: transparent; border: 1px dashed var(--border); color: var(--text-muted); opacity: 0.6; }
     </style>
 </head>
 <body>
 
-<div id="loading">SYNCING...</div>
+<div id="loading" aria-live="polite">SYNCING...</div>
 
 <div id="passcodeOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10001; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
         <div style="margin-bottom: 15px; display:flex; justify-content:center;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         </div>
-        <h3 id="passcodeMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Enter House Passcode</h3>
-        <input type="password" id="passcodeInput" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.5rem; font-weight: bold; letter-spacing: 4px;" autocomplete="off">
+        <h3 style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Enter House Passcode</h3>
+        <input type="password" id="passcodeInput" aria-label="Passcode" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.5rem; font-weight: bold; letter-spacing: 4px;" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
         <div style="display:flex; gap:10px;">
             <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000; width: 100%;" onclick="triggerHaptic(); submitPasscode()">Unlock</button>
+            <button id="bioBtn" class="btn-glowing" style="display:none; background: transparent; border-color: var(--accent); color: var(--accent); width: auto; padding: 0 15px;" onclick="triggerHaptic(); authenticateBiometric()" aria-label="Use FaceID/TouchID">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><circle cx="12" cy="12" r="3"></circle><path d="M12 19v-2"></path></svg>
+            </button>
         </div>
     </div>
 </div>
@@ -232,10 +282,7 @@
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Manage Housemates</h2>
         <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <div style="display:flex; gap:10px; margin-bottom: 15px;">
-            <input type="text" id="newUserName" class="chat-note" placeholder="New housemate..." style="flex:1; padding:10px 12px; margin:0; border:1px solid var(--border);">
-            <button class="btn-glowing" style="width:auto; padding:10px 15px; margin:0;" onclick="triggerHaptic(); addUser()">Add</button>
-        </div>
+        <button class="btn-glowing" style="margin-bottom: 15px;" onclick="triggerHaptic(); addUser()">Add New Housemate</button>
         <button class="btn-glowing" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeManageUsers()">Close</button>
     </div>
 </div>
@@ -244,20 +291,52 @@
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
         
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
             <span style="font-weight:700; font-size: 0.95rem;">Swipe to Reveal Actions</span>
             <label class="toggle-switch">
-                <input type="checkbox" id="swipeToggleInput" onchange="triggerHaptic(); toggleSwipeSetting()">
+                <input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" onchange="triggerHaptic(); toggleSwipeSetting()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div id="smartRoundingContainer" style="display:none; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
+            <span style="font-weight:700; font-size: 0.95rem;">Smart Rounding (10p)</span>
+            <label class="toggle-switch">
+                <input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" onchange="triggerHaptic(); toggleSmartRounding()">
                 <span class="toggle-slider"></span>
             </label>
         </div>
         
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
+            <span style="font-weight:700; font-size: 0.95rem;">Trash Expiry</span>
+            <select id="trashExpirySelect" onchange="triggerHaptic(); updateTrashExpiry()" style="padding:4px; border-radius:8px; border:1px solid var(--border); background:var(--input-bg);">
+                <option value="7">7 Days</option>
+                <option value="14">14 Days</option>
+                <option value="30">30 Days</option>
+            </select>
+        </div>
+        
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
+            <button id="trashBtn" class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
             <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
-            <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export to Excel (CSV)</button>
+            <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); promptBiometricSetup();">Enable FaceID / TouchID</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
+                <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export CSV</button>
+            </div>
+            <button class="btn-glowing" style="background:transparent; color:var(--accent); border-color:var(--accent); font-size:0.8rem;" onclick="triggerHaptic(); closeSettings(); downloadZIP();">Download All Receipts (.ZIP)</button>
         </div>
         
         <button class="btn-glowing" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); closeSettings()">Done</button>
+    </div>
+</div>
+
+<div id="trashOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="login-card" style="width:90%; max-width:340px;">
+        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Recovery Vault</h2>
+        <div id="trashExpiryText" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:15px;"></div>
+        <div id="trashList" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
+        <button class="btn-glowing" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeTrash()">Close</button>
     </div>
 </div>
 
@@ -277,7 +356,7 @@
 <div id="promptOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
         <h3 id="promptMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;"></h3>
-        <input type="text" id="promptInput" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
+        <input type="text" id="promptInput" aria-label="Input field" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
         <div style="display:flex; gap:10px;">
             <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closePrompt()">Cancel</button>
             <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="triggerHaptic(); executePrompt()">OK</button>
@@ -285,18 +364,23 @@
     </div>
 </div>
 
-<div id="lightboxOverlay" onclick="closeLightbox()">
-    <button class="lightbox-close" onclick="closeLightbox()">×</button>
-    <img id="lightboxImg" src="" alt="Receipt" onclick="event.stopPropagation()">
+<div id="lightboxOverlay" onclick="closeLightbox(event)">
+    <button class="lightbox-close" aria-label="Close image" onclick="closeLightbox(event)">×</button>
+    <button class="lightbox-rotate" aria-label="Rotate image" onclick="rotateLightboxImg(event)">↻</button>
+    <button id="lightboxPrev" class="lightbox-nav" style="display:none;" onclick="changeLightboxImage(event, -1)">❮</button>
+    <button id="lightboxNext" class="lightbox-nav" style="display:none;" onclick="changeLightboxImage(event, 1)">❯</button>
+    <div id="lightboxLoader" style="color:white; font-size:0.8rem; font-weight:800; letter-spacing:1px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">LOADING PHOTO...</div>
+    <div id="lightboxPagination" style="position:absolute; bottom:25px; color:white; font-size:0.8rem; font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; display:none; pointer-events:none;">1/1</div>
+    <img id="lightboxImg" src="" alt="Receipt" crossorigin="anonymous" style="display:none;" onload="document.getElementById('lightboxLoader').style.display='none'; this.style.display='block';">
 </div>
 
 <div id="menuOverlay" onclick="toggleMenu()"></div>
-<div id="sideMenu">
+<nav id="sideMenu" aria-label="Main Menu">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
         <div>
             <h2 id="menuUserName" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--accent); text-transform:uppercase; letter-spacing:1px;"></h2>
         </div>
-        <button class="action-icon" onclick="triggerHaptic(); toggleMenu()">
+        <button class="action-icon" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     </div>
@@ -315,27 +399,30 @@
     <div style="flex-grow: 1;"></div>
     <a href="#" class="menu-link" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
     <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
-</div>
+</nav>
 
-<div class="wrapper">
-    <div class="glass-nav">
+<main class="wrapper">
+    <nav class="glass-nav" aria-label="Top Navigation">
         <div style="display:flex; align-items:center; gap:12px;">
-            <button class="action-icon" onclick="triggerHaptic(); toggleMenu()">
+            <button class="action-icon" aria-label="Open Menu" onclick="triggerHaptic(); toggleMenu()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <span id="topUserName" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer;" onclick="triggerHaptic(); toggleMyView()" title="Toggle My View"></span>
+            <button id="topUserName" aria-label="Toggle My View" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer; border: none;" onclick="triggerHaptic(); toggleMyView()" title="Toggle My View"></button>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
-            <button class="action-icon" onclick="triggerHaptic(); loadData()">
-                <svg id="syncIconElement" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-            </button>
+            <div style="position: relative;">
+                <button class="action-icon" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
+                    <svg id="syncIconElement" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                </button>
+                <div id="offlineBadge" class="offline-badge" style="display: none;">0</div>
+            </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="hero-section" id="heroSection">
+    <header class="hero-section" id="heroSection">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-            <span class="hero-label">Total House Bill</span>
-            <select id="currency" onchange="render()">
+            <span id="heroTotalLabel" class="hero-label">Total House Bill</span>
+            <select id="currency" aria-label="Select Currency" onchange="render()">
                 <option value="GBP">£ GBP</option>
                 <option value="PKR">Rs PKR</option>
                 <option value="USD">$ USD</option>
@@ -343,7 +430,7 @@
                 <option value="AED">AED</option>
             </select>
         </div>
-        <div id="totalExp" class="hero-value">0</div>
+        <div id="totalExp" class="hero-value" aria-live="polite">0</div>
         <div class="hero-stats-grid">
             <div class="stat-block">
                 <span class="label">Per Head</span>
@@ -357,12 +444,14 @@
                 </div>
             </div>
         </div>
+        <div id="hashtagContainer" class="swipe-track" style="margin-top: 15px; gap: 8px; position: relative; z-index: 1;"></div>
+        <div id="monthlyTrendText" style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 15px; font-weight: 600;"></div>
         <div style="margin-top: 15px;">
             <button class="btn-glowing" onclick="triggerHaptic(); endMonth()">END MONTH/START NEW</button>
         </div>
-    </div>
+    </header>
 
-    <div class="content-section" id="settlementsWrapper">
+    <section class="content-section" id="settlementsWrapper">
         <div class="flow-header" onclick="toggleSection(this)">
             <h3 class="flow-title" style="cursor:pointer;" onmousedown="startPress(event)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchstart="startPress(event)" ontouchend="cancelPress()" ontouchcancel="cancelPress()">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
             <div style="display:flex; align-items:center; gap:15px;">
@@ -373,7 +462,7 @@
         <div class="collapsible-content">
             
             <div style="margin-bottom: 15px;">
-                <button class="badge" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
+                <button class="badge" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Active Housemates
                 </button>
                 <div id="cycleSplitCheckboxes" style="display: none; flex-wrap: wrap; gap: 10px;"></div>
@@ -386,9 +475,9 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="content-section expanded" id="currentExpensesWrapper">
+    <section class="content-section expanded" id="currentExpensesWrapper">
         <div class="flow-header" onclick="toggleSection(this)">
             <h3 class="flow-title">Current Expenses</h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -396,9 +485,9 @@
         <div class="collapsible-content">
             <div id="expenseList" style="padding-bottom: 10px;"></div>
         </div>
-    </div>
+    </section>
 
-    <div class="content-section" id="unpaidArchivesSection" style="display:none; padding-top: 15px; border-top: 1px solid var(--border);">
+    <section class="content-section" id="unpaidArchivesSection" style="display:none; padding-top: 15px; border-top: 1px solid var(--border);">
         <div class="flow-header" onclick="toggleSection(this)">
             <h3 class="flow-title danger-text">Unpaid Past Debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -406,65 +495,230 @@
         <div class="collapsible-content">
             <div id="unpaidArchivesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
-    </div>
+    </section>
 
-    <div class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
+    <section class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
         <div class="flow-header" onclick="toggleSection(this)">
-            <h3 class="flow-title" onclick="triggerSecretBackup(event)">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
+            <h3 class="flow-title">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
             <div id="archiveList"></div>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 
-<div class="input-section" id="inputSection">
+<section class="input-section" id="inputSection" aria-label="Add Expense Area">
+    <div id="hashtagAutocomplete"></div>
     <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <input type="text" id="groupNote" class="chat-note" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
+        <input type="text" id="groupNote" aria-label="General Note" class="chat-note" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
         <button class="btn-glowing" style="padding: 10px; font-size: 0.85rem;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
-            Attach Photo
+            Attach Photo(s)
         </button>
     </div>
     <div class="chat-row">
         <div class="chat-input-wrapper" id="chatWrapper">
-            <textarea id="amtInput" class="chat-textarea" placeholder="Write Amount here" oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
-            <input type="file" id="receiptInput" accept="image/*" style="display:none;">
-            <button class="chat-btn" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
+            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea" placeholder="Write Amount here" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
+            <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
+            <button class="chat-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
         </div>
-        <button id="mainAddBtn" class="chat-btn primary" onclick="triggerHaptic(); addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        <button id="mainAddBtn" aria-label="Submit Expense" class="chat-btn primary" onclick="triggerHaptic(); addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
     </div>
-</div>
+</section>
 
 <script>
-    const APP_VERSION = "1.2";
-    const BIN_ID = '69dab988856a682189232cd0';
+    const APP_VERSION = "7.9.3";
+    const BIN_ID = '69e2bb7736566621a8c5920c';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
     let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
     const defaultUsers = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    let db = { startDate: "01/01/2026", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], userLinks: {} };
+    // GLOBAL STATE VARIABLES
+    let db = { startDate: "", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], userLinks: {}, trash: [], auditLog: [] };
     let currentUser = localStorage.getItem('house_user') || "";
+    let activeHashtag = null;
+    let prevTotalAmount = 0;
+    let prevPerHeadAmount = 0;
+    let offlineActionsCount = 0;
+    let isProcessingQueue = false;
+    let isSyncing = false;
+    let lastApiSaveTime = 0;
+    let lastSyncTime = 0;
+    let saveTimeout = null;
+    let isArchiving = false;
+    let isSettling = false;
+    let isUnlocked = false;
+    let lastSubmitTime = 0;
+    let editingId = null;
+    let myViewActive = false;
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
     let swipeActionsEnabled = localStorage.getItem('house_swipe_actions') === 'true';
+    let smartRoundingEnabled = localStorage.getItem('house_smart_rounding') === 'true';
     let housePasscode = localStorage.getItem('house_passcode') || "";
-    let pendingAction = null;
+    let trashExpiryDays = parseInt(localStorage.getItem('house_trash_expiry')) || 30;
     let toastTimeout;
-    let editingIndex = -1;
-    let myViewActive = false;
-    let lastSubmitTime = 0;
+    let confirmAction = null;
+    let promptAction = null;
+    let isHardwareDebounceActive = false;
+    let isSubmitting = false; // v7.9.1 Multi-tap lock
+
+    // Lightbox & Pinch-to-Zoom State
+    let currentLightboxImages = [];
+    let currentLightboxIndex = 0;
+    let lightboxRotation = 0;
+    let scale = 1;
+    let startDist = 0;
+
+    // V6.6: Popstate Modal Trap
+    window.addEventListener('popstate', (e) => {
+        if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('trashOverlay').style.display === 'flex') { closeTrash(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('sideMenu').classList.contains('open')) { toggleMenu(); history.pushState(null, null, location.href); }
+    });
+
+    window.addEventListener('pageshow', (e) => {
+        if (e.persisted && !isSyncing && isUnlocked) {
+            loadLocalBackup();
+            loadData(false);
+        }
+    });
+
+    window.onerror = function(message, source, lineno, colno, error) {
+        showToast("System recovered from an unexpected error.", 4000);
+        isSubmitting = false;
+        if(document.getElementById('mainAddBtn')) {
+            document.getElementById('mainAddBtn').disabled = false;
+            document.getElementById('mainAddBtn').style.opacity = '1';
+        }
+        isProcessingQueue = false;
+        isSyncing = false;
+        isArchiving = false;
+        isSettling = false;
+        if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE") {
+            document.getElementById('loading').style.display = 'none';
+        }
+        return true; 
+    };
+    
+    window.addEventListener('unhandledrejection', function(event) {
+        showToast("Network sync recovered.", 3000);
+        isSubmitting = false;
+        isProcessingQueue = false;
+        isSyncing = false;
+        if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE") {
+            document.getElementById('loading').style.display = 'none';
+        }
+        if(document.getElementById('mainAddBtn')) {
+            document.getElementById('mainAddBtn').disabled = false;
+            document.getElementById('mainAddBtn').style.opacity = '1';
+        }
+    });
+
+    function escapeHTML(str) {
+        if (!str || typeof str !== 'string') return str;
+        let clean = str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '');
+        return clean.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[tag]));
+    }
+    
+    function sanitizeName(str) {
+        if (!str) return "";
+        let clean = str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '');
+        return clean.replace(/['"<>\\\/&]/g, '').trim();
+    }
+    
+    function sanitizeURL(url) {
+        if (!url || typeof url !== 'string') return null;
+        return (url.startsWith('http://') || url.startsWith('https://')) ? url : null;
+    }
+
+    function safeJSONParse(str, defaultVal) {
+        try { return JSON.parse(str) || defaultVal; } 
+        catch (e) { return defaultVal; }
+    }
+
+    function safeSetStorage(key, val) {
+        if (typeof val === 'string' && val.length > 4500000) { 
+             showToast("Payload too massive for local vault. Aborting.", 4000);
+             return false;
+        }
+        try {
+            localStorage.setItem(key, val);
+            return true;
+        } catch (e) {
+            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                if (key === 'img_queue') {
+                    let q = safeJSONParse(localStorage.getItem('img_queue'), []);
+                    if(q.length > 0) { q.shift(); safeSetStorage('img_queue', JSON.stringify(q)); }
+                } else if (key === 'house_db_backup') {
+                    if (db.archives && db.archives.length > 5) {
+                        db.archives.pop(); 
+                        safeSetStorage(key, JSON.stringify(db));
+                        showToast("Vault Full. Oldest archive pruned to save space.", 4000);
+                    } else {
+                        showToast("Vault Full. Cannot save.", 4000);
+                        if(isUnlocked) loadLocalBackup();
+                        render();
+                    }
+                } else {
+                     showToast("Storage Limit Reached. Clear Vault.", 4000);
+                }
+            }
+            return false;
+        }
+    }
+
+    function updateOfflineBadge() {
+        const badge = document.getElementById('offlineBadge');
+        if (offlineActionsCount > 0 && (!navigator.onLine || needsSync)) {
+            badge.innerText = offlineActionsCount;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    window.addEventListener('storage', (e) => {
+        if (!isUnlocked) return;
+        if (e.key === 'house_db_backup' && e.newValue) {
+            loadLocalBackup();
+            showToast("SYNCED FROM ANOTHER TAB", 2000);
+        }
+    });
 
     function triggerHaptic() {
         if (window.navigator && window.navigator.vibrate) navigator.vibrate(40);
     }
+    
+    function animateValue(obj, start, end, duration, prefix) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 4); 
+            const current = start + (end - start) * ease;
+            obj.innerText = prefix + current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                obj.innerText = prefix + end.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
 
     async function checkForUpdates() {
         try {
-            const res = await fetch(location.href.split('?')[0] + '?t=' + Date.now(), {cache: "no-store"});
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch(location.href.split('?')[0] + '?t=' + Date.now(), {cache: "no-store", signal: controller.signal});
+            clearTimeout(timeoutId);
             const text = await res.text();
             const match = text.match(/<meta name="app-version" content="([^"]+)">/);
             if (match && match[1] && match[1] !== APP_VERSION) {
@@ -473,14 +727,23 @@
         } catch(e) {}
     }
 
-    let confirmAction = null;
+    function logAudit(actionStr, targetUser = null) {
+        if(!db.auditLog) db.auditLog = [];
+        db.auditLog.unshift({ t: Date.now(), by: currentUser, act: actionStr, trg: targetUser });
+        if(db.auditLog.length > 200) db.auditLog.pop();
+    }
+
     function customConfirm(msg, action) {
+        if(document.activeElement) document.activeElement.blur(); 
         document.getElementById('confirmMessage').innerHTML = msg;
         confirmAction = action;
         document.getElementById('confirmOverlay').style.display = 'flex';
     }
     function closeConfirm() {
-        document.getElementById('confirmOverlay').style.display = 'none';
+        const el = document.getElementById('confirmOverlay');
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        el.style.pointerEvents = 'auto';
         confirmAction = null;
     }
     function executeConfirm() {
@@ -488,8 +751,8 @@
         closeConfirm();
     }
 
-    let promptAction = null;
     function customPrompt(msg, defaultValue, action, inputMode = "text") {
+        if(document.activeElement) document.activeElement.blur(); 
         document.getElementById('promptMessage').innerHTML = msg;
         const input = document.getElementById('promptInput');
         input.value = defaultValue || "";
@@ -499,78 +762,319 @@
         setTimeout(() => input.focus(), 100);
     }
     function closePrompt() {
-        document.getElementById('promptOverlay').style.display = 'none';
+        const el = document.getElementById('promptOverlay');
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        el.style.pointerEvents = 'auto';
         promptAction = null;
     }
     function executePrompt() {
         if (promptAction) promptAction(document.getElementById('promptInput').value);
         closePrompt();
     }
-    document.getElementById('promptInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') { triggerHaptic(); executePrompt(); }
-    });
-    
-    function showPasscodePrompt(action) {
-        pendingAction = action;
-        const msg = action === "save" ? "Set House Passcode to Secure Data" : "Enter House Passcode to Unlock";
-        document.getElementById('passcodeMessage').innerText = msg;
-        const input = document.getElementById('passcodeInput');
-        input.value = "";
-        document.getElementById('passcodeOverlay').style.display = 'flex';
-        setTimeout(() => input.focus(), 100);
+
+    async function promptBiometricSetup() {
+        if (window.PublicKeyCredential) {
+             customConfirm("Use FaceID / TouchID to unlock House Expenses seamlessly?", async () => {
+                 try {
+                     const publicKey = {
+                         challenge: new Uint8Array(32),
+                         rp: { name: "House Expenses" },
+                         user: { id: new Uint8Array(16), name: currentUser || "Flatmate", displayName: currentUser || "Flatmate" },
+                         pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+                         authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                         timeout: 60000
+                     };
+                     const cred = await navigator.credentials.create({ publicKey });
+                     localStorage.setItem('house_bio_cred', btoa(String.fromCharCode.apply(null, new Uint8Array(cred.rawId))));
+                     showToast("Biometrics Enabled", 2000);
+                     document.getElementById('bioBtn').style.display = 'flex';
+                 } catch(e) {
+                     showToast("Biometrics setup skipped.", 3000);
+                 }
+             });
+        }
     }
+
+    async function authenticateBiometric() {
+        if (isHardwareDebounceActive) return; 
+        isHardwareDebounceActive = true;
+        
+        let bioCred = localStorage.getItem('house_bio_cred');
+        if (!bioCred || !window.PublicKeyCredential) {
+            isHardwareDebounceActive = false;
+            return;
+        }
+        try {
+            const rawIdStr = atob(bioCred);
+            const rawId = new Uint8Array(rawIdStr.length);
+            for(let i=0; i<rawIdStr.length; i++) rawId[i] = rawIdStr.charCodeAt(i);
+            await navigator.credentials.get({
+                publicKey: { challenge: new Uint8Array(32), allowCredentials: [{ type: "public-key", id: rawId }], userVerification: "required" }
+            });
+            
+            housePasscode = localStorage.getItem('house_passcode') || "";
+            document.getElementById('passcodeOverlay').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            loadData(true).then(() => {
+                if (!isUnlocked) document.getElementById('passcodeOverlay').style.display = 'flex';
+                isHardwareDebounceActive = false;
+            });
+        } catch(e) {
+            isHardwareDebounceActive = false;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('passcodeOverlay').style.display = 'flex';
+            document.getElementById('passcodeInput').focus();
+            if (e.name === 'NotAllowedError') {
+                showToast("Biometric cancelled. Enter PIN.", 3000);
+            } else {
+                showToast("Biometric timeout. Enter PIN.", 3000);
+            }
+        }
+    }
+
     function submitPasscode() {
-        const val = document.getElementById('passcodeInput').value.trim();
+        const inputEl = document.getElementById('passcodeInput');
+        const val = inputEl.value.trim();
         if (!val) return;
+        
+        if (val.length > 100) {
+            showToast("Invalid Input.", 3000);
+            inputEl.value = "";
+            return;
+        }
+        
         housePasscode = val;
-        localStorage.setItem('house_passcode', housePasscode);
         document.getElementById('passcodeOverlay').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
         
-        if (pendingAction === "load") loadData();
-        else if (pendingAction === "save") saveData();
-        
-        pendingAction = null;
+        loadData(true).then(() => {
+            if (!isUnlocked) {
+                document.getElementById('passcodeOverlay').style.display = 'flex';
+            }
+        });
     }
-    document.getElementById('passcodeInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') { triggerHaptic(); submitPasscode(); }
-    });
 
     function openSettings() {
+        if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu');
         if (menu.classList.contains('open')) toggleMenu();
+        
+        history.pushState(null, null, location.href); 
+        
         document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
+        
+        const roundingContainer = document.getElementById('smartRoundingContainer');
+        if (currentUser === "Shahzeb") {
+            roundingContainer.style.display = 'flex';
+            document.getElementById('smartRoundingInput').checked = smartRoundingEnabled;
+        } else {
+            roundingContainer.style.display = 'none';
+        }
+        
+        // V7.9 Admin Lockdown for Trash
+        const trashBtn = document.getElementById('trashBtn');
+        if (currentUser === "Shahzeb") {
+            trashBtn.style.display = 'flex';
+            document.getElementById('trashExpirySelect').parentElement.style.display = 'flex';
+            document.getElementById('trashExpirySelect').value = trashExpiryDays.toString();
+        } else {
+            trashBtn.style.display = 'none';
+            document.getElementById('trashExpirySelect').parentElement.style.display = 'none';
+        }
+        
         document.getElementById('settingsOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
     }
     function closeSettings() {
-        document.getElementById('settingsOverlay').style.display = 'none';
+        const el = document.getElementById('settingsOverlay');
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        el.style.pointerEvents = 'auto';
+        document.body.style.overflow = '';
     }
     function toggleSwipeSetting() {
         swipeActionsEnabled = document.getElementById('swipeToggleInput').checked;
-        localStorage.setItem('house_swipe_actions', swipeActionsEnabled);
+        safeSetStorage('house_swipe_actions', swipeActionsEnabled);
+        render();
+    }
+    function toggleSmartRounding() {
+        smartRoundingEnabled = document.getElementById('smartRoundingInput').checked;
+        safeSetStorage('house_smart_rounding', smartRoundingEnabled);
+        render();
+    }
+    function updateTrashExpiry() {
+        trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value);
+        localStorage.setItem('house_trash_expiry', trashExpiryDays);
+        showToast("Trash Expiry Updated", 1500);
+    }
+
+    // V7.8 & V7.7 Auto-split memory & autocomplete
+    function handleTagInput(e) {
+        const val = e.target.value;
+        const match = val.match(/#([\w-]+)$/);
+        const dropdown = document.getElementById('hashtagAutocomplete');
+        
+        if (match) {
+            const currentTyping = match[0];
+            let allTags = new Set();
+            (db.expenses||[]).forEach(ex => {
+                let tMatch = (ex.desc || "").match(/#([\w-]+)/g);
+                if(tMatch) tMatch.forEach(t => allTags.add(t));
+            });
+            (db.archives||[]).forEach(arc => {
+                if(arc.tag) allTags.add(arc.tag);
+                (arc.details||[]).forEach(ex => {
+                    let tMatch = (ex.desc || "").match(/#([\w-]+)/g);
+                    if(tMatch) tMatch.forEach(t => allTags.add(t));
+                });
+            });
+            
+            let suggestions = Array.from(allTags).filter(t => t.toLowerCase().startsWith(currentTyping.toLowerCase()) && t !== currentTyping);
+            
+            if (suggestions.length > 0) {
+                dropdown.innerHTML = suggestions.map(t => `<div class="autocomplete-item" onclick="applyTag('${t}', '${e.target.id}')">${t}</div>`).join('');
+                dropdown.style.display = 'flex';
+            } else {
+                dropdown.style.display = 'none';
+            }
+
+            // Tag Memory
+            let lastEx = (db.expenses||[]).find(ex => (ex.desc||"").includes(currentTyping));
+            if (lastEx && lastEx.involved && lastEx.involved.length > 0) {
+                db.activeUsers = [...lastEx.involved];
+                render(); // silently updates checkboxes
+            }
+
+        } else {
+            dropdown.style.display = 'none';
+        }
+    }
+    
+    function applyTag(fullTag, targetId) {
+        const input = document.getElementById(targetId);
+        input.value = input.value.replace(/#([\w-]+)$/, fullTag);
+        document.getElementById('hashtagAutocomplete').style.display = 'none';
+        input.focus();
+    }
+
+    function toggleHashtag(tag) {
+        if (editingId) {
+            showToast("Finish editing before changing tags.", 3000);
+            return;
+        }
+        if (activeHashtag === tag) {
+            activeHashtag = null;
+        } else {
+            activeHashtag = tag;
+        }
         render();
     }
 
+    function openTrash() {
+        closeSettings();
+        history.pushState(null, null, location.href); 
+        
+        const list = document.getElementById('trashList');
+        const sym = curSymbols[document.getElementById('currency').value];
+        const rate = rates[document.getElementById('currency').value];
+        
+        document.getElementById('trashExpiryText').innerText = `Items permanently deleted after ${trashExpiryDays} days.`;
+        
+        if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) {
+            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>Vault is empty.</div>";
+        } else {
+            list.innerHTML = db.trash.map((ex, i) => {
+                const daysLeft = trashExpiryDays - Math.floor((Date.now() - ex.deletedAt) / (1000 * 60 * 60 * 24));
+                const shortDesc = ex.desc ? escapeHTML(ex.desc.split('\n')[0].substring(0, 20)) : "Expense";
+                return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+                    <div>
+                        <div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${sym}${(ex.amount * rate).toFixed(2)} - ${shortDesc}</div>
+                        <div style="font-size:0.65rem; color:var(--danger); margin-top:3px;">${daysLeft} days until deletion</div>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-pill success" onclick="triggerHaptic(); restoreTrash(${i})">Restore</button>
+                        <button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i})">Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        document.getElementById('trashOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeTrash() { 
+        const el = document.getElementById('trashOverlay');
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        el.style.pointerEvents = 'auto';
+        document.body.style.overflow = '';
+    }
+    
+    function restoreTrash(i) {
+        if(db.trash && db.trash[i]) {
+            let ex = db.trash.splice(i, 1)[0];
+            delete ex.deletedAt;
+            if(!Array.isArray(db.expenses)) db.expenses = [];
+            db.expenses.unshift(ex);
+            db.expenses.sort((a,b) => b.timestamp - a.timestamp);
+            logAudit("Restored Expense", ex.id);
+            openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000);
+        }
+    }
+    function permDeleteTrash(i) {
+        if(db.trash && db.trash[i]) {
+            customConfirm("Permanently delete this expense?", () => {
+                if(!db.trash[i]) return;
+                let ex = db.trash[i];
+                let receipts = Array.isArray(ex.receipt) ? ex.receipt : (ex.receipt ? [ex.receipt] : []);
+                let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
+                
+                delUrls.forEach(u => {
+                     if (u) fetch(u, { mode: 'no-cors' }).catch(() => {});
+                });
+                db.trash.splice(i, 1);
+                logAudit("Permanently Deleted", ex.id);
+                openTrash(); executeActionWithSave(); showToast("Deleted Permanently", 2000);
+            });
+        }
+    }
+
+    async function checkTrueNetwork() {
+        if (!navigator.onLine) return false;
+        try {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 3000);
+            await fetch('https://open.er-api.com/v6/latest/GBP', { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+            clearTimeout(id);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     async function fetchLiveRates() {
-        const cached = localStorage.getItem('currency_rates_cache');
+        let cached = safeJSONParse(localStorage.getItem('currency_rates_cache'), null);
         if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                rates.PKR = parsed.PKR || rates.PKR;
-                rates.USD = parsed.USD || rates.USD;
-                rates.EUR = parsed.EUR || rates.EUR;
-                rates.AED = parsed.AED || rates.AED;
-            } catch(e){}
+            rates.PKR = cached.PKR || rates.PKR;
+            rates.USD = cached.USD || rates.USD;
+            rates.EUR = cached.EUR || rates.EUR;
+            rates.AED = cached.AED || rates.AED;
         }
         try {
-            const res = await fetch('https://open.er-api.com/v6/latest/GBP');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch('https://open.er-api.com/v6/latest/GBP', {signal: controller.signal});
+            clearTimeout(timeoutId);
             const data = await res.json();
             if (data && data.rates) {
                 rates.PKR = data.rates.PKR || rates.PKR;
                 rates.USD = data.rates.USD || rates.USD;
                 rates.EUR = data.rates.EUR || rates.EUR;
                 rates.AED = data.rates.AED || rates.AED;
-                localStorage.setItem('currency_rates_cache', JSON.stringify(rates));
-                render(); 
+                safeSetStorage('currency_rates_cache', JSON.stringify(rates));
+                if(isUnlocked) render(); 
             }
         } catch(e) {}
     }
@@ -584,20 +1088,23 @@
     });
 
     function showToast(msg, duration = 0) {
+        if(document.activeElement && document.activeElement.tagName === 'TEXTAREA') document.activeElement.blur(); 
         const loader = document.getElementById('loading');
         loader.innerHTML = msg;
         loader.style.display = 'block';
         clearTimeout(toastTimeout);
-        if (duration > 0) toastTimeout = setTimeout(() => { loader.style.display = 'none'; }, duration);
+        if (duration > 0) toastTimeout = setTimeout(() => { 
+            loader.style.display = 'none'; 
+            loader.innerHTML = "SYNCING..."; 
+        }, duration);
     }
 
-    function setNeedsSync(val) { needsSync = val; localStorage.setItem('house_needs_sync', val); }
+    function setNeedsSync(val) { needsSync = val; safeSetStorage('house_needs_sync', val); }
+    
     function saveLocalBackup() { 
-        if (housePasscode) {
+        if (housePasscode && isUnlocked) {
             const encrypted = CryptoJS.AES.encrypt(JSON.stringify(db), housePasscode).toString();
-            localStorage.setItem('house_db_backup', encrypted);
-        } else {
-            localStorage.setItem('house_db_backup', JSON.stringify(db));
+            safeSetStorage('house_db_backup', encrypted);
         }
     }
     
@@ -606,15 +1113,33 @@
         if (backup) { 
             try { 
                 if (backup.startsWith('U2Fsd')) {
-                    if (housePasscode) {
-                        const bytes = CryptoJS.AES.decrypt(backup, housePasscode);
-                        db = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-                    }
+                    if (!housePasscode) throw new Error("No passcode provided");
+                    const bytes = CryptoJS.AES.decrypt(backup, housePasscode);
+                    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
+                    if (!decryptedString || !decryptedString.includes("expenses")) throw new Error("Decryption failed or invalid JSON"); 
+                    db = JSON.parse(decryptedString);
+                    isUnlocked = true;
                 } else {
                     db = JSON.parse(backup); 
+                    isUnlocked = true;
                 }
-                initializeDB(); renderUsers(); render(); 
-            } catch (e) { }
+                
+                initializeDB(); renderUsers(); 
+                
+                if (isUnlocked) {
+                    if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
+                    else {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        render();
+                    }
+                }
+            } catch (err) {
+                showToast("INCORRECT PASSCODE", 3000);
+                isUnlocked = false;
+                housePasscode = localStorage.getItem('house_passcode') || ""; 
+                document.getElementById('passcodeOverlay').style.display = 'flex';
+                document.getElementById('passcodeInput').value = "";
+            }
         }
     }
 
@@ -647,9 +1172,11 @@
     }
 
     function toggleMenu() {
+        if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu');
         const overlay = document.getElementById('menuOverlay');
         const isOpen = menu.classList.contains('open');
+        if(!isOpen) history.pushState(null, null, location.href); 
         menu.classList.toggle('open');
         overlay.style.display = isOpen ? 'none' : 'block';
     }
@@ -667,18 +1194,30 @@
     function cancelPress() { clearTimeout(pressTimer); }
 
     function markAllSettled() {
-        customConfirm("Mark ALL current house debts as Settled?", () => {
+        if (isSettling) return;
+        customConfirm("Mark ALL displayed debts as Settled?", () => {
+            isSettling = true;
             let totalBase = 0;
-            let validExpenses = db.expenses.filter(e => !e.deleted);
-            validExpenses.forEach(e => totalBase += e.amount);
-            const txs = getSettlements(validExpenses, totalBase, db.activeUsers);
+            
+            let allValid = db.expenses || [];
+            let contextExpenses = allValid.filter(e => {
+                let hasTags = /#([\w-]+)/.test(e.desc || "");
+                return activeHashtag ? (e.desc || "").includes(activeHashtag) : !hasTags;
+            });
+            
+            contextExpenses.forEach(e => totalBase += e.amount);
+            const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
+            
             txs.forEach(t => {
-                const key = `${t.from}_${t.to}`;
+                const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
+                if (!db.paidStatus) db.paidStatus = {};
                 db.paidStatus[key] = t.amt; 
             });
+            logAudit("Marked All Active Settled");
             render();
-            saveData();
+            executeActionWithSave();
             showToast("ALL SETTLED", 2000);
+            isSettling = false;
         });
     }
     
@@ -687,7 +1226,7 @@
         const parent = headerEl.parentElement;
         if (parent.classList.contains('content-section')) {
             document.querySelectorAll('.content-section.expanded').forEach(el => {
-                if (el !== parent && !(el.id === 'currentExpensesWrapper' && db.expenses.filter(e=>!e.deleted).length > 0)) el.classList.remove('expanded');
+                if (el !== parent && !(el.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) el.classList.remove('expanded');
             });
         } else if (parent.classList.contains('archive-item')) {
             document.querySelectorAll('.archive-item.expanded').forEach(el => { if (el !== parent) el.classList.remove('expanded'); });
@@ -703,7 +1242,7 @@
         if (el) {
             if (id !== 'inputSection' && el.classList.contains('content-section')) {
                 document.querySelectorAll('.content-section.expanded').forEach(sec => {
-                    if (sec !== el && !(sec.id === 'currentExpensesWrapper' && db.expenses.filter(e=>!e.deleted).length > 0)) sec.classList.remove('expanded');
+                    if (sec !== el && !(sec.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) sec.classList.remove('expanded');
                 });
             }
             if (!el.classList.contains('expanded') && el.querySelector('.flow-header')) el.classList.add('expanded');
@@ -714,44 +1253,61 @@
     }
 
     function openManageUsers() {
+        if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu');
         if (menu.classList.contains('open')) toggleMenu();
+        
+        history.pushState(null, null, location.href); 
+        
         const list = document.getElementById('manageUserList');
-        list.innerHTML = db.users.map(u => `
+        // V7.2 Vacation Mode added
+        list.innerHTML = db.users.map(u => {
+            let isVacation = false; // Placeholder for UI, math exclusion handled by unchecking
+            return `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-                <span style="font-weight:bold; color:var(--text-main);">${u}</span>
+                <span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-pill ${db.userLinks && db.userLinks[u] ? 'success' : ''}" onclick="triggerHaptic(); editUserLink('${u}')">Link</button>
-                    <button class="btn-pill" onclick="triggerHaptic(); editUser('${u}')">Rename</button>
-                    <button class="btn-pill danger" onclick="triggerHaptic(); deleteUser('${u}')">Remove</button>
+                    <button class="btn-pill ${db.userLinks && db.userLinks[u] ? 'success' : ''}" onclick="triggerHaptic(); editUserLink('${escapeHTML(u)}')">Link</button>
+                    <button class="btn-pill" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button>
+                    <button class="btn-pill danger" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
         document.getElementById('manageUsersOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     }
 
-    function closeManageUsers() { document.getElementById('manageUsersOverlay').style.display = 'none'; }
+    function closeManageUsers() { 
+        const el = document.getElementById('manageUsersOverlay');
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        el.style.pointerEvents = 'auto';
+        document.body.style.overflow = '';
+    }
 
     function addUser() {
         customPrompt("Enter new housemate's name:", "", (val) => {
-            const n = val.trim(); if (!n) return;
-            if (db.users.includes(n)) { showToast("User already exists.", 3000); return; }
+            const n = sanitizeName(val); if (!n) return;
+            const nLower = n.toLowerCase();
+            if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("User already exists.", 3000); return; }
+            
             db.users.push(n); db.activeUsers.push(n);
-            renderUsers(); openManageUsers(); render(); saveData();
+            logAudit("Added User", n);
+            renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
     }
 
     function editUser(oldName) {
         customPrompt(`Rename ${oldName} to:`, oldName, (newName) => {
-            if (!newName || newName.trim() === "" || newName === oldName) return;
-            const n = newName.trim();
-            if (db.users.includes(n)) { showToast("Name already exists.", 3000); return; }
+            const n = sanitizeName(newName); if (!n || n === oldName) return;
+            const nLower = n.toLowerCase();
+            if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("Name already exists.", 3000); return; }
             
             db.users[db.users.indexOf(oldName)] = n;
             if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
             
             if (db.userLinks && db.userLinks[oldName] !== undefined) {
-                db.userLinks[newName] = db.userLinks[oldName];
+                db.userLinks[n] = db.userLinks[oldName];
                 delete db.userLinks[oldName];
             }
             
@@ -762,65 +1318,122 @@
             
             db.archives.forEach(arc => {
                 if (arc.activeUsers && arc.activeUsers.includes(oldName)) arc.activeUsers[arc.activeUsers.indexOf(oldName)] = n;
-                arc.details.forEach(ex => {
-                    if (ex.name === oldName) ex.name = n;
-                    if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n;
-                });
+                if (arc.details) {
+                    arc.details.forEach(ex => {
+                        if (ex.name === oldName) ex.name = n;
+                        if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n;
+                    });
+                }
                 let arcPaid = {};
                 for (let key in arc.paidStatus) {
-                    let [from, to] = key.split('_');
+                    let parts = key.split('_');
+                    let from = parts[0];
+                    let to = parts[1];
+                    let tagPart = parts.slice(2).join('_');
+                    
                     if (from === oldName) from = n;
                     if (to === oldName) to = n;
-                    arcPaid[`${from}_${to}`] = arc.paidStatus[key];
+                    
+                    let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`;
+                    arcPaid[newKey] = arc.paidStatus[key]; 
                 }
                 arc.paidStatus = arcPaid;
             });
 
             let newPaid = {};
             for (let key in db.paidStatus) {
-                let [from, to] = key.split('_');
+                let parts = key.split('_');
+                let from = parts[0];
+                let to = parts[1];
+                let tagPart = parts.slice(2).join('_');
+
                 if (from === oldName) from = n;
                 if (to === oldName) to = n;
-                newPaid[`${from}_${to}`] = db.paidStatus[key];
+                
+                let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`;
+                newPaid[newKey] = db.paidStatus[key];
             }
             db.paidStatus = newPaid;
             
+            logAudit(`Renamed ${oldName} to`, n);
             if (currentUser === oldName) {
                 currentUser = n;
                 localStorage.setItem('house_user', n);
-                document.getElementById('topUserName').innerText = n;
+                document.getElementById('topUserName').innerText = escapeHTML(n);
                 const menuUser = document.getElementById('menuUserName');
-                if(menuUser) menuUser.innerText = n;
+                if(menuUser) menuUser.innerText = escapeHTML(n);
             }
-            renderUsers(); openManageUsers(); render(); saveData();
+            renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
     }
     
     function editUserLink(name) {
         let currentLink = (db.userLinks && db.userLinks[name]) ? db.userLinks[name] : "";
-        customPrompt(`Paste payment link for ${name} (e.g., monzo.me/name):`, currentLink, (val) => {
+        customPrompt(`Paste payment link (monzo.me/name) OR Bank Details (Sort/Acc) for ${name}:`, currentLink, (val) => {
             if (val === null) return;
             if (!db.userLinks) db.userLinks = {};
             db.userLinks[name] = val.trim();
-            showToast("Payment Link Saved", 2000);
+            showToast("Details Saved", 2000);
             openManageUsers(); 
             render();
-            saveData();
+            executeActionWithSave();
         });
     }
 
     function deleteUser(name) {
         if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
-        customConfirm(`Remove ${name} from housemates? Past expenses are kept.`, () => {
+        
+        let validExpenses = db.expenses || [];
+        let contexts = [null]; 
+        validExpenses.forEach(e => {
+            let match = (e.desc || "").match(/#([\w-]+)/);
+            if(match && !contexts.includes(match[0])) contexts.push(match[0]);
+        });
+
+        let canDelete = true;
+
+        for(let i=0; i<contexts.length; i++) {
+            let ctx = contexts[i];
+            let ctxEx = validExpenses.filter(e => {
+                let match = (e.desc || "").match(/#([\w-]+)/);
+                if(ctx) return match && match[0] === ctx;
+                return !match;
+            });
+
+            let balances = {};
+            db.users.forEach(u => balances[u] = 0);
+
+            ctxEx.forEach(e => {
+                balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
+                let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : db.activeUsers;
+                let activeCount = Math.max(involved.length, 1);
+                let perHead = Math.round((e.amount / activeCount) * 100) / 100;
+                involved.forEach(u => { balances[u] = Math.round((balances[u] - perHead) * 100) / 100; });
+            });
+
+            if (Math.abs(balances[name]) > 0.05) {
+                canDelete = false;
+                break;
+            }
+        }
+
+        if (!canDelete) {
+            showToast(`Cannot remove ${escapeHTML(name)}. Balance must be settled in all tags.`, 4000);
+            return;
+        }
+
+        customConfirm(`Remove ${escapeHTML(name)} from housemates? Past expenses are kept.`, () => {
             const idx = db.users.indexOf(name);
             if (idx > -1) db.users.splice(idx, 1);
             const aIdx = db.activeUsers.indexOf(name);
             if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
             
             if (db.userLinks) delete db.userLinks[name];
+            
+            logAudit("Removed User", name);
 
             if (currentUser === name) { closeManageUsers(); logout(); } 
-            else { renderUsers(); openManageUsers(); render(); saveData(); }
+            else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
 
@@ -829,7 +1442,7 @@
         btns.innerHTML = '';
         const usersList = (db.users && db.users.length > 0) ? db.users : defaultUsers;
         usersList.forEach(u => {
-            btns.innerHTML += `<button class="user-select-btn" onclick="triggerHaptic(); login('${u}')"><div class="user-avatar">${u.charAt(0)}</div>${u}</button>`;
+            btns.innerHTML += `<button class="user-select-btn" onclick="triggerHaptic(); login('${escapeHTML(u)}')"><div class="user-avatar">${escapeHTML(u.charAt(0))}</div>${escapeHTML(u)}</button>`;
         });
     }
 
@@ -845,12 +1458,12 @@
             let t = tokens[i];
             if (/^(?:£|\$|€|Rs)?\d/.test(t)) {
                 if (/^\d+(\.\d+)?$/.test(t)) t = origSym + t;
-                processedDesc += ' &bull; ' + t;
+                processedDesc += ' • ' + t;
             } else {
                 processedDesc += ' ' + t;
             }
         }
-        return processedDesc;
+        return escapeHTML(processedDesc);
     }
     
     function formatNiceDate(dateStr) {
@@ -859,7 +1472,7 @@
         if (parts.length !== 3) return dateStr;
         const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
         const dateObj = new Date(y, m, d);
-        if (isNaN(dateObj.getTime())) return dateStr;
+        if (isNaN(dateObj.getTime())) return escapeHTML(dateStr);
         const day = dateObj.getDate(), month = dateObj.toLocaleString('default', { month: 'short' }), year = dateObj.getFullYear();
         const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th';
         return `${day}${nth} ${month} ${year}`;
@@ -867,9 +1480,22 @@
 
     async function copyToClipboard(text) {
         try {
-            if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
-            const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            if (navigator.clipboard && window.isSecureContext) { 
+                await navigator.clipboard.writeText(text); 
+                return; 
+            }
+            const el = document.createElement('textarea'); 
+            el.value = text; 
+            document.body.appendChild(el); 
+            el.select(); 
+            document.execCommand('copy'); 
+            document.body.removeChild(el);
         } catch (e) { showToast("Copy manually.", 3000); }
+    }
+    
+    function copyBankDetails(text) {
+        copyToClipboard(text); 
+        showToast("Bank Details Copied!", 2000);
     }
 
     function sendNudge(name, amount, sym) {
@@ -884,27 +1510,220 @@
         }
     }
 
-    function viewImg(url) { 
+    // V7.9 Lightbox Array Support & V7.6 Pinch Zoom
+    function viewImg(urlArrayRaw) { 
         triggerHaptic();
+        
+        let urls = [];
+        try {
+            if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw);
+            else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); // Fallback
+            else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw;
+        } catch(e) { urls = [urlArrayRaw]; }
+        
+        if(!urls || urls.length === 0) { showToast("Invalid receipt link.", 3000); return; }
+        
+        currentLightboxImages = urls.map(u => sanitizeURL(u.trim())).filter(u => u !== null);
+        if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
+        
+        currentLightboxIndex = 0;
+        lightboxRotation = 0;
+        scale = 1;
+        
+        updateLightboxDOM();
+        
         const overlay = document.getElementById('lightboxOverlay');
-        document.getElementById('lightboxImg').src = url;
         overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        initPinchZoom();
+    }
+    
+    function updateLightboxDOM() {
+        const loader = document.getElementById('lightboxLoader');
+        const img = document.getElementById('lightboxImg');
+        const prev = document.getElementById('lightboxPrev');
+        const next = document.getElementById('lightboxNext');
+        const pag = document.getElementById('lightboxPagination');
+        
+        loader.style.display = 'block';
+        img.style.display = 'none';
+        img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`;
+        
+        img.src = currentLightboxImages[currentLightboxIndex];
+        
+        if(currentLightboxImages.length > 1) {
+            prev.style.display = 'flex';
+            next.style.display = 'flex';
+            pag.style.display = 'block';
+            pag.innerText = `${currentLightboxIndex + 1}/${currentLightboxImages.length}`;
+        } else {
+            prev.style.display = 'none';
+            next.style.display = 'none';
+            pag.style.display = 'none';
+        }
+    }
+    
+    function changeLightboxImage(e, dir) {
+        e.stopPropagation();
+        triggerHaptic();
+        currentLightboxIndex += dir;
+        if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1;
+        if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0;
+        lightboxRotation = 0;
+        scale = 1;
+        updateLightboxDOM();
+    }
+    
+    function rotateLightboxImg(e) {
+        e.stopPropagation();
+        triggerHaptic();
+        lightboxRotation += 90;
+        document.getElementById('lightboxImg').style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`;
     }
 
-    function closeLightbox() {
+    function closeLightbox(e) {
+        if(e) e.stopPropagation();
         triggerHaptic();
         document.getElementById('lightboxOverlay').style.display = 'none';
         document.getElementById('lightboxImg').src = '';
+        document.body.style.overflow = '';
+        currentLightboxImages = [];
+        scale = 1;
+        lightboxRotation = 0;
+    }
+    
+    function initPinchZoom() {
+        const img = document.getElementById('lightboxImg');
+        let initialDist = 0;
+        
+        img.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                initialDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            }
+        }, { passive: true });
+        
+        img.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                const delta = currentDist - initialDist;
+                scale = Math.max(1, Math.min(scale + (delta * 0.01), 4));
+                initialDist = currentDist;
+                img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`;
+            }
+        }, { passive: true });
+    }
+
+    // PDF Export Tool (v7.1)
+    async function downloadPDF() {
+        showToast("GENERATING PDF...", 0);
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+            
+            doc.setFontSize(18);
+            doc.text("House Expenses Ledger", 14, 22);
+            doc.setFontSize(11);
+            doc.text(`Cycle: ${formatNiceDate(db.startDate)} to Present`, 14, 30);
+            
+            let y = 40;
+            let validExpenses = db.expenses || [];
+            
+            validExpenses.forEach((ex, i) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                let exSym = ex.originalSym || sym;
+                let cleanDesc = ex.desc ? ex.desc.replace(/\n/g, ' ') : '';
+                doc.text(`${formatNiceDate(ex.date || db.startDate)} - ${ex.name} - ${exSym}${(ex.amount * rate).toFixed(2)}`, 14, y);
+                doc.setFontSize(9);
+                doc.setTextColor(100);
+                doc.text(cleanDesc.substring(0, 80), 14, y+5);
+                doc.setFontSize(11);
+                doc.setTextColor(0);
+                y += 15;
+            });
+            
+            doc.save(`House_Ledger_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`);
+            showToast("PDF Downloaded", 2000);
+        } catch(e) {
+            showToast("PDF Generation Failed", 3000);
+        }
+    }
+    
+    // ZIP Export Tool (v7.9)
+    async function downloadZIP() {
+        showToast("COMPILING ZIP...", 0);
+        try {
+            const zip = new JSZip();
+            const imgFolder = zip.folder("Receipts");
+            let fetchPromises = [];
+            
+            let allUrls = [];
+            
+            const extractUrls = (receiptField) => {
+                if(!receiptField) return;
+                if(typeof receiptField === 'string' && receiptField.startsWith('[')) {
+                    try { JSON.parse(receiptField).forEach(u => allUrls.push(u)); } catch(e){}
+                } else if(typeof receiptField === 'string') {
+                    receiptField.split(',').forEach(u => allUrls.push(u.trim()));
+                } else if(Array.isArray(receiptField)) {
+                    receiptField.forEach(u => allUrls.push(u));
+                }
+            };
+
+            (db.expenses||[]).forEach(ex => extractUrls(ex.receipt));
+            (db.archives||[]).forEach(arc => (arc.details||[]).forEach(ex => extractUrls(ex.receipt)));
+            
+            let validUrls = allUrls.filter(u => u && u.startsWith('http'));
+            if(validUrls.length === 0) { showToast("No receipts found.", 3000); return; }
+            
+            showToast(`COMPILING ${validUrls.length} RECEIPTS...`, 0);
+
+            // V7.9.1 Batch Chunking for RAM safety
+            const batchSize = 10;
+            for (let i = 0; i < validUrls.length; i += batchSize) {
+                const batch = validUrls.slice(i, i + batchSize);
+                await Promise.all(batch.map(async (url, idx) => {
+                    try {
+                        const response = await fetch(url, { mode: 'cors' });
+                        if(response.ok) {
+                            const blob = await response.blob();
+                            let filename = `receipt_${i+idx}_${Date.now()}.jpg`;
+                            imgFolder.file(filename, blob);
+                        }
+                    } catch(e) { console.warn("Failed fetching", url); }
+                }));
+                await new Promise(r => setTimeout(r, 50)); // Jitter breath
+            }
+            
+            const content = await zip.generateAsync({type:"blob"});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `House_Receipts_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.zip`;
+            link.click();
+            showToast("ZIP Downloaded", 2000);
+        } catch(e) {
+            showToast("ZIP Compilation Failed", 3000);
+        }
     }
 
     function initializeDB() {
-        if (!db.expenses) db.expenses = []; 
-        if (!db.archives) db.archives = [];
-        if (!db.paidStatus) db.paidStatus = {};
-        if (!db.startDate) db.startDate = new Date().toLocaleDateString('en-GB'); 
-        if (!db.users || db.users.length === 0) db.users = [...defaultUsers];
-        if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
-        if (!db.userLinks) db.userLinks = {};
+        if (!db || typeof db !== 'object') db = {};
+        if (!db.expenses || !Array.isArray(db.expenses)) db.expenses = []; 
+        if (!db.archives || !Array.isArray(db.archives)) db.archives = [];
+        if (!db.paidStatus || typeof db.paidStatus !== 'object') db.paidStatus = {};
+        if (!db.startDate) {
+            const today = new Date();
+            db.startDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+        }
+        if (!db.users || !Array.isArray(db.users) || db.users.length === 0) db.users = [...defaultUsers];
+        if (!db.activeUsers || !Array.isArray(db.activeUsers) || db.activeUsers.length === 0) db.activeUsers = [...db.users];
+        
+        db.activeUsers = db.activeUsers.filter(u => db.users.includes(u));
+        if (db.activeUsers.length === 0) db.activeUsers = [...db.users];
+        
+        if (!db.userLinks || typeof db.userLinks !== 'object') db.userLinks = {};
+        if (!db.trash || !Array.isArray(db.trash)) db.trash = [];
+        if (!db.auditLog || !Array.isArray(db.auditLog)) db.auditLog = [];
     }
 
     function renderSkeletons() {
@@ -919,73 +1738,217 @@
         document.getElementById('currentExpensesWrapper').classList.add('expanded');
     }
 
-    async function loadData() {
-        if (!navigator.onLine) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); return; }
+    function checkPayloadSize() {
+        const payloadStr = JSON.stringify(db);
+        const bytes = new TextEncoder().encode(payloadStr).length;
+        if (bytes > 900000) { 
+            showToast("Vault approaching capacity. Export CSV and initialize a new Bin.", 4000);
+            return false;
+        }
+        return true;
+    }
+
+    async function loadData(force = false) {
+        if (isSyncing) return;
+        if (!force && Date.now() - lastSyncTime < 2500) return;
         
-        if (db.expenses.length === 0) renderSkeletons();
+        lastSyncTime = Date.now();
+        isSyncing = true;
+        
+        const isReallyOnline = await checkTrueNetwork();
+        if (!isReallyOnline) { 
+            showToast("OFFLINE - LOCAL MODE", 2000); 
+            loadLocalBackup(); 
+            isSyncing = false;
+            return; 
+        }
+        
+        if (isUnlocked && (!db.expenses || db.expenses.length === 0)) renderSkeletons();
         
         const syncIcon = document.getElementById('syncIconElement');
         if(syncIcon) syncIcon.classList.add('spin');
         
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }, cache: 'no-store' });
-            if (!res.ok) throw new Error("Fetch failed");
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
+                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }, 
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (res.status === 429) throw new Error("429");
+            if (!res.ok) throw new Error("HTTP_API_ERROR");
             
             const data = await res.json();
             
-            if (data.encrypted && data.payload) {
+            if (data && data.encrypted && data.payload) {
                 if (!housePasscode) {
-                    showPasscodePrompt("load");
+                    document.getElementById('passcodeOverlay').style.display = 'flex';
+                    if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE") {
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                    if(syncIcon) syncIcon.classList.remove('spin');
+                    isSyncing = false;
                     return;
                 }
+
                 try {
                     const bytes = CryptoJS.AES.decrypt(data.payload, housePasscode);
                     const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
-                    if (!decryptedString) throw new Error("Decryption failed");
+                    if (!decryptedString || !decryptedString.includes("expenses")) throw new Error("Decryption failed or invalid JSON"); 
+                    
                     db = JSON.parse(decryptedString);
+                    isUnlocked = true;
+                    
+                    bytes.words = [];
+                    
+                    if (housePasscode !== localStorage.getItem('house_passcode')) {
+                        safeSetStorage('house_passcode', housePasscode);
+                        setTimeout(() => promptBiometricSetup(), 1000);
+                    }
                 } catch (err) {
                     showToast("INCORRECT PASSCODE", 3000);
-                    localStorage.removeItem('house_passcode');
-                    housePasscode = "";
-                    showPasscodePrompt("load");
-                    return;
+                    isUnlocked = false;
+                    housePasscode = localStorage.getItem('house_passcode') || "";
+                    document.getElementById('passcodeOverlay').style.display = 'flex';
+                    document.getElementById('passcodeInput').value = "";
+                    if(syncIcon) syncIcon.classList.remove('spin');
+                    isSyncing = false;
+                    return; 
                 }
             } else {
-                db = data.record ? data.record : data;
+                showToast("VAULT NOT INITIALIZED", 4000);
+                if(syncIcon) syncIcon.classList.remove('spin');
+                isSyncing = false;
+                return;
             }
             
-            initializeDB(); renderUsers(); saveLocalBackup(); render(); 
-            document.getElementById('loading').style.display = 'none'; 
+            initializeDB(); 
+            
+            if (db.trash && Array.isArray(db.trash)) {
+                const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000;
+                let originalLength = db.trash.length;
+                db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs);
+                if (db.trash.length !== originalLength) executeActionWithSave(); 
+            }
+            
+            renderUsers(); saveLocalBackup(); 
+            if (isUnlocked) {
+                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
+                else {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    render();
+                }
+            }
+            
+            offlineActionsCount = 0;
+            updateOfflineBadge();
+            
             processUploadQueue();
         } catch (e) {
-            showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup();
+            if (e.message === "429") {
+                setTimeout(() => { if(isUnlocked) loadData(true); }, 1500);
+            } else if (e.message === "HTTP_API_ERROR") {
+                showToast("CLOUD SERVER OFFLINE", 3000);
+                loadLocalBackup();
+            } else {
+                showToast("OFFLINE - LOCAL MODE", 2000); 
+                loadLocalBackup();
+            }
         } finally {
             if(syncIcon) syncIcon.classList.remove('spin');
+            if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE" && document.getElementById('loading').innerHTML !== "SYNCING...") {
+                document.getElementById('loading').style.display = 'none'; 
+            }
+            isSyncing = false;
         }
     }
+    
+    function executeActionWithSave() {
+        if (!isUnlocked) return;
+        if (!checkPayloadSize()) return; 
+        
+        offlineActionsCount++;
+        updateOfflineBadge();
+        saveData();
+    }
 
-    function saveData() {
+    async function saveData(retryCount = 0) {
+        if (!isUnlocked) return;
         if (!housePasscode) {
-            showPasscodePrompt("save");
+            document.getElementById('passcodeOverlay').style.display = 'flex';
             return;
         }
 
         saveLocalBackup(); 
-        if (!navigator.onLine) { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); return; }
+        
+        const isReallyOnline = await checkTrueNetwork();
+        if (!isReallyOnline) { 
+            setNeedsSync(true); 
+            // V7.0 Optimistic UI: Don't show toast for every save, just use badge.
+            return; 
+        }
+        
+        const now = Date.now();
+        if (now - lastApiSaveTime < 2000 && retryCount === 0) {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => { saveData(); }, 2000);
+            return;
+        }
+        lastApiSaveTime = now;
+        
+        if (isSyncing && retryCount === 0) return;
+        isSyncing = true;
         
         const syncIcon = document.getElementById('syncIconElement');
         if(syncIcon) syncIcon.classList.add('spin');
         
+        document.body.style.overscrollBehavior = 'none';
+        
+        try {
+            const metaRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?meta=true`, { headers: { 'X-Master-Key': MASTER_KEY } });
+            if (metaRes.ok) {
+                const metaData = await metaRes.json();
+                const cloudTimestamp = metaData.record ? metaData.record.lastModified : null; 
+            }
+        } catch(e) {}
+
         const encryptedPayload = CryptoJS.AES.encrypt(JSON.stringify(db), housePasscode).toString();
         const secureData = { encrypted: true, payload: encryptedPayload };
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
         fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-            body: JSON.stringify(secureData)
+            method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() },
+            body: JSON.stringify(secureData),
+            signal: controller.signal
         })
-        .then(res => { if (!res.ok) throw new Error(); setNeedsSync(false); document.getElementById('loading').style.display = 'none'; })
-        .catch(() => { setNeedsSync(true); showToast("SAVED OFFLINE", 2000); })
-        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); });
+        .then(res => { 
+            clearTimeout(timeoutId);
+            if (res.status === 429) throw new Error("429"); 
+            if (!res.ok) throw new Error("HTTP_API_ERROR"); 
+            setNeedsSync(false); 
+            offlineActionsCount = 0;
+            updateOfflineBadge();
+        })
+        .catch((e) => { 
+            clearTimeout(timeoutId);
+            if (e.message === "429" && retryCount < 2) {
+                setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1));
+            } else {
+                setNeedsSync(true); 
+            }
+        })
+        .finally(() => { 
+            if(syncIcon) syncIcon.classList.remove('spin'); 
+            isSyncing = false;
+            document.body.style.overscrollBehavior = 'auto'; 
+        });
     }
 
     function getSettlements(expenses, totalBase, specificActiveUsers = null) {
@@ -993,23 +1956,42 @@
         let active = specificActiveUsers || db.activeUsers || db.users;
         db.users.forEach(u => balances[u] = 0);
 
-        let validExpenses = expenses.filter(e => !e.deleted);
-
-        validExpenses.forEach(e => {
+        expenses.forEach(e => {
             if (balances[e.name] === undefined) balances[e.name] = 0;
-            balances[e.name] += e.amount;
+            balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
 
-            let involved = (e.involved && e.involved.length > 0) ? e.involved : active;
-            let perHead = e.amount / involved.length;
+            let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active;
+            let activeCount = Math.max(involved.length, 1); 
+            let perHead = Math.round((e.amount / activeCount) * 100) / 100;
 
             involved.forEach(u => {
                 if (balances[u] === undefined) balances[u] = 0;
-                balances[u] -= perHead;
+                balances[u] = Math.round((balances[u] - perHead) * 100) / 100;
             });
         });
+        
+        if (smartRoundingEnabled) {
+            let sum = 0;
+            let keys = Object.keys(balances);
+            for (let i=0; i<keys.length; i++) {
+                balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10;
+                sum += balances[keys[i]];
+            }
+            if (Math.abs(sum) > 0.001 && keys.length > 0) {
+                balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100; 
+            }
+        } else {
+             let sum = 0;
+             let keys = Object.keys(balances);
+             keys.forEach(k => sum += balances[k]);
+             if (Math.abs(sum) > 0.001 && keys.length > 0) {
+                 balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100;
+             }
+        }
 
         let debtors = [], creditors = [];
         for (let u in balances) {
+            if (Math.abs(balances[u]) < 0.005) balances[u] = 0; 
             if (balances[u] < -0.01) debtors.push({ name: u, amt: Math.abs(balances[u]) });
             else if (balances[u] > 0.01) creditors.push({ name: u, amt: balances[u] });
         }
@@ -1032,7 +2014,8 @@
 
             let amount = Math.min(debtors[d].amt, creditors[c].amt);
             txs.push({ from: debtors[d].name, to: creditors[c].name, amt: amount });
-            debtors[d].amt -= amount; creditors[c].amt -= amount;
+            debtors[d].amt = Math.round((debtors[d].amt - amount) * 100) / 100; 
+            creditors[c].amt = Math.round((creditors[c].amt - amount) * 100) / 100;
         }
         return txs;
     }
@@ -1048,19 +2031,20 @@
             db.activeUsers.push(u);
         }
         render();
-        saveData();
+        executeActionWithSave();
     }
 
-    function generateActionPills(ex, originalIndex) {
-        let html = `<button class="btn-pill" onclick="triggerHaptic(); copyExpense(${originalIndex})">Share</button>`;
+    function generateActionPills(ex) {
+        let html = `<button class="btn-pill" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
         if (ex.name === currentUser) {
-            html += `<button class="btn-pill" onclick="triggerHaptic(); editEx(${originalIndex})">Edit</button>
-                     <button class="btn-pill danger" onclick="triggerHaptic(); deleteEx(${originalIndex})">Delete</button>`;
+            html += `<button class="btn-pill" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">Edit</button>
+                     <button class="btn-pill danger" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`;
         }
         return html;
     }
 
     function render() {
+        if (!isUnlocked) return;
         const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
         
@@ -1070,44 +2054,97 @@
         chkContainer.innerHTML = db.users.map(u => {
             const isChecked = db.activeUsers.includes(u);
             const opac = isChecked ? '1' : '0.4';
-            return `<label class="split-label" style="opacity: ${opac};"><input type="checkbox" style="display:none;" onchange="toggleActiveUser('${u}')" ${isChecked ? 'checked' : ''}> <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${u}</span></label>`;
+            return `<label class="split-label" style="opacity: ${opac};"><input type="checkbox" style="display:none;" onchange="toggleActiveUser('${escapeHTML(u)}')"> <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span></label>`;
         }).join('');
 
-        let totalBase = 0;
-        const list = document.getElementById('expenseList');
+        let allValid = db.expenses || [];
         
-        let validExpenses = db.expenses.filter(e => !e.deleted);
-        validExpenses.forEach(ex => { totalBase += ex.amount; });
+        if (activeHashtag) {
+            let tagStillExists = allValid.some(e => {
+                let match = (e.desc || "").match(/#([\w-]+)/);
+                return match && match[0] === activeHashtag;
+            });
+            if (!tagStillExists) activeHashtag = null;
+        }
+        
+        let hashtags = new Set();
+        allValid.forEach(e => {
+            let primaryMatch = (e.desc || "").match(/#([\w-]+)/);
+            if(primaryMatch) hashtags.add(primaryMatch[0]);
+        });
+        
+        let tagHtml = '';
+        if(hashtags.size > 0) {
+            hashtags.forEach(tag => {
+                let isActive = activeHashtag === tag;
+                tagHtml += `<button class="name-pill ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag('${escapeHTML(tag)}')">${escapeHTML(tag)}</button>`;
+            });
+        }
+        document.getElementById('hashtagContainer').innerHTML = tagHtml;
 
-        let displayExpenses = [];
-        db.expenses.forEach((ex, originalIndex) => {
-            if (ex.deleted) return;
-            let isMine = true;
-            if (myViewActive) {
-                let involved = (ex.involved && ex.involved.length > 0) ? ex.involved : db.activeUsers;
-                isMine = ex.name === currentUser || involved.includes(currentUser);
+        let contextExpenses = allValid.filter(e => {
+            let primaryMatch = (e.desc || "").match(/#([\w-]+)/);
+            if (activeHashtag) {
+                return primaryMatch && primaryMatch[0] === activeHashtag;
+            } else {
+                return !primaryMatch;
             }
-            if (isMine) displayExpenses.push({ ex, originalIndex });
         });
 
+        document.getElementById('heroTotalLabel').innerText = activeHashtag ? `${escapeHTML(activeHashtag)} Total` : "Total House Bill";
+
+        let totalBase = 0;
+        contextExpenses.forEach(ex => { totalBase += ex.amount; });
+        
+        const trendEl = document.getElementById('monthlyTrendText');
+        if (activeHashtag) {
+            trendEl.innerText = `Viewing isolated ledger for ${escapeHTML(activeHashtag)}`;
+        } else {
+            let trendHtml = "";
+            if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) {
+                const lastTotal = db.archives[0].total;
+                const diff = totalBase - lastTotal;
+                const pct = (diff / lastTotal) * 100;
+                if (diff > 0) trendHtml = `House spending is ${pct.toFixed(1)}% higher than last cycle.`;
+                else if (diff < 0) trendHtml = `House spending is ${Math.abs(pct).toFixed(1)}% lower than last cycle.`;
+                else trendHtml = `House spending is exactly the same as last cycle.`;
+            } else {
+                trendHtml = `Tracking your first monthly cycle.`;
+            }
+            trendEl.innerText = trendHtml;
+        }
+
+        let displayExpenses = [];
+        db.expenses.forEach((ex) => {
+            let primaryMatch = (ex.desc || "").match(/#([\w-]+)/);
+            let matchesContext = activeHashtag ? (primaryMatch && primaryMatch[0] === activeHashtag) : !primaryMatch;
+            
+            if (matchesContext) {
+                let isMine = true;
+                if (myViewActive) {
+                    isMine = ex.name === currentUser;
+                }
+                if (isMine) displayExpenses.push(ex);
+            }
+        });
+
+        const list = document.getElementById('expenseList');
         if (!displayExpenses || displayExpenses.length === 0) {
             document.getElementById('currentExpensesWrapper').classList.remove('expanded');
-            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses found.</div>";
+            list.innerHTML = `<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses found${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}.</div>`;
         } else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
             let listHtml = `<div class="timeline-wrapper">`;
             let currentGroupDate = null;
 
-            displayExpenses.forEach((item, renderIndex) => {
-                let ex = item.ex;
-                let originalIndex = item.originalIndex;
-                
+            displayExpenses.forEach((ex, renderIndex) => {
                 let exSym = ex.originalSym || sym;
                 let displayDesc = formatDescDisplay(ex.desc, exSym);
                 
                 let splitNote = "";
-                if (ex.involved && ex.involved.length < db.users.length) {
-                    splitNote = `<div style="font-size:0.65rem; color:var(--accent); margin-top:2px;">Split: ${ex.involved.join(', ')}</div>`;
+                let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null;
+                if (involvedArr) {
+                    splitNote = `<div style="font-size:0.65rem; color:var(--accent); margin-top:2px;">Split: ${escapeHTML(involvedArr.join(', '))}</div>`;
                 }
                 
                 let exDate = ex.date || db.startDate || "Unknown Date"; 
@@ -1117,8 +2154,10 @@
                     currentGroupDate = exDate;
                 }
 
-                let pillsHtml = generateActionPills(ex, originalIndex);
-                let receiptHtml = ex.receipt ? `<button class="btn-pill success" onclick="triggerHaptic(); viewImg('${ex.receipt}')">Receipt</button>` : '';
+                let pillsHtml = generateActionPills(ex);
+                
+                let receiptSafeStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+                let receiptHtml = ex.receipt ? `<button class="btn-pill success" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
 
                 if (swipeActionsEnabled) {
                     listHtml += `
@@ -1126,7 +2165,7 @@
                         <div class="swipe-track">
                             <div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;">
                                 <div style="display:flex; flex-direction:column; justify-content:center;">
-                                    <span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${ex.name}</span>
+                                    <span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${escapeHTML(ex.name)}</span>
                                     ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
                                     <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                     <div class="item-desc">${displayDesc}</div>
@@ -1143,7 +2182,7 @@
                     listHtml += `
                     <div class="linear-row">
                         <div class="item-main">
-                            <span class="name-pill main" style="margin-bottom: 6px;">${ex.name}</span>
+                            <span class="name-pill main" style="margin-bottom: 6px;">${escapeHTML(ex.name)}</span>
                             ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
                             <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             <div class="item-desc">${displayDesc}</div>
@@ -1159,17 +2198,34 @@
             list.innerHTML = listHtml + `</div>`;
         }
 
-        document.getElementById('totalExp').innerText = sym + (totalBase * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        let totalLocal = Math.round(totalBase * rate * 100) / 100;
+        let activeCount = Math.max(db.activeUsers.length, 1);
+        let avgPerHead = Math.round((totalLocal / activeCount) * 100) / 100;
         
-        let avgPerHead = db.activeUsers.length > 0 ? (totalBase / db.activeUsers.length) * rate : 0;
-        document.getElementById('perPerson').innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const totalEl = document.getElementById('totalExp');
+        if (Math.abs(prevTotalAmount - totalLocal) > 0.01) {
+            animateValue(totalEl, prevTotalAmount, totalLocal, 800, sym);
+            prevTotalAmount = totalLocal;
+        } else {
+            totalEl.innerText = sym + totalLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
         
-        const txs = getSettlements(validExpenses, totalBase, db.activeUsers);
+        const perPersonEl = document.getElementById('perPerson');
+        if (Math.abs(prevPerHeadAmount - avgPerHead) > 0.01) {
+            animateValue(perPersonEl, prevPerHeadAmount, avgPerHead, 800, sym);
+            prevPerHeadAmount = avgPerHead;
+        } else {
+            perPersonEl.innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+        
+        const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
         let credMap = {};
         txs.forEach(t => {
             if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
             credMap[t.to].totalOwed += t.amt;
-            const key = `${t.from}_${t.to}`, paid = (db.paidStatus && db.paidStatus[key]) || 0;
+            
+            const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
+            const paid = (db.paidStatus && db.paidStatus[key]) || 0;
             if (paid > 0) credMap[t.to].received += paid;
             credMap[t.to].txs.push({ ...t, paid, key });
         });
@@ -1184,7 +2240,7 @@
             let showCreditor = !myViewActive || (c === currentUser) || data.txs.some(t => t.from === currentUser);
             if (!showCreditor) continue;
 
-            let sHtmlTemp = `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${c} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`;
+            let sHtmlTemp = `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${escapeHTML(c)} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`;
             let hasVisibleTxs = false;
 
             data.txs.forEach((t, ti) => {
@@ -1192,20 +2248,29 @@
                 hasVisibleTxs = true;
                 const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
                 
-                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">`;
+                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">`;
                 
                 if (can) {
                     if (!isS) {
-                        sHtmlTemp += `<button class="btn-pill" onclick="sendNudge('${t.from}', ${tr * rate}, '${sym}')">Nudge</button>
-                                      <button class="btn-pill" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
+                        sHtmlTemp += `<button class="btn-pill" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button>
+                                      <button class="btn-pill" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
                     }
-                    sHtmlTemp += `<button class="btn-pill ${isS ? 'success' : 'primary'}" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
+                    sHtmlTemp += `<button class="btn-pill ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
                 } else {
                     let payLinkHtml = "";
                     if (!isS && t.from === currentUser && db.userLinks && db.userLinks[t.to]) {
-                        let link = db.userLinks[t.to];
-                        if (!link.startsWith('http')) link = 'https://' + link;
-                        payLinkHtml = `<button class="btn-pill primary" onclick="triggerHaptic(); window.open('${link}', '_blank')">Pay</button>`;
+                        let link = db.userLinks[t.to].trim();
+                        let amtLocalStr = (tr * rate).toFixed(2);
+                        if (link.toLowerCase().includes('paypal.me') || link.toLowerCase().includes('monzo.me') || link.toLowerCase().includes('revolut.me')) {
+                            let baseUrl = link;
+                            if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+                            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                            baseUrl = `${baseUrl}/${amtLocalStr}`;
+                            payLinkHtml = `<a class="btn-pill primary" style="text-decoration:none;" href="${escapeHTML(baseUrl)}" target="_blank" rel="noopener noreferrer">Pay</a>`;
+                        } else {
+                            let copyStr = `NAME: ${t.to} | DETAILS: ${link} | AMOUNT: ${sym}${amtLocalStr}`;
+                            payLinkHtml = `<button class="btn-pill primary" aria-label="Copy Bank Details" onclick="triggerHaptic(); copyBankDetails('${escapeHTML(copyStr)}')">Copy Bank</button>`;
+                        }
                     }
                     sHtmlTemp += `${payLinkHtml}<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
                 }
@@ -1226,13 +2291,14 @@
         const current = db.paidStatus[key] || 0;
         if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } 
         else { db.paidStatus[key] = totalBaseAmt; }
-        render(); saveData();
+        logAudit("Toggled Paid Status", key);
+        render(); executeActionWithSave();
     }
 
     function logPayment(key, remainingLocal, rate) {
         customPrompt(`Log Partial Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
             if (val === null || val.trim() === "") return;
-            let amtLocal = parseFloat(val);
+            let amtLocal = parseFloat(val.replace(/,/g, '.'));
             if (isNaN(amtLocal) || amtLocal < 0) return;
 
             if(!db.paidStatus) db.paidStatus = {};
@@ -1241,7 +2307,8 @@
                 if(!db.paidStatus[key]) db.paidStatus[key] = 0;
                 db.paidStatus[key] += (amtLocal / rate);
             }
-            render(); saveData();
+            logAudit("Partial Payment Logged", key);
+            render(); executeActionWithSave();
         }, "decimal");
     }
 
@@ -1250,13 +2317,14 @@
         const current = db.archives[arcIdx].paidStatus[key] || 0;
         if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } 
         else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
-        render(); saveData();
+        logAudit("Toggled Archive Paid", key);
+        render(); executeActionWithSave();
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
         customPrompt(`Log Archive Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
             if (val === null || val.trim() === "") return;
-            let amtLocal = parseFloat(val);
+            let amtLocal = parseFloat(val.replace(/,/g, '.'));
             if (isNaN(amtLocal) || amtLocal < 0) return;
 
             if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
@@ -1265,7 +2333,8 @@
                 if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0;
                 db.archives[arcIdx].paidStatus[key] += (amtLocal / rate);
             }
-            render(); saveData();
+            logAudit("Partial Archive Payment Logged", key);
+            render(); executeActionWithSave();
         }, "decimal");
     }
 
@@ -1280,16 +2349,17 @@
             arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none';
         }
 
-        if (!db.archives || db.archives.length === 0) {
+        if (!db.archives || !Array.isArray(db.archives) || db.archives.length === 0) {
             arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>";
         } else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
                 const pastActive = a.activeUsers || db.users;
                 
-                let validArcEx = (a.details || []).filter(e => !e.deleted);
+                let validArcEx = Array.isArray(a.details) ? a.details : [];
                 const txs = getSettlements(validArcEx, a.total, pastActive);
                 let credMap = {};
-                const displayStart = formatNiceDate(a.start);
+                
+                const displayStart = a.tag ? `<span style="color:var(--accent); font-weight:800;">${escapeHTML(a.tag)}</span> • ${formatNiceDate(a.start)}` : formatNiceDate(a.start);
                 const displayEnd = formatNiceDate(a.end);
                 
                 let cycleHasUnpaid = false;
@@ -1314,19 +2384,19 @@
                         <div class="flow-row" style="padding: 12px 0; border:none;">
                             <div>
                                 <div style="font-size:0.9rem; color:var(--text-main);">
-                                    <b>${t.from}</b> owes <b>${t.to}</b>
+                                    <b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b>
                                 </div>
                                 <div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">
                                     ${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                 </div>
-                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
+                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                             </div>
                             <div>
                                 <div class="action-group">
                                 ${canMarkGlobal ? `
-                                        <button class="btn-pill" onclick="sendNudge('${t.from}', ${remLocal}, '${sym}')">Nudge</button>
-                                        <button class="btn-pill" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
-                                        <button class="btn-pill primary" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
+                                        <button class="btn-pill" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button>
+                                        <button class="btn-pill" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
+                                        <button class="btn-pill primary" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
                                 ` : `<span class="name-pill">Pending</span>`}
                                 </div>
                             </div>
@@ -1359,22 +2429,31 @@
                             archiveSettleHtml += `
                             <div class="flow-row" style="padding: 12px 0; border:none;">
                                 <div>
-                                    <div style="font-size:0.9rem; color:var(--text-main);"><b>${t.from}</b> owes <b>${t.to}</b></div>
+                                    <div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div>
                                     <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
+                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                                 </div>
                                 <div>
                                     <div class="action-group">
                                     ${canMark ? `
-                                            <button class="btn-pill" onclick="sendNudge('${t.from}', ${remainingLocal}, '${sym}')">Nudge</button>
-                                            <button class="btn-pill" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
-                                            <button class="btn-pill primary" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
+                                            <button class="btn-pill" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button>
+                                            <button class="btn-pill" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
+                                            <button class="btn-pill primary" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
                                     ` : (() => {
                                         let payLinkHtml = "";
                                         if (t.from === currentUser && db.userLinks && db.userLinks[t.to]) {
-                                            let link = db.userLinks[t.to];
-                                            if (!link.startsWith('http')) link = 'https://' + link;
-                                            payLinkHtml = `<button class="btn-pill primary" onclick="triggerHaptic(); window.open('${link}', '_blank')">Pay</button>`;
+                                            let link = db.userLinks[t.to].trim();
+                                            let amtLocalStr = remainingLocal.toFixed(2);
+                                            if (link.toLowerCase().includes('paypal.me') || link.toLowerCase().includes('monzo.me') || link.toLowerCase().includes('revolut.me')) {
+                                                let baseUrl = link;
+                                                if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+                                                if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                                                baseUrl = `${baseUrl}/${amtLocalStr}`;
+                                                payLinkHtml = `<a class="btn-pill primary" style="text-decoration:none;" href="${escapeHTML(baseUrl)}" target="_blank" rel="noopener noreferrer">Pay</a>`;
+                                            } else {
+                                                let copyStr = `NAME: ${t.to} | DETAILS: ${link} | AMOUNT: ${sym}${amtLocalStr}`;
+                                                payLinkHtml = `<button class="btn-pill primary" aria-label="Copy Bank Details" onclick="triggerHaptic(); copyBankDetails('${escapeHTML(copyStr)}')">Copy Bank</button>`;
+                                            }
                                         }
                                         return `${payLinkHtml}<span class="name-pill">Pending</span>`;
                                     })()}
@@ -1385,28 +2464,37 @@
                     });
                 }
 
+                // V7.4 Settlement Lock
+                const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== "");
+                let adminActionHtml = "";
+                if (!isFullySettled) {
+                    adminActionHtml = `<button class="btn-pill danger" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`;
+                } else {
+                    adminActionHtml = `<span class="name-pill success" style="margin-right:8px;">Settled</span>`;
+                }
+
                 let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
 
                 let hasVisibleLogs = false;
                 let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) {
-                        let involved = (d.involved && d.involved.length > 0) ? d.involved : pastActive;
-                        const isMine = d.name === currentUser || involved.includes(currentUser);
+                        const isMine = d.name === currentUser;
                         if (!isMine) return '';
                     }
                     hasVisibleLogs = true;
                     let exSym = d.originalSym || sym;
                     let displayDesc = formatDescDisplay(d.desc, exSym);
+                    let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
                     return `
                     <div class="flow-row" style="padding:10px 0; border:none;">
                         <div style="flex-grow:1; padding-right:15px;">
                             <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                                <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${d.name}</span>
+                                <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span>
                                 <span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                             </div>
                             <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
                         </div>
-                        ${d.receipt ? `<button class="btn-pill success" onclick="triggerHaptic(); viewImg('${d.receipt}')">Receipt</button>` : ''}
+                        ${d.receipt ? `<button class="btn-pill success" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}
                     </div>`
                 }).join('');
 
@@ -1420,7 +2508,8 @@
                             <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                         <div style="display:flex; gap:8px; align-items:center;">
-                            <button class="btn-pill" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>
+                            <button class="btn-pill" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>
+                            ${adminActionHtml}
                             <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                     </div>
@@ -1473,11 +2562,12 @@
 
         const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc';
         try {
-            const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2 });
+            const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2, useCORS: true, allowTaint: true });
             const link = document.createElement('a');
             link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+            canvas.width = 0; // V7.9.2 RAM Release
         } catch (e) { showToast("Failed to capture snapshot.", 3000); }
 
         if (!wasExpanded) card.classList.remove('expanded');
@@ -1486,167 +2576,272 @@
     }
 
     async function processUploadQueue() {
-        let queue = JSON.parse(localStorage.getItem('img_queue') || '[]');
-        if (queue.length === 0 || !navigator.onLine) return;
+        if (isProcessingQueue) return;
+        let queue = safeJSONParse(localStorage.getItem('img_queue'), []);
+        if (!Array.isArray(queue) || queue.length === 0 || !navigator.onLine) return;
         
+        isProcessingQueue = true;
         let updatedDb = false;
         let remainingQueue = [];
         
-        for (let item of queue) {
-            try {
-                const base64Data = item.image.split(',')[1];
-                const formData = new FormData();
-                formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
-                formData.append("image", base64Data);
+        try {
+            for (let item of queue) {
+                try {
+                    const base64Data = item.image.split(',')[1];
+                    const formData = new FormData();
+                    formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
+                    formData.append("image", base64Data);
 
-                const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
-                const json = await res.json();
-                
-                if (json.success) {
-                    let ex = db.expenses.find(e => e.id === item.id);
-                    if (ex) {
-                        ex.receipt = json.data.url;
-                        ex.receiptDelete = json.data.delete_url;
-                        updatedDb = true;
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (!res.ok) throw new Error("HTTP Error");
+                    const json = await res.json();
+                    if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
+                    
+                    if (json.success) {
+                        let ex = db.expenses.find(e => e.id === item.id);
+                        if (ex) {
+                            if (!ex.receipt) { ex.receipt = json.data.url; ex.receiptDelete = json.data.delete_url; }
+                            else { 
+                                // Handling queued arrays
+                                let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt];
+                                let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete];
+                                recArr.push(json.data.url); delArr.push(json.data.delete_url);
+                                ex.receipt = recArr; ex.receiptDelete = delArr;
+                            }
+                            updatedDb = true;
+                        }
+                    } else {
+                        remainingQueue.push(item);
                     }
-                } else {
+                } catch(e) {
                     remainingQueue.push(item);
                 }
-            } catch(e) {
-                remainingQueue.push(item);
             }
+            
+            safeSetStorage('img_queue', JSON.stringify(remainingQueue));
+            if (updatedDb) { render(); executeActionWithSave(); }
+        } finally {
+            isProcessingQueue = false;
         }
-        
-        localStorage.setItem('img_queue', JSON.stringify(remainingQueue));
-        if (updatedDb) { render(); saveData(); }
     }
 
     async function uploadToImgBB(file) {
-        showToast("UPLOADING RECEIPT...", 0);
         try {
+            if (!file.type.startsWith('image/')) { showToast("Invalid image file.", 3000); return null; }
+            if (file.size > 15 * 1024 * 1024) { showToast("File too large (Max 15MB).", 3000); return null; }
+
             const dataUrl = await compressImage(file);
-            if (!dataUrl) { showToast("SYNCING...", 0); return null; }
+            if (!dataUrl) { return null; }
             
+            if (dataUrl.length > 4500000) {
+                showToast("Image dimensions too large for safe offline storage. Try another.", 4000);
+                return null;
+            }
+
             const base64Data = dataUrl.split(',')[1];
             const formData = new FormData();
             formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
             formData.append("image", base64Data);
 
-            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (!res.ok) throw new Error("HTTP Error");
             const json = await res.json();
+            if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
+            
             if (json.success) return { url: json.data.url, delete_url: json.data.delete_url };
             else return { failedBase64: dataUrl }; 
         } catch (e) {
             return { failedBase64: await compressImage(file) }; 
-        } finally {
-            document.getElementById('loading').style.display = 'none';
         }
     }
 
+    function extractAmount(text) {
+        if (!text) return 0;
+        let safeText = text.substring(0, 500);
+        let normalized = safeText.replace(/(\d),(\d{3})/g, '$1$2'); 
+        normalized = normalized.replace(/(\d)\.(\d{3})/g, '$1$2'); 
+        normalized = normalized.replace(/,/g, (match, offset, string) => {
+            if (/^\d{2}(\D|$)/.test(string.substring(offset + 1))) return '.'; 
+            return '.'; 
+        });
+        
+        let noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?\b/g, '');
+        
+        const mathMatch = noDates.match(/(?:\d+(?:\.\d+)?\s*\+\s*)+\d+(?:\.\d+)?/);
+        if (mathMatch) {
+            return mathMatch[0].split('+').reduce((acc, val) => acc + parseFloat(val.trim()), 0);
+        }
+        
+        let nums = noDates.match(/(?:\d*\.\d+)|\d+/g);
+        if (nums && nums.length > 0) {
+            return nums.reduce((sum, val) => sum + parseFloat(val), 0);
+        }
+        
+        return 0;
+    }
+
     async function addExpense() {
+        if (isSubmitting) return; // V7.9.1 Multi-touch lock
+        
+        const addBtn = document.getElementById('mainAddBtn');
+        if(addBtn.disabled) return;
+        
         const now = Date.now();
         if (now - lastSubmitTime < 1500) return; 
         lastSubmitTime = now;
 
         const rawInput = document.getElementById('amtInput').value;
+        let safeInput = rawInput.substring(0, 500);
         const gNote = document.getElementById('groupNote').value;
-        const file = document.getElementById('receiptInput').files[0];
+        const files = document.getElementById('receiptInput').files;
+        
         const cur = document.getElementById('currency').value;
         const sym = curSymbols[cur];
-        const rate = rates[cur];
+        const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1;
         
-        if (!rawInput.trim()) { showToast("Please enter an amount.", 3000); return; }
-        const matches = rawInput.match(/\d+(\.\d+)?/g);
-        if(!matches) { showToast("No valid amount found.", 3000); return; }
+        if (!safeInput.trim()) { showToast("Please enter an amount.", 3000); return; }
         
-        const addBtn = document.getElementById('mainAddBtn');
+        let extractedBase = extractAmount(safeInput);
+        if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
+
+        let baseAmt = Math.round((extractedBase / rate) * 100) / 100;
+        
+        if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
+        
+        isSubmitting = true;
         addBtn.disabled = true;
         addBtn.style.opacity = '0.5';
 
-        let baseAmt = matches.reduce((acc, val) => acc + parseFloat(val), 0) / rate;
-        
-        let involvedUsers = [];
-        document.querySelectorAll('.split-chk').forEach(chk => {
-            if (chk.checked) involvedUsers.push(chk.value);
-        });
-        if (involvedUsers.length === 0) involvedUsers = db.users;
+        let rollbackDb = JSON.parse(JSON.stringify(db));
 
-        let receiptData = null;
-        let receiptDeleteUrl = null;
-        let failedUploadFile = null;
-        
-        if (file) {
-            const uploadRes = await uploadToImgBB(file);
-            if (uploadRes && uploadRes.url) {
-                receiptData = uploadRes.url;
-                receiptDeleteUrl = uploadRes.delete_url;
-            } else if (uploadRes && uploadRes.failedBase64) {
-                failedUploadFile = uploadRes.failedBase64;
-            }
-        }
-        
-        let descToSave = gNote ? `[${gNote}] \n ${rawInput}` : rawInput;
-        const expenseId = Date.now().toString(36) + Math.random().toString(36).substring(2);
-        
-        if (editingIndex > -1) {
-            db.expenses[editingIndex].amount = baseAmt;
-            db.expenses[editingIndex].desc = descToSave;
-            db.expenses[editingIndex].involved = involvedUsers;
-            db.expenses[editingIndex].originalSym = sym;
-            db.expenses[editingIndex].edited = true;
-            db.expenses[editingIndex].timestamp = Date.now();
-            
-            if (receiptData) {
-                db.expenses[editingIndex].receipt = receiptData;
-                db.expenses[editingIndex].receiptDelete = receiptDeleteUrl;
-            }
-            if (failedUploadFile) {
-                let q = JSON.parse(localStorage.getItem('img_queue') || '[]');
-                q.push({ id: db.expenses[editingIndex].id, image: failedUploadFile });
-                localStorage.setItem('img_queue', JSON.stringify(q));
-            }
-            editingIndex = -1;
-            showToast("EDIT SAVED", 2000);
-        } else {
-            const today = new Date();
-            const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-            if (!db.startDate || db.startDate === "Unknown Date") db.startDate = dateStr; 
-            
-            db.expenses.unshift({ 
-                id: expenseId,
-                timestamp: Date.now(),
-                name: currentUser, 
-                amount: baseAmt, 
-                desc: descToSave, 
-                involved: involvedUsers,
-                originalSym: sym,
-                receipt: receiptData, 
-                receiptDelete: receiptDeleteUrl,
-                date: dateStr 
+        try {
+            let involvedUsers = [];
+            document.querySelectorAll('.split-chk').forEach(chk => {
+                if (chk.checked) involvedUsers.push(chk.value);
             });
-            
-            if (failedUploadFile) {
-                let q = JSON.parse(localStorage.getItem('img_queue') || '[]');
-                q.push({ id: expenseId, image: failedUploadFile });
-                localStorage.setItem('img_queue', JSON.stringify(q));
-            }
-        }
-        
-        const amtInputEl = document.getElementById('amtInput');
-        amtInputEl.value = ""; 
-        amtInputEl.style.height = "40px";
-        document.getElementById('groupNote').value = ""; 
-        document.getElementById('receiptInput').value = "";
-        document.getElementById('optionsMenu').style.display = "none";
-        
-        addBtn.disabled = false; addBtn.style.opacity = '1';
+            if (involvedUsers.length === 0) involvedUsers = [];
 
-        render(); saveData();
-        if(failedUploadFile) processUploadQueue();
+            let receiptDataArr = [];
+            let receiptDeleteArr = [];
+            let failedUploadsArr = [];
+            
+            if (files && files.length > 0) {
+                // V7.0 Optimistic UI: Don't lock UI if not needed, but uploading files takes time
+                // Since this is background processing, we should show a specific non-blocking toast or just wait.
+                // For safety in file upload, we still process files before creating object.
+                for (let i = 0; i < files.length; i++) {
+                    const uploadRes = await uploadToImgBB(files[i]);
+                    if (uploadRes && uploadRes.url) {
+                        receiptDataArr.push(uploadRes.url);
+                        receiptDeleteArr.push(uploadRes.delete_url);
+                    } else if (uploadRes && uploadRes.failedBase64) {
+                        failedUploadsArr.push(uploadRes.failedBase64);
+                    }
+                }
+            }
+            
+            let finalReceiptData = null;
+            let finalReceiptDelete = null;
+            
+            if(receiptDataArr.length === 1) {
+                finalReceiptData = receiptDataArr[0];
+                finalReceiptDelete = receiptDeleteArr[0];
+            } else if (receiptDataArr.length > 1) {
+                finalReceiptData = receiptDataArr;
+                finalReceiptDelete = receiptDeleteArr;
+            }
+            
+            let descToSave = gNote ? `[${gNote}] \n ${safeInput}` : safeInput;
+            if (activeHashtag && !descToSave.includes(activeHashtag)) descToSave += ` ${activeHashtag}`;
+            
+            const expenseId = Date.now().toString(36) + Math.random().toString(36).substring(2) + performance.now().toString(36).replace('.','');
+            
+            if (editingId) {
+                let ex = db.expenses.find(e => e.id === editingId);
+                if (ex) {
+                    ex.amount = baseAmt;
+                    ex.desc = descToSave;
+                    if (involvedUsers.length > 0) ex.involved = involvedUsers;
+                    ex.originalSym = sym;
+                    ex.edited = true;
+                    ex.timestamp = Date.now();
+                    
+                    if (finalReceiptData) { ex.receipt = finalReceiptData; ex.receiptDelete = finalReceiptDelete; }
+                    
+                    if (failedUploadsArr.length > 0) {
+                        let q = safeJSONParse(localStorage.getItem('img_queue'), []);
+                        if(!Array.isArray(q)) q = [];
+                        failedUploadsArr.forEach(img => q.push({ id: ex.id, image: img }));
+                        safeSetStorage('img_queue', JSON.stringify(q));
+                    }
+                }
+                editingId = null;
+                logAudit("Edited Expense", expenseId);
+            } else {
+                let safeTimestamp = Date.now();
+                if (db.expenses.length > 0 && safeTimestamp <= db.expenses[0].timestamp) {
+                    safeTimestamp = db.expenses[0].timestamp + 1; 
+                }
+
+                const today = new Date();
+                const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+                if (!db.startDate || db.startDate === "Unknown Date") db.startDate = dateStr; 
+                
+                if (!Array.isArray(db.expenses)) db.expenses = [];
+                db.expenses.unshift({ 
+                    id: expenseId,
+                    timestamp: safeTimestamp,
+                    name: currentUser, 
+                    amount: baseAmt, 
+                    desc: descToSave, 
+                    involved: involvedUsers,
+                    originalSym: sym,
+                    receipt: finalReceiptData, 
+                    receiptDelete: finalReceiptDelete,
+                    date: dateStr 
+                });
+                
+                if (failedUploadsArr.length > 0) {
+                    let q = safeJSONParse(localStorage.getItem('img_queue'), []);
+                    if(!Array.isArray(q)) q = [];
+                    failedUploadsArr.forEach(img => q.push({ id: expenseId, image: img }));
+                    safeSetStorage('img_queue', JSON.stringify(q));
+                }
+            }
+            
+            const amtInputEl = document.getElementById('amtInput');
+            amtInputEl.value = ""; 
+            amtInputEl.style.height = "40px"; 
+            document.getElementById('groupNote').value = ""; 
+            document.getElementById('receiptInput').value = "";
+            document.getElementById('optionsMenu').style.display = "none";
+            document.getElementById('hashtagAutocomplete').style.display = "none";
+            
+            // V7.0 Optimistic UI: instantly render, no block toast.
+            render(); executeActionWithSave();
+            if(failedUploadsArr.length > 0) processUploadQueue();
+            
+        } catch (error) {
+            db = rollbackDb;
+            render();
+            showToast("Failed to process expense.", 3000);
+        } finally {
+            addBtn.disabled = false; addBtn.style.opacity = '1';
+            isSubmitting = false;
+        }
     }
 
-    function editEx(originalIndex) {
-        const ex = db.expenses[originalIndex];
+    function editEx(id) {
+        const ex = db.expenses.find(e => e.id === id);
+        if (!ex) return;
         if (ex.name !== currentUser) { showToast("Cannot edit others' expenses.", 3000); return; }
         
         let rawDesc = ex.desc, note = "";
@@ -1656,24 +2851,23 @@
         document.getElementById('amtInput').value = rawDesc;
         if (note) document.getElementById('groupNote').value = note;
         
-        editingIndex = originalIndex;
+        editingId = id;
         toggleOptionsMenu(true);
-
-        document.querySelectorAll('.split-chk').forEach(c => {
-            c.checked = ex.involved ? ex.involved.includes(c.value) : true;
-        });
 
         document.getElementById('amtInput').focus();
         showToast("EDITING MODE", 0);
+        render();
     }
 
     function exportCSV() {
         let csv = "HOUSE EXPENSES EXPORT\n\n";
-        const sym = document.getElementById('currency').value, rate = rates[sym];
+        const sym = document.getElementById('currency').value;
+        const rate = (rates[document.getElementById('currency').value] && rates[document.getElementById('currency').value] > 0) ? rates[document.getElementById('currency').value] : 1;
         
-        let validExpenses = db.expenses.filter(e => !e.deleted);
+        let validExpenses = db.expenses || [];
         let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0);
         let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length;
+        if(activeCount === 0) activeCount = 1;
         
         csv += `Cycle Start,${formatNiceDate(db.startDate)}\n`;
         csv += `Current Total,${sym}${(totalBase * rate).toFixed(2)}\n`;
@@ -1689,19 +2883,21 @@
         csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
         validExpenses.forEach(e => {
             let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
-            let split = e.involved ? e.involved.join(' | ') : 'All';
-            let receipt = e.receipt || 'None';
+            let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (db.activeUsers || db.users);
+            let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default';
+            let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
             csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Current,${receipt}\n`;
         });
         
-        db.archives.forEach(arc => {
-            csv += `\nARCHIVE: ${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`;
+        (db.archives || []).forEach(arc => {
+            csv += `\nARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`;
             csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
-            let vArcEx = (arc.details || []).filter(e => !e.deleted);
+            let vArcEx = Array.isArray(arc.details) ? arc.details : [];
             vArcEx.forEach(e => {
                 let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
-                let split = e.involved ? e.involved.join(' | ') : 'All';
-                let receipt = e.receipt || 'None';
+                let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (arc.activeUsers || db.users);
+                let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default';
+                let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
                 let eDate = e.date || arc.start;
                 csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`;
             });
@@ -1715,14 +2911,20 @@
         showToast("EXPORTED CSV", 2000);
     }
 
-    function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); }; }; }); }
+    function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); canvas.width = 0; canvas = null; }; }; }); }
     
-    async function copyExpense(originalIndex) { 
+    async function copyExpense(id) { 
         triggerHaptic();
-        const ex = db.expenses[originalIndex], cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur], exSym = ex.originalSym || sym; 
-        let cleanDesc = formatDescDisplay(ex.desc, exSym).split('&bull;').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
+        let ex = (db.expenses||[]).find(e => e.id === id);
+        if (!ex) return;
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur];
+        const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; 
+        const exSym = ex.originalSym || sym; 
+        
+        let cleanDesc = formatDescDisplay(ex.desc, exSym).split('•').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
         let txt = `Expense logged by ${ex.name}:\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${cleanDesc}`;
-        if (ex.involved && ex.involved.length < db.users.length) { txt += `\nSplit Between: ${ex.involved.join(', ')}`; }
+        let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null;
+        if (involvedArr) { txt += `\nSplit Between: ${involvedArr.join(', ')}`; }
         
         if (navigator.share) {
             navigator.share({ title: 'House Expense', text: txt }).catch(async e => {
@@ -1735,19 +2937,46 @@
     
     async function copySummary() { 
         triggerHaptic();
-        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur]; 
-        let validExpenses = db.expenses.filter(e => !e.deleted);
-        let totalBase = 0; validExpenses.forEach(e => { totalBase += e.amount; }); 
+        let allValid = db.expenses || [];
+        let contextExpenses = allValid.filter(e => {
+            let primaryMatch = (e.desc || "").match(/#([\w-]+)/);
+            return activeHashtag ? (primaryMatch && primaryMatch[0] === activeHashtag) : !primaryMatch;
+        });
+
+        if (contextExpenses.length === 0) {
+            showToast("No data to copy.", 3000);
+            return;
+        }
+
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur];
+        const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; 
+        let totalBase = 0; 
+        let categories = { "💡 Bills": 0, "🛒 Groceries": 0, "🚕 Travel": 0, "📦 Other": 0 };
+
+        contextExpenses.forEach(e => { 
+            totalBase += e.amount; 
+            let d = (e.desc || "").toLowerCase();
+            let amtLocal = e.amount * rate;
+            if (d.includes("bijli") || d.includes("electricity") || d.includes("gas") || d.includes("water") || d.includes("wifi") || d.includes("internet") || d.includes("council") || d.includes("rent")) {
+                categories["💡 Bills"] += amtLocal;
+            } else if (d.includes("tesco") || d.includes("aldi") || d.includes("asda") || d.includes("sainsbury") || d.includes("lidl") || d.includes("morrisons") || d.includes("milk") || d.includes("bread") || d.includes("groceries") || d.includes("food") || d.includes("meat")) {
+                categories["🛒 Groceries"] += amtLocal;
+            } else if (d.includes("uber") || d.includes("train") || d.includes("bus") || d.includes("taxi") || d.includes("petrol") || d.includes("fuel") || d.includes("ticket")) {
+                categories["🚕 Travel"] += amtLocal;
+            } else {
+                categories["📦 Other"] += amtLocal;
+            }
+        }); 
         
         let balances = {}; db.users.forEach(u => balances[u] = 0); 
         let active = db.activeUsers || db.users; 
         
-        validExpenses.forEach(e => { 
+        contextExpenses.forEach(e => { 
             if (balances[e.name] === undefined) balances[e.name] = 0; 
             balances[e.name] += e.amount; 
             
-            let involved = (e.involved && e.involved.length > 0) ? e.involved : active;
-            let perHead = e.amount / involved.length;
+            let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active;
+            let perHead = e.amount / Math.max(involved.length, 1);
             
             involved.forEach(u => {
                 if (balances[u] === undefined) balances[u] = 0;
@@ -1755,16 +2984,54 @@
             });
         }); 
         
-        const activeCount = active.length; 
+        if (smartRoundingEnabled) {
+            let sum = 0;
+            let keys = Object.keys(balances);
+            for (let i=0; i<keys.length; i++) {
+                balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10;
+                sum += balances[keys[i]];
+            }
+            if (Math.abs(sum) > 0.001 && keys.length > 0) balances[keys[0]] -= sum; 
+        }
+
+        const activeCount = Math.max(active.length, 1); 
         const perHeadHouse = totalBase / activeCount;
         
         const todayStr = `${new Date().getDate().toString().padStart(2, '0')}/${(new Date().getMonth() + 1).toString().padStart(2, '0')}/${new Date().getFullYear()}`; 
-        let txt = `🏠 HOUSE SUMMARY (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head (Avg): ${sym}${(perHeadHouse * rate).toFixed(2)}\n\n*BALANCES:*\n`; 
-        db.users.forEach(u => { let bal = balances[u] * rate; if (bal <= -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal >= 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; }); 
+        
+        let titleText = activeHashtag ? `🏠 ${activeHashtag} SUMMARY` : `🏠 HOUSE SUMMARY`;
+        let txt = `${titleText} (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head (Avg): ${sym}${(perHeadHouse * rate).toFixed(2)}\n`; 
+        
+        let hasSpecificCats = (categories["💡 Bills"] > 0.01 || categories["🛒 Groceries"] > 0.01 || categories["🚕 Travel"] > 0.01);
+        
+        if (hasSpecificCats) {
+            let catStr = `\n*SPENDING BREAKDOWN:*\n`;
+            for (let c in categories) {
+                if (categories[c] > 0.01) catStr += `${c}: ${sym}${categories[c].toFixed(2)}\n`;
+            }
+            txt += catStr;
+        }
+        
+        txt += `\n*BALANCES:*\n`; 
+        db.users.forEach(u => { 
+            let bal = (balances[u] || 0) * rate; 
+            if (Math.abs(bal) < 0.01 && !active.includes(u)) return; 
+            
+            if (bal <= -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; 
+            else if (bal >= 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; 
+            else txt += `${u}: ✅ Settled\n`; 
+        }); 
         
         txt += `\n*SETTLEMENTS:*\n`; 
-        const txs = getSettlements(validExpenses, totalBase, db.activeUsers); 
-        txs.forEach(t => { const pk = `${t.from}_${t.to}`, pd = (db.paidStatus && db.paidStatus[pk]) || 0, rem = t.amt - pd; let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; }); 
+        const txs = getSettlements(contextExpenses, totalBase, db.activeUsers); 
+        
+        txs.forEach(t => { 
+            const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
+            const pd = (db.paidStatus && db.paidStatus[key]) || 0; 
+            const rem = t.amt - pd; 
+            let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; 
+            txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; 
+        }); 
         if (txs.length === 0) txt += "All debts are settled.\n"; 
         
         if (navigator.share) {
@@ -1775,89 +3042,139 @@
             await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000); 
         }
     }
-    
-    let deletedExpenseCache = null;
-    let undoTimeout = null;
 
-    function deleteEx(originalIndex) { 
-        if (db.expenses[originalIndex].name !== currentUser) { showToast("Cannot delete others' expenses.", 3000); return; }
+    function deleteEx(id) { 
+        let idx = (db.expenses||[]).findIndex(e => e.id === id);
+        if (idx === -1) return;
+        if (db.expenses[idx].name !== currentUser) { showToast("Cannot delete others' expenses.", 3000); return; }
         
-        deletedExpenseCache = { index: originalIndex, data: JSON.parse(JSON.stringify(db.expenses[originalIndex])) };
-        
-        db.expenses[originalIndex].deleted = true; 
-        db.expenses[originalIndex].timestamp = Date.now();
-        
-        render(); saveData(); 
-        
-        showToast(`Deleted <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="triggerHaptic(); undoDelete()">UNDO</span>`, 5000);
-        
-        clearTimeout(undoTimeout);
-        undoTimeout = setTimeout(() => {
-            if (deletedExpenseCache && deletedExpenseCache.data.receiptDelete) {
-                fetch(deletedExpenseCache.data.receiptDelete, { mode: 'no-cors' }).catch(() => {});
-            }
-            deletedExpenseCache = null;
-        }, 5000);
-    }
-
-    function undoDelete() {
-        if (deletedExpenseCache) {
-            db.expenses[deletedExpenseCache.index].deleted = false;
-            db.expenses[deletedExpenseCache.index].timestamp = Date.now();
-            deletedExpenseCache = null;
-            clearTimeout(undoTimeout);
-            showToast("RESTORED", 2000);
-            render(); saveData();
+        let exArr = db.expenses.splice(idx, 1);
+        if (exArr.length > 0) {
+            let ex = exArr[0];
+            ex.deletedAt = Date.now();
+            if (!db.trash) db.trash = [];
+            db.trash.push(ex);
+            logAudit("Deleted Expense", id);
+            render(); executeActionWithSave(); 
+            showToast(`Moved to Vault`, 2000);
         }
     }
     
     function deleteArchive(ev, i) { 
         ev.stopPropagation(); 
         customConfirm("Delete this archive permanently?", () => { 
+            if (!db.archives || !db.archives[i]) return;
             const arc = db.archives[i];
-            arc.details.forEach(ex => { if (ex.receiptDelete) fetch(ex.receiptDelete, { mode: 'no-cors' }).catch(() => {}); });
+            if (arc && Array.isArray(arc.details)) {
+                arc.details.forEach(ex => { 
+                    let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
+                    delUrls.forEach(u => { if (u) fetch(u, { mode: 'no-cors' }).catch(() => {}); });
+                });
+            }
             db.archives.splice(i,1); 
-            render(); saveData(); 
+            logAudit("Deleted Archive");
+            render(); executeActionWithSave(); 
         }); 
     }
     
     function changeStartDate() { 
         customPrompt("Start Date (DD/MM/YYYY):", db.startDate, (val) => {
-            if(val && val.trim() !== "") { db.startDate = val.trim(); render(); saveData(); }
+            if(val && val.trim() !== "") { db.startDate = escapeHTML(val.trim()); render(); executeActionWithSave(); }
         }); 
     }
 
     function endMonth() {
-        let validExpenses = db.expenses.filter(e => !e.deleted);
-        if (!validExpenses || validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
+        if (isArchiving) return;
         
+        let validExpenses = db.expenses || [];
+        if (validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
+
         customConfirm("End the current month and move expenses to archive?", () => {
-            let total = 0; validExpenses.forEach(e => total += e.amount);
-            if(!db.archives) db.archives = [];
+            isArchiving = true; 
+            if(!Array.isArray(db.archives)) db.archives = [];
             const today = new Date();
             const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-            
-            db.archives.unshift({ 
-                start: db.startDate, end: endDateStr, total: total, 
-                details: [...validExpenses], paidStatus: {...db.paidStatus}, activeUsers: [...(db.activeUsers || db.users)]
+
+            let tags = new Set();
+            validExpenses.forEach(e => {
+                let match = (e.desc || "").match(/#([\w-]+)/);
+                if(match) tags.add(match[0]);
             });
-            
-            if (db.archives.length > 2) db.archives = db.archives.slice(0, 2);
-            
-            db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr; db.activeUsers = [...db.users]; 
-            render(); saveData();
+
+            tags.forEach(tag => {
+                let tagEx = validExpenses.filter(e => {
+                    let match = (e.desc || "").match(/#([\w-]+)/);
+                    return match && match[0] === tag;
+                });
+                
+                if (tagEx.length > 0) {
+                    let tTotal = 0; tagEx.forEach(e => tTotal += e.amount);
+                    
+                    let tagPaidStatus = {};
+                    for (let pk in db.paidStatus) {
+                        if (pk.endsWith('_' + tag)) {
+                            let baseKey = pk.substring(0, pk.lastIndexOf('_' + tag));
+                            tagPaidStatus[baseKey] = db.paidStatus[pk];
+                        }
+                    }
+                    
+                    db.archives.unshift({
+                        start: db.startDate, end: endDateStr, total: tTotal,
+                        details: tagEx, paidStatus: tagPaidStatus, activeUsers: [...(db.activeUsers || db.users)],
+                        tag: tag
+                    });
+                }
+            });
+
+            let normalEx = validExpenses.filter(e => {
+                let hasTags = /#([\w-]+)/.test(e.desc || "");
+                return !hasTags;
+            });
+
+            if (normalEx.length > 0) {
+                let nTotal = 0; normalEx.forEach(e => nTotal += e.amount);
+                
+                let normalPaidStatus = {};
+                for (let pk in db.paidStatus) {
+                    if (!pk.includes('#')) { 
+                        normalPaidStatus[pk] = db.paidStatus[pk];
+                    }
+                }
+                
+                db.archives.unshift({
+                    start: db.startDate, end: endDateStr, total: nTotal,
+                    details: normalEx, paidStatus: normalPaidStatus, activeUsers: [...(db.activeUsers || db.users)],
+                    tag: null
+                });
+            }
+
+            if (db.archives.length > 15) db.archives = db.archives.slice(0, 15);
+
+            db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr; db.activeUsers = [...db.users];
+            activeHashtag = null;
+            logAudit("Ended Month");
+            render(); executeActionWithSave();
+            isArchiving = false;
         });
     }
 
-    function logout() { localStorage.removeItem('house_user'); location.reload(); }
+    function logout() { 
+        currentUser = "";
+        localStorage.removeItem('house_user');
+        document.getElementById('sideMenu').classList.remove('open');
+        document.getElementById('menuOverlay').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('userButtons').innerHTML = '';
+        renderUsers();
+    }
     
     function login(u) { 
         currentUser = u; 
         localStorage.setItem('house_user', u); 
         document.getElementById('loginOverlay').style.display='none'; 
-        document.getElementById('topUserName').innerText = u; 
+        document.getElementById('topUserName').innerText = escapeHTML(u); 
         const menuUser = document.getElementById('menuUserName');
-        if(menuUser) menuUser.innerText = u;
+        if(menuUser) menuUser.innerText = escapeHTML(u);
         
         if (!localStorage.getItem('has_seen_input')) {
             document.getElementById('chatWrapper').classList.add('intro-glow');
@@ -1872,12 +3189,12 @@
 
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
+            if (!isUnlocked) return;
             if (navigator.onLine) {
                 if (needsSync) {
-                    showToast("RESTORING SYNC...", 2000);
                     saveData();
                 } else {
-                    loadData();
+                    loadData(false);
                 }
                 processUploadQueue();
             }
@@ -1885,40 +3202,47 @@
         }
     });
 
+    // V7.9.3 Thundering Herd Jitter Delay
     window.addEventListener('online', () => { 
-        if (needsSync) { showToast("RESTORING SYNC..."); saveData(); } 
-        else { loadData(); processUploadQueue(); }
+        if (!isUnlocked) return;
+        const jitterMs = Math.floor(Math.random() * 1400) + 100;
+        setTimeout(() => {
+            if (needsSync) { saveData(); } 
+            else { loadData(false); processUploadQueue(); }
+        }, jitterMs);
     });
     
-    window.addEventListener('offline', () => { showToast("YOU ARE OFFLINE", 2000); });
-    
-    window.onload = () => {
-        const backup = localStorage.getItem('house_db_backup');
-        if (backup) { try { loadLocalBackup(); } catch(e){} }
-        
+    window.addEventListener('offline', () => { 
+        showToast("YOU ARE OFFLINE", 2000); 
+    });
+
+    window.onload = async () => {
         initializeDB();
         renderUsers();
-
-        if(currentUser) {
-            document.getElementById('loginOverlay').style.display='none';
-            document.getElementById('topUserName').innerText = currentUser;
-            const menuUser = document.getElementById('menuUserName');
-            if(menuUser) menuUser.innerText = currentUser;
+        
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('passcodeOverlay').style.display = 'none';
+        
+        let savedPin = localStorage.getItem('house_passcode');
+        
+        if (savedPin) {
+            housePasscode = savedPin;
+            let bioCred = localStorage.getItem('house_bio_cred');
             
-            if (!localStorage.getItem('has_seen_input')) {
-                document.getElementById('chatWrapper').classList.add('intro-glow');
-                document.getElementById('amtInput').addEventListener('focus', function() {
-                    document.getElementById('chatWrapper').classList.remove('intro-glow');
-                    localStorage.setItem('has_seen_input', 'true');
-                }, { once: true });
+            // Wait for WebAuthn API
+            if (bioCred && window.PublicKeyCredential) {
+                document.getElementById('passcodeOverlay').style.display = 'flex';
+                document.getElementById('bioBtn').style.display = 'flex';
+                document.getElementById('loading').style.display = 'none';
+            } else {
+                await loadData(true);
             }
-            
-            render(); 
         } else {
-            document.getElementById('loginOverlay').style.display='flex';
+            document.getElementById('passcodeOverlay').style.display = 'flex';
+            document.getElementById('loading').style.display = 'none';
         }
         
-        loadData();
         fetchLiveRates();
         checkForUpdates();
     };
