@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.9.3">
+    <meta name="app-version" content="7.9.4">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
@@ -57,7 +57,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.9.3';
+                    const CACHE_NAME = 'house-expenses-v7.9.4';
                     self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['/']))));
                     self.addEventListener('activate', e => {
                         e.waitUntil(caches.keys().then(keys => Promise.all(
@@ -499,7 +499,7 @@
 
     <section class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
         <div class="flow-header" onclick="toggleSection(this)">
-            <h3 class="flow-title">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
+            <h3 class="flow-title" onclick="triggerSecretBackup(event)">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
@@ -530,7 +530,7 @@
 </section>
 
 <script>
-    const APP_VERSION = "7.9.3";
+    const APP_VERSION = "7.9.4";
     const BIN_ID = '69e2bb7736566621a8c5920c';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
@@ -564,7 +564,7 @@
     let confirmAction = null;
     let promptAction = null;
     let isHardwareDebounceActive = false;
-    let isSubmitting = false; // v7.9.1 Multi-tap lock
+    let isSubmitting = false; 
 
     // Lightbox & Pinch-to-Zoom State
     let currentLightboxImages = [];
@@ -573,7 +573,6 @@
     let scale = 1;
     let startDist = 0;
 
-    // V6.6: Popstate Modal Trap
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
         else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
@@ -873,7 +872,6 @@
             roundingContainer.style.display = 'none';
         }
         
-        // V7.9 Admin Lockdown for Trash
         const trashBtn = document.getElementById('trashBtn');
         if (currentUser === "Shahzeb") {
             trashBtn.style.display = 'flex';
@@ -910,7 +908,6 @@
         showToast("Trash Expiry Updated", 1500);
     }
 
-    // V7.8 & V7.7 Auto-split memory & autocomplete
     function handleTagInput(e) {
         const val = e.target.value;
         const match = val.match(/#([\w-]+)$/);
@@ -940,11 +937,10 @@
                 dropdown.style.display = 'none';
             }
 
-            // Tag Memory
             let lastEx = (db.expenses||[]).find(ex => (ex.desc||"").includes(currentTyping));
             if (lastEx && lastEx.involved && lastEx.involved.length > 0) {
                 db.activeUsers = [...lastEx.involved];
-                render(); // silently updates checkboxes
+                render(); 
             }
 
         } else {
@@ -1260,9 +1256,8 @@
         history.pushState(null, null, location.href); 
         
         const list = document.getElementById('manageUserList');
-        // V7.2 Vacation Mode added
         list.innerHTML = db.users.map(u => {
-            let isVacation = false; // Placeholder for UI, math exclusion handled by unchecking
+            let isVacation = false; 
             return `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span>
@@ -1510,14 +1505,13 @@
         }
     }
 
-    // V7.9 Lightbox Array Support & V7.6 Pinch Zoom
     function viewImg(urlArrayRaw) { 
         triggerHaptic();
         
         let urls = [];
         try {
             if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw);
-            else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); // Fallback
+            else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); 
             else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw;
         } catch(e) { urls = [urlArrayRaw]; }
         
@@ -1613,7 +1607,6 @@
         }, { passive: true });
     }
 
-    // PDF Export Tool (v7.1)
     async function downloadPDF() {
         showToast("GENERATING PDF...", 0);
         try {
@@ -1649,7 +1642,6 @@
         }
     }
     
-    // ZIP Export Tool (v7.9)
     async function downloadZIP() {
         showToast("COMPILING ZIP...", 0);
         try {
@@ -1678,7 +1670,6 @@
             
             showToast(`COMPILING ${validUrls.length} RECEIPTS...`, 0);
 
-            // V7.9.1 Batch Chunking for RAM safety
             const batchSize = 10;
             for (let i = 0; i < validUrls.length; i += batchSize) {
                 const batch = validUrls.slice(i, i + batchSize);
@@ -1692,7 +1683,7 @@
                         }
                     } catch(e) { console.warn("Failed fetching", url); }
                 }));
-                await new Promise(r => setTimeout(r, 50)); // Jitter breath
+                await new Promise(r => setTimeout(r, 50)); 
             }
             
             const content = await zip.generateAsync({type:"blob"});
@@ -1821,10 +1812,11 @@
                     return; 
                 }
             } else {
-                showToast("VAULT NOT INITIALIZED", 4000);
-                if(syncIcon) syncIcon.classList.remove('spin');
-                isSyncing = false;
-                return;
+                showToast("INITIALIZING NEW VAULT...", 3000);
+                initializeDB();
+                isUnlocked = true;
+                safeSetStorage('house_passcode', housePasscode);
+                saveData(); 
             }
             
             initializeDB(); 
@@ -1861,7 +1853,7 @@
             }
         } finally {
             if(syncIcon) syncIcon.classList.remove('spin');
-            if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE" && document.getElementById('loading').innerHTML !== "SYNCING...") {
+            if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE" && document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") {
                 document.getElementById('loading').style.display = 'none'; 
             }
             isSyncing = false;
@@ -1889,7 +1881,6 @@
         const isReallyOnline = await checkTrueNetwork();
         if (!isReallyOnline) { 
             setNeedsSync(true); 
-            // V7.0 Optimistic UI: Don't show toast for every save, just use badge.
             return; 
         }
         
@@ -2464,7 +2455,6 @@
                     });
                 }
 
-                // V7.4 Settlement Lock
                 const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== "");
                 let adminActionHtml = "";
                 if (!isFullySettled) {
@@ -2567,7 +2557,8 @@
             link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            canvas.width = 0; // V7.9.2 RAM Release
+            canvas.width = 0; 
+            canvas = null; 
         } catch (e) { showToast("Failed to capture snapshot.", 3000); }
 
         if (!wasExpanded) card.classList.remove('expanded');
@@ -2606,7 +2597,6 @@
                         if (ex) {
                             if (!ex.receipt) { ex.receipt = json.data.url; ex.receiptDelete = json.data.delete_url; }
                             else { 
-                                // Handling queued arrays
                                 let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt];
                                 let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete];
                                 recArr.push(json.data.url); delArr.push(json.data.delete_url);
@@ -2689,7 +2679,7 @@
     }
 
     async function addExpense() {
-        if (isSubmitting) return; // V7.9.1 Multi-touch lock
+        if (isSubmitting) return; 
         
         const addBtn = document.getElementById('mainAddBtn');
         if(addBtn.disabled) return;
@@ -2734,9 +2724,6 @@
             let failedUploadsArr = [];
             
             if (files && files.length > 0) {
-                // V7.0 Optimistic UI: Don't lock UI if not needed, but uploading files takes time
-                // Since this is background processing, we should show a specific non-blocking toast or just wait.
-                // For safety in file upload, we still process files before creating object.
                 for (let i = 0; i < files.length; i++) {
                     const uploadRes = await uploadToImgBB(files[i]);
                     if (uploadRes && uploadRes.url) {
@@ -2825,7 +2812,6 @@
             document.getElementById('optionsMenu').style.display = "none";
             document.getElementById('hashtagAutocomplete').style.display = "none";
             
-            // V7.0 Optimistic UI: instantly render, no block toast.
             render(); executeActionWithSave();
             if(failedUploadsArr.length > 0) processUploadQueue();
             
@@ -3202,7 +3188,6 @@
         }
     });
 
-    // V7.9.3 Thundering Herd Jitter Delay
     window.addEventListener('online', () => { 
         if (!isUnlocked) return;
         const jitterMs = Math.floor(Math.random() * 1400) + 100;
@@ -3230,7 +3215,6 @@
             housePasscode = savedPin;
             let bioCred = localStorage.getItem('house_bio_cred');
             
-            // Wait for WebAuthn API
             if (bioCred && window.PublicKeyCredential) {
                 document.getElementById('passcodeOverlay').style.display = 'flex';
                 document.getElementById('bioBtn').style.display = 'flex';
