@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.9.42">
+    <meta name="app-version" content="7.9.45">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
@@ -56,7 +56,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.9.42';
+                    const CACHE_NAME = 'house-expenses-v7.9.45';
                     self.addEventListener('install', e => self.skipWaiting());
                     self.addEventListener('activate', e => {
                         e.waitUntil(caches.keys().then(keys => Promise.all(
@@ -99,66 +99,42 @@
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
         html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100dvh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; touch-action: pan-x pan-y; overscroll-behavior-y: none; -webkit-user-select: none; user-select: none; }
-        
         input, textarea, select { font-size: 16px !important; -webkit-user-select: auto; user-select: auto; color: var(--text-main) !important; background-color: var(--input-bg) !important; touch-action: manipulation; }
-        
         button svg, .badge svg, .action-icon svg { pointer-events: none; }
         button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; -webkit-user-drag: none; }
-
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
-        .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note {
-            transform: translateZ(0); 
-            backface-visibility: hidden; 
-            transform-style: flat;
-            -webkit-mask-image: -webkit-radial-gradient(white, black);
-        }
-        
-        @media (prefers-reduced-transparency: reduce) {
-            .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note, [style*="backdrop-filter"] {
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
-                background-color: var(--nav-bg) !important;
-            }
-        }
+        .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note { transform: translateZ(0); backface-visibility: hidden; transform-style: flat; -webkit-mask-image: -webkit-radial-gradient(white, black); }
+        @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note, [style*="backdrop-filter"] { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background-color: var(--nav-bg) !important; } }
 
         .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; padding-top: max(12px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
-        
         @media (hover: hover) { .action-icon:hover { color: var(--accent); } }
-
         .offline-badge { position: absolute; top: -2px; right: -2px; background: var(--danger); color: white; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
         #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
         .menu-link { text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; padding: 12px 15px; border-radius: 12px; transition: 0.2s; display: block; cursor: pointer; }
-        
         @media (hover: hover) { .menu-link:hover { background: var(--input-bg); color: var(--text-main); } }
         .menu-link:active { background: var(--input-bg); color: var(--text-main); }
 
         @keyframes highlight-glow { 0% { background-color: var(--accent-glow); } 100% { background-color: transparent; } }
         .highlight-pulse { animation: highlight-glow 1.5s ease-out; }
-
         @keyframes input-glow { 0% { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: var(--border); } 50% { box-shadow: 0 0 15px 2px var(--accent); border-color: var(--accent); } 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: var(--border); } }
         .intro-glow { animation: input-glow 2.5s ease-in-out infinite; }
-        
         @keyframes skel-pulse { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
         .skel-block { background: var(--border); border-radius: 8px; animation: skel-pulse 1.5s infinite ease-in-out; }
-
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .spin { animation: spin 1s linear infinite; }
 
         .hero-section { padding: 25px 20px 20px 20px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
         .hero-section::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); filter: blur(100px); opacity: 0.15; z-index: 0; pointer-events: none; }
-        
         .hero-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 4px; position: relative; z-index: 1; transition: 0.3s; }
         .hero-value { font-size: 3rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; margin-bottom: 10px; line-height: 1; text-shadow: 0 0 30px var(--accent-glow); position: relative; z-index: 1; font-variant-numeric: tabular-nums; word-break: break-all; overflow-wrap: anywhere; }
-        
         .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 1; }
         .stat-block { display: flex; flex-direction: column; gap: 4px; }
         .stat-block .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
@@ -191,13 +167,11 @@
         
         .chat-btn { background: transparent; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
         @media (hover: hover) { .chat-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.05); } }
-        
         .chat-btn.primary { width: 48px; height: 48px; background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); margin-bottom: 0; border-radius: 50%; transition: 0.2s; flex-shrink: 0; }
         .chat-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .chat-note { width: 100%; background: var(--nav-bg) !important; border: 1px solid var(--border); padding: 10px 15px; color: var(--text-main) !important; border-radius: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-size: 16px !important; }
         .chat-note:focus { border-color: var(--accent); }
-        
         select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; font-size: 16px !important; }
         
         #hashtagAutocomplete { position: absolute; bottom: 100%; left: 10px; width: calc(100% - 20px); background: var(--nav-bg); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 8px; max-height: 140px; overflow-y: auto; display: none; flex-direction: column; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.1); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
@@ -242,10 +216,8 @@
 
         .login-card { background: var(--nav-bg); border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
         .user-select-btn { display: flex; align-items: center; gap: 14px; background: transparent; border: 1px solid var(--border); padding: 12px 18px; border-radius: 20px; color: var(--text-main); font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; text-align: left; margin-bottom: 10px; }
-        
         @media (hover: hover) { .user-select-btn:hover { border-color: var(--accent); background: var(--accent-glow); } }
         .user-select-btn:active { transform: scale(0.98); border-color: var(--accent); background: var(--accent-glow); }
-        
         .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--text-main); color: var(--bg); display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1rem; }
 
         .btn-glowing { background: var(--input-bg); color: var(--text-main); padding: 14px 24px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
@@ -270,17 +242,24 @@
         .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 40px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; border-radius: 8px; }
         #lightboxPrev { left: 10px; }
         #lightboxNext { right: 10px; }
-        
-        .vacation-pill { background: transparent; border: 1px dashed var(--border); color: var(--text-muted); opacity: 0.6; }
     </style>
 </head>
 <body>
+
 <div id="loading" aria-live="polite">SYNCING...</div>
 
 <div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:340px; text-align:center;">
         <h2 style="margin:0 0 25px 0; font-size: 1.4rem; font-weight:900; letter-spacing:-0.5px;">Select User</h2>
         <div id="userButtons" style="display: flex; flex-direction: column;"></div>
+    </div>
+</div>
+
+<div id="auditOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="width:90%; max-width:340px;">
+        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Audit Trail</h2>
+        <div id="auditList" style="margin-bottom: 15px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeAuditLog()">Close</button>
     </div>
 </div>
 
@@ -296,7 +275,6 @@
 <div id="settingsOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
-        
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
             <span style="font-weight:700; font-size: 0.95rem;">Swipe to Reveal Actions</span>
             <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSwipeSetting()">
@@ -304,7 +282,6 @@
                 <span class="toggle-slider" style="pointer-events:none;"></span>
             </div>
         </div>
-
         <div id="smartRoundingContainer" style="display:none; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
             <span style="font-weight:700; font-size: 0.95rem;">Smart Rounding (10p)</span>
             <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSmartRounding()">
@@ -312,7 +289,6 @@
                 <span class="toggle-slider" style="pointer-events:none;"></span>
             </div>
         </div>
-        
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
             <span style="font-weight:700; font-size: 0.95rem;">Trash Expiry</span>
             <select id="trashExpirySelect" class="interactive-btn" onchange="triggerHaptic(); updateTrashExpiry()" style="padding:4px; border-radius:8px; border:1px solid var(--border); background:var(--input-bg);">
@@ -321,7 +297,6 @@
                 <option value="30">30 Days</option>
             </select>
         </div>
-        
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
             <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
@@ -331,7 +306,6 @@
             </div>
             <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--accent); border-color:var(--accent); font-size:0.8rem;" onclick="triggerHaptic(); closeSettings(); downloadZIP();">Download All Receipts (.ZIP)</button>
         </div>
-        
         <button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); closeSettings()">Done</button>
     </div>
 </div>
@@ -401,6 +375,8 @@
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
+    <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();">📋 Audit Trail</a>
+    
     <div style="flex-grow: 1;"></div>
     <a href="#" class="menu-link interactive-btn" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
     <a href="#" class="menu-link interactive-btn" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
@@ -465,14 +441,12 @@
             </div>
         </div>
         <div class="collapsible-content">
-            
             <div style="margin-bottom: 15px;">
                 <button class="badge interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Active Housemates
                 </button>
                 <div id="cycleSplitCheckboxes" style="display: none; flex-wrap: wrap; gap: 10px;"></div>
             </div>
-
             <div id="settleList"></div>
             <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none; padding-top: 5px; margin-bottom: 10px;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 14px; text-align: center; cursor: pointer;">
@@ -517,7 +491,6 @@
     <div id="hashtagAutocomplete"></div>
     <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
-        
         <div style="display: flex; gap: 10px;">
             <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem; flex: 1;" onclick="triggerHaptic(); document.getElementById('cameraInput').click()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> 
@@ -532,10 +505,8 @@
     <div class="chat-row">
         <div class="chat-input-wrapper" id="chatWrapper">
             <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Write Amount here" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
-            
             <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
             <input type="file" id="cameraInput" aria-label="Take Photo" accept="image/*" capture="environment" style="display:none;">
-            
             <button class="chat-btn interactive-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
@@ -544,7 +515,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.9.42";
+    const APP_VERSION = "7.9.45";
     const BIN_ID = '69e2bb7736566621a8c5920c';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
@@ -585,7 +556,6 @@
     let scale = 1;
     let startDist = 0;
 
-    // v7.9.42: GHOST CLICK ARMOR COMPLETELY REMOVED. Only keyboard pre-wipe remains.
     let lastTouchTime = 0;
     document.body.addEventListener('touchstart', (e) => {
         lastTouchTime = Date.now();
@@ -599,6 +569,7 @@
         if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
         else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
         else if (document.getElementById('trashOverlay').style.display === 'flex') { closeTrash(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('auditOverlay').style.display === 'flex') { closeAuditLog(); history.pushState(null, null, location.href); }
         else if (document.getElementById('sideMenu').classList.contains('open')) { toggleMenu(); history.pushState(null, null, location.href); }
     });
 
@@ -635,6 +606,37 @@
             document.getElementById('mainAddBtn').style.opacity = '1';
         }
     });
+
+    // v7.9.45: Feature 8 - Audit Trail Logic
+    function openAuditLog() {
+        if(document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu');
+        if (menu.classList.contains('open')) toggleMenu();
+        history.pushState(null, null, location.href); 
+        
+        const list = document.getElementById('auditList');
+        if (!db.auditLog || db.auditLog.length === 0) {
+            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center;'>No history recorded.</div>";
+        } else {
+            list.innerHTML = db.auditLog.map(log => `
+                <div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid var(--accent); text-align: left;">
+                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${new Date(log.t).toLocaleString()}</div>
+                    <div style="font-size:0.85rem; color:var(--text-main);"><b>${escapeHTML(log.by)}</b> ${escapeHTML(log.act)}</div>
+                    ${log.trg ? `<div style="font-size:0.75rem; color:var(--accent);">Target: ${escapeHTML(log.trg)}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        document.getElementById('auditOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAuditLog() { 
+        const el = document.getElementById('auditOverlay');
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        el.style.pointerEvents = 'auto';
+        document.body.style.overflow = '';
+    }
 
     function escapeHTML(str) {
         if (!str || typeof str !== 'string') return str;
@@ -682,12 +684,11 @@
                     if (db.archives && db.archives.length > 5) {
                         db.archives.pop(); 
                         safeSetStorage(key, JSON.stringify(db));
-                        showToast("Vault Full. Oldest archive pruned to save space.", 4000);
+                        showToast("Vault Full. Oldest archive pruned.", 4000);
                     } else {
-                        console.error("v7.9.42: Quota limit hit. Using RAM fallback.");
                         window.ephemeralStorage = window.ephemeralStorage || {};
                         window.ephemeralStorage[key] = val;
-                        showToast("Memory Limit Reached. Running in Volatile Mode.", 4000);
+                        showToast("Memory Limit Reached. Running Volatile.", 4000);
                     }
                 } else {
                      showToast("Storage Limit Reached. Clear Vault.", 4000);
@@ -804,7 +805,6 @@
         if (menu.classList.contains('open')) toggleMenu();
         
         history.pushState(null, null, location.href); 
-        
         document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
         
         const roundingContainer = document.getElementById('smartRoundingContainer');
@@ -835,8 +835,7 @@
         el.style.pointerEvents = 'auto';
         document.body.style.overflow = '';
     }
-    
-    // v7.9.42: Pure JS-Driven toggles (Bypassing native inputs)
+
     function toggleSwipeSetting() {
         swipeActionsEnabled = !swipeActionsEnabled;
         document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
@@ -973,7 +972,6 @@
             customConfirm("Permanently delete this expense?", () => {
                 if(!db.trash[i]) return;
                 let ex = db.trash[i];
-                let receipts = Array.isArray(ex.receipt) ? ex.receipt : (ex.receipt ? [ex.receipt] : []);
                 let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
                 
                 delUrls.forEach(u => {
@@ -1046,9 +1044,7 @@
 
     function setNeedsSync(val) { needsSync = val; safeSetStorage('house_needs_sync', val); }
     
-    function saveLocalBackup() { 
-        safeSetStorage('house_db_backup', JSON.stringify(db));
-    }
+    function saveLocalBackup() { safeSetStorage('house_db_backup', JSON.stringify(db)); }
     
     function loadLocalBackup() {
         const backup = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup');
@@ -1069,6 +1065,201 @@
                 initializeDB();
             }
         }
+    }
+
+    // v7.9.45: Feature 3 - Twin-Sync Collision Resolution Matrix
+    function mergeDatabases(local, remote) {
+        const merged = JSON.parse(JSON.stringify(remote));
+        const remoteIds = new Set(remote.expenses.map(e => e.id));
+        
+        local.expenses.forEach(ex => {
+            if (!remoteIds.has(ex.id)) merged.expenses.unshift(ex);
+        });
+        merged.expenses.sort((a,b) => b.timestamp - a.timestamp);
+        
+        if (local.auditLog) {
+            const remoteAuditTimes = new Set(remote.auditLog.map(a => a.t));
+            local.auditLog.forEach(a => { if(!remoteAuditTimes.has(a.t)) merged.auditLog.unshift(a); });
+            merged.auditLog.sort((a,b) => b.t - a.t);
+            if (merged.auditLog.length > 200) merged.auditLog.length = 200;
+        }
+        return merged;
+    }
+
+    async function secureFetch(url, options = {}, timeoutMs = 8000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+                cache: 'no-store', 
+                headers: {
+                    ...options.headers,
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            clearTimeout(id);
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("text/html") !== -1 && !url.includes('api.imgbb')) {
+                throw new Error("CAPTIVE_PORTAL_DETECTED");
+            }
+            return response;
+        } catch (error) {
+            clearTimeout(id);
+            throw error;
+        }
+    }
+
+    async function loadData(force = false) {
+        if (isSyncing) return;
+        if (!force && Date.now() - lastSyncTime < 2500) return;
+        
+        lastSyncTime = Date.now();
+        isSyncing = true;
+        
+        const isReallyOnline = await checkTrueNetwork();
+        if (!isReallyOnline) { 
+            showToast("OFFLINE - LOCAL MODE", 2000); 
+            loadLocalBackup(); 
+            isSyncing = false;
+            return; 
+        }
+        
+        if (!db.expenses || db.expenses.length === 0) renderSkeletons();
+        
+        const syncIcon = document.getElementById('syncIconElement');
+        if(syncIcon) syncIcon.classList.add('spin');
+        
+        try {
+            const res = await secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
+                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }
+            });
+            
+            if (res.status === 429) throw new Error("429");
+            if (!res.ok) throw new Error("HTTP_API_ERROR");
+            
+            const data = await res.json();
+            const targetData = data.record ? data.record : data;
+            
+            if (targetData && (targetData.expenses || targetData.users)) {
+                if (targetData.encrypted) {
+                    showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000);
+                    initializeDB();
+                } else {
+                    if (offlineActionsCount > 0 && db.expenses) {
+                        db = mergeDatabases(db, targetData);
+                        saveData();
+                    } else {
+                        db = targetData;
+                    }
+                }
+            } else {
+                showToast("INITIALIZING NEW VAULT...", 3000);
+                initializeDB();
+                saveData(); 
+            }
+            
+            initializeDB(); 
+            
+            if (db.trash && Array.isArray(db.trash)) {
+                const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000;
+                let originalLength = db.trash.length;
+                db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs);
+                if (db.trash.length !== originalLength) executeActionWithSave(); 
+            }
+            
+            renderUsers(); saveLocalBackup(); 
+            
+            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
+            else {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('topUserName').innerText = escapeHTML(currentUser); 
+                const menuUser = document.getElementById('menuUserName');
+                if(menuUser) menuUser.innerText = escapeHTML(currentUser);
+                render();
+            }
+            
+            offlineActionsCount = 0;
+            updateOfflineBadge();
+            
+            processUploadQueue();
+        } catch (e) {
+            if (e.message === "429") {
+                setTimeout(() => { loadData(true); }, 1500);
+            } else if (e.message === "HTTP_API_ERROR") {
+                showToast("CLOUD SERVER OFFLINE", 3000);
+                loadLocalBackup();
+            } else {
+                showToast("OFFLINE - LOCAL MODE", 2000); 
+                loadLocalBackup();
+            }
+        } finally {
+            if(syncIcon) syncIcon.classList.remove('spin');
+            if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") {
+                document.getElementById('loading').style.display = 'none'; 
+            }
+            isSyncing = false;
+        }
+    }
+
+    function executeActionWithSave() {
+        if (!checkPayloadSize()) return; 
+        offlineActionsCount++;
+        updateOfflineBadge();
+        saveData();
+    }
+
+    async function saveData(retryCount = 0) {
+        saveLocalBackup(); 
+        
+        const isReallyOnline = await checkTrueNetwork();
+        if (!isReallyOnline) { 
+            setNeedsSync(true); 
+            return; 
+        }
+        
+        const now = Date.now();
+        if (now - lastApiSaveTime < 2000 && retryCount === 0) {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => { saveData(); }, 2000);
+            return;
+        }
+        lastApiSaveTime = now;
+        
+        if (isSyncing && retryCount === 0) return;
+        isSyncing = true;
+        
+        const syncIcon = document.getElementById('syncIconElement');
+        if(syncIcon) syncIcon.classList.add('spin');
+        document.body.style.overscrollBehavior = 'none';
+
+        secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() },
+            body: JSON.stringify(db)
+        })
+        .then(res => { 
+            if (res.status === 429) throw new Error("429"); 
+            if (!res.ok) throw new Error("HTTP_API_ERROR"); 
+            setNeedsSync(false); 
+            offlineActionsCount = 0;
+            updateOfflineBadge();
+        })
+        .catch((e) => { 
+            if (e.message === "429" && retryCount < 2) {
+                setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1));
+            } else {
+                setNeedsSync(true); 
+            }
+        })
+        .finally(() => { 
+            if(syncIcon) syncIcon.classList.remove('spin'); 
+            isSyncing = false;
+            document.body.style.overscrollBehavior = 'auto'; 
+        });
     }
 
     function toggleMyView() {
@@ -1148,6 +1339,7 @@
             isSettling = false;
         });
     }
+
     function toggleSection(headerEl) {
         if (isLongPress) { isLongPress = false; return; }
         const parent = headerEl.parentElement;
@@ -1199,11 +1391,7 @@
         }).join('');
         
         const addBtn = document.getElementById('addHousemateBtn');
-        if (currentUser === "Shahzeb") {
-            addBtn.style.display = 'flex';
-        } else {
-            addBtn.style.display = 'none';
-        }
+        if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
         
         document.getElementById('manageUsersOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
@@ -1211,22 +1399,15 @@
 
     function closeManageUsers() { 
         const el = document.getElementById('manageUsersOverlay');
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-        el.style.pointerEvents = 'auto';
-        document.body.style.overflow = '';
+        el.style.pointerEvents = 'none'; el.style.display = 'none'; el.style.pointerEvents = 'auto'; document.body.style.overflow = '';
     }
 
     function addUser() {
-        if (currentUser !== 'Shahzeb') {
-            showToast("Only Shahzeb can add housemates.", 3000);
-            return;
-        }
+        if (currentUser !== 'Shahzeb') { showToast("Only Shahzeb can add housemates.", 3000); return; }
         customPrompt("Enter new housemate's name:", "", (val) => {
             const n = sanitizeName(val); if (!n) return;
             const nLower = n.toLowerCase();
             if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("User already exists.", 3000); return; }
-            
             db.users.push(n); db.activeUsers.push(n);
             logAudit("Added User", n);
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
@@ -1257,42 +1438,26 @@
                 }
                 let arcPaid = {};
                 for (let key in arc.paidStatus) {
-                    let parts = key.split('_');
-                    let from = parts[0];
-                    let to = parts[1];
-                    let tagPart = parts.slice(2).join('_');
-                    
-                    if (from === oldName) from = n;
-                    if (to === oldName) to = n;
-                    
-                    let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`;
-                    arcPaid[newKey] = arc.paidStatus[key]; 
+                    let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_');
+                    if (from === oldName) from = n; if (to === oldName) to = n;
+                    let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; arcPaid[newKey] = arc.paidStatus[key]; 
                 }
                 arc.paidStatus = arcPaid;
             });
 
             let newPaid = {};
             for (let key in db.paidStatus) {
-                let parts = key.split('_');
-                let from = parts[0];
-                let to = parts[1];
-                let tagPart = parts.slice(2).join('_');
-
-                if (from === oldName) from = n;
-                if (to === oldName) to = n;
-                
-                let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`;
-                newPaid[newKey] = db.paidStatus[key];
+                let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_');
+                if (from === oldName) from = n; if (to === oldName) to = n;
+                let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key];
             }
             db.paidStatus = newPaid;
             
             logAudit(`Renamed ${oldName} to`, n);
             if (currentUser === oldName) {
-                currentUser = n;
-                localStorage.setItem('house_user', n);
+                currentUser = n; localStorage.setItem('house_user', n);
                 document.getElementById('topUserName').innerText = escapeHTML(n);
-                const menuUser = document.getElementById('menuUserName');
-                if(menuUser) menuUser.innerText = escapeHTML(n);
+                const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(n);
             }
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
@@ -1303,24 +1468,13 @@
         
         let validExpenses = db.expenses || [];
         let contexts = [null]; 
-        validExpenses.forEach(e => {
-            let match = (e.desc || "").match(/#([\w-]+)/);
-            if(match && !contexts.includes(match[0])) contexts.push(match[0]);
-        });
+        validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match && !contexts.includes(match[0])) contexts.push(match[0]); });
 
         let canDelete = true;
-
         for(let i=0; i<contexts.length; i++) {
             let ctx = contexts[i];
-            let ctxEx = validExpenses.filter(e => {
-                let match = (e.desc || "").match(/#([\w-]+)/);
-                if(ctx) return match && match[0] === ctx;
-                return !match;
-            });
-
-            let balances = {};
-            db.users.forEach(u => balances[u] = 0);
-
+            let ctxEx = validExpenses.filter(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(ctx) return match && match[0] === ctx; return !match; });
+            let balances = {}; db.users.forEach(u => balances[u] = 0);
             ctxEx.forEach(e => {
                 balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
                 let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : db.activeUsers;
@@ -1328,54 +1482,33 @@
                 let perHead = Math.round((e.amount / activeCount) * 100) / 100;
                 involved.forEach(u => { balances[u] = Math.round((balances[u] - perHead) * 100) / 100; });
             });
-
-            if (Math.abs(balances[name]) > 0.05) {
-                canDelete = false;
-                break;
-            }
+            if (Math.abs(balances[name]) > 0.05) { canDelete = false; break; }
         }
 
-        if (!canDelete) {
-            showToast(`Cannot remove ${escapeHTML(name)}. Balance must be settled in all tags.`, 4000);
-            return;
-        }
+        if (!canDelete) { showToast(`Cannot remove ${escapeHTML(name)}. Balance must be settled in all tags.`, 4000); return; }
 
         customConfirm(`Remove ${escapeHTML(name)} from housemates? Past expenses are kept.`, () => {
-            const idx = db.users.indexOf(name);
-            if (idx > -1) db.users.splice(idx, 1);
-            const aIdx = db.activeUsers.indexOf(name);
-            if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
-            
+            const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1);
+            const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
             logAudit("Removed User", name);
-
-            if (currentUser === name) { closeManageUsers(); logout(); } 
-            else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
+            if (currentUser === name) { closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
 
-    // v7.9.43: Bulletproof User Rendering (Corrupted Data Failsafe)
     function renderUsers() {
         const btns = document.getElementById('userButtons');
-        if (!btns) return;
-        btns.innerHTML = '';
+        if (!btns) return; btns.innerHTML = '';
         
         let usersList = defaultUsers;
-        if (db && Array.isArray(db.users) && db.users.length > 0) {
-            usersList = db.users;
-        }
+        if (db && Array.isArray(db.users) && db.users.length > 0) usersList = db.users;
         
         let validUsersFound = false;
 
         usersList.forEach(u => {
             try {
                 let nameStr = "";
-                if (typeof u === 'string') nameStr = u;
-                else if (u && typeof u === 'object' && u.name) nameStr = String(u.name);
-                else if (u) nameStr = String(u);
-                
-                nameStr = nameStr.trim();
-                if (!nameStr) return; 
-                
+                if (typeof u === 'string') nameStr = u; else if (u && typeof u === 'object' && u.name) nameStr = String(u.name); else if (u) nameStr = String(u);
+                nameStr = nameStr.trim(); if (!nameStr) return; 
                 validUsersFound = true;
                 btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(nameStr)}')"><div class="user-avatar">${escapeHTML(nameStr.charAt(0))}</div>${escapeHTML(nameStr)}</button>`;
             } catch (e) {}
@@ -1393,29 +1526,21 @@
         if (!desc) return "";
         let cleanInput = desc.replace(/[•+]/g, ' ').replace(/&bull;/g, ' ').replace(/\n+/g, ' ').trim();
         let tokens = cleanInput.split(/\s+/).filter(Boolean);
-        
         let processedDesc = tokens[0] || '';
         if (/^\d+(\.\d+)?$/.test(processedDesc)) processedDesc = origSym + processedDesc;
-
         for (let i = 1; i < tokens.length; i++) {
             let t = tokens[i];
-            if (/^(?:£|\$|€|Rs)?\d/.test(t)) {
-                if (/^\d+(\.\d+)?$/.test(t)) t = origSym + t;
-                processedDesc += ' • ' + t;
-            } else {
-                processedDesc += ' ' + t;
-            }
+            if (/^(?:£|\$|€|Rs)?\d/.test(t)) { if (/^\d+(\.\d+)?$/.test(t)) t = origSym + t; processedDesc += ' • ' + t; } 
+            else { processedDesc += ' ' + t; }
         }
         return escapeHTML(processedDesc);
     }
     
     function formatNiceDate(dateStr) {
         if (!dateStr || dateStr === "Unknown Date") return "Unknown Date";
-        const parts = dateStr.split('/');
-        if (parts.length !== 3) return dateStr;
+        const parts = dateStr.split('/'); if (parts.length !== 3) return dateStr;
         const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
-        const dateObj = new Date(y, m, d);
-        if (isNaN(dateObj.getTime())) return escapeHTML(dateStr);
+        const dateObj = new Date(y, m, d); if (isNaN(dateObj.getTime())) return escapeHTML(dateStr);
         const day = dateObj.getDate(), month = dateObj.toLocaleString('default', { month: 'short' }), year = dateObj.getFullYear();
         const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th';
         return `${day}${nth} ${month} ${year}`;
@@ -1423,219 +1548,81 @@
 
     async function copyToClipboard(text) {
         try {
-            if (navigator.clipboard && window.isSecureContext) { 
-                await navigator.clipboard.writeText(text); 
-                return; 
-            }
-            const el = document.createElement('textarea'); 
-            el.value = text; 
-            document.body.appendChild(el); 
-            el.select(); 
-            document.execCommand('copy'); 
-            document.body.removeChild(el);
+            if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
+            const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
         } catch (e) { showToast("Copy manually.", 3000); }
     }
 
     function sendNudge(name, amount, sym) {
         triggerHaptic();
         const text = `Hey ${name}, just a heads up you owe ${sym}${amount.toFixed(2)} for the current house cycle. Catch you later!`;
-        if (navigator.share) {
-            navigator.share({ title: 'House Expenses', text: text }).catch(e => {
-                copyToClipboard(text); showToast("Nudge Copied!", 2000);
-            });
-        } else {
-            copyToClipboard(text); showToast("Nudge Copied!", 2000);
-        }
+        if (navigator.share) { navigator.share({ title: 'House Expenses', text: text }).catch(e => { copyToClipboard(text); showToast("Nudge Copied!", 2000); }); } 
+        else { copyToClipboard(text); showToast("Nudge Copied!", 2000); }
     }
 
     function viewImg(urlArrayRaw) { 
-        triggerHaptic();
-        
-        let urls = [];
+        triggerHaptic(); let urls = [];
         try {
             if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw);
-            else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); 
-            else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw;
+            else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw;
         } catch(e) { urls = [urlArrayRaw]; }
-        
         if(!urls || urls.length === 0) { showToast("Invalid receipt link.", 3000); return; }
-        
         currentLightboxImages = urls.map(u => sanitizeURL(u.trim())).filter(u => u !== null);
         if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
         
-        currentLightboxIndex = 0;
-        lightboxRotation = 0;
-        scale = 1;
-        
-        updateLightboxDOM();
-        
-        const overlay = document.getElementById('lightboxOverlay');
-        overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        initPinchZoom();
+        currentLightboxIndex = 0; lightboxRotation = 0; scale = 1; updateLightboxDOM();
+        const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; initPinchZoom();
     }
     
     function updateLightboxDOM() {
-        const loader = document.getElementById('lightboxLoader');
-        const img = document.getElementById('lightboxImg');
-        const prev = document.getElementById('lightboxPrev');
-        const next = document.getElementById('lightboxNext');
-        const pag = document.getElementById('lightboxPagination');
-        
-        loader.style.display = 'block';
-        img.style.display = 'none';
-        img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`;
-        
-        img.src = currentLightboxImages[currentLightboxIndex];
-        
-        if(currentLightboxImages.length > 1) {
-            prev.style.display = 'flex';
-            next.style.display = 'flex';
-            pag.style.display = 'block';
-            pag.innerText = `${currentLightboxIndex + 1}/${currentLightboxImages.length}`;
-        } else {
-            prev.style.display = 'none';
-            next.style.display = 'none';
-            pag.style.display = 'none';
-        }
+        const loader = document.getElementById('lightboxLoader'), img = document.getElementById('lightboxImg'), prev = document.getElementById('lightboxPrev'), next = document.getElementById('lightboxNext'), pag = document.getElementById('lightboxPagination');
+        loader.style.display = 'block'; img.style.display = 'none'; img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; img.src = currentLightboxImages[currentLightboxIndex];
+        if(currentLightboxImages.length > 1) { prev.style.display = 'flex'; next.style.display = 'flex'; pag.style.display = 'block'; pag.innerText = `${currentLightboxIndex + 1}/${currentLightboxImages.length}`; } 
+        else { prev.style.display = 'none'; next.style.display = 'none'; pag.style.display = 'none'; }
     }
     
-    function changeLightboxImage(e, dir) {
-        e.stopPropagation();
-        triggerHaptic();
-        currentLightboxIndex += dir;
-        if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1;
-        if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0;
-        lightboxRotation = 0;
-        scale = 1;
-        updateLightboxDOM();
-    }
-    
-    function rotateLightboxImg(e) {
-        e.stopPropagation();
-        triggerHaptic();
-        lightboxRotation += 90;
-        document.getElementById('lightboxImg').style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`;
-    }
-
-    function closeLightbox(e) {
-        if(e) e.stopPropagation();
-        triggerHaptic();
-        document.getElementById('lightboxOverlay').style.display = 'none';
-        document.getElementById('lightboxImg').src = '';
-        document.body.style.overflow = '';
-        currentLightboxImages = [];
-        scale = 1;
-        lightboxRotation = 0;
-    }
+    function changeLightboxImage(e, dir) { e.stopPropagation(); triggerHaptic(); currentLightboxIndex += dir; if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1; if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0; lightboxRotation = 0; scale = 1; updateLightboxDOM(); }
+    function rotateLightboxImg(e) { e.stopPropagation(); triggerHaptic(); lightboxRotation += 90; document.getElementById('lightboxImg').style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; }
+    function closeLightbox(e) { if(e) e.stopPropagation(); triggerHaptic(); document.getElementById('lightboxOverlay').style.display = 'none'; document.getElementById('lightboxImg').src = ''; document.body.style.overflow = ''; currentLightboxImages = []; scale = 1; lightboxRotation = 0; }
     
     function initPinchZoom() {
-        const img = document.getElementById('lightboxImg');
-        let initialDist = 0;
-        
-        img.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 2) {
-                initialDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-            }
-        }, { passive: true });
-        
-        img.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2) {
-                const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                const delta = currentDist - initialDist;
-                scale = Math.max(1, Math.min(scale + (delta * 0.01), 4));
-                initialDist = currentDist;
-                img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`;
-            }
-        }, { passive: true });
+        const img = document.getElementById('lightboxImg'); let initialDist = 0;
+        img.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { initialDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); } }, { passive: true });
+        img.addEventListener('touchmove', (e) => { if (e.touches.length === 2) { const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); const delta = currentDist - initialDist; scale = Math.max(1, Math.min(scale + (delta * 0.01), 4)); initialDist = currentDist; img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; } }, { passive: true });
     }
 
     async function downloadPDF() {
         showToast("GENERATING PDF...", 0);
         try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
-            
-            doc.setFontSize(18);
-            doc.text("House Expenses Ledger", 14, 22);
-            doc.setFontSize(11);
-            doc.text(`Cycle: ${formatNiceDate(db.startDate)} to Present`, 14, 30);
-            
-            let y = 40;
-            let validExpenses = db.expenses || [];
-            
+            const { jsPDF } = window.jspdf; const doc = new jsPDF(); const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+            doc.setFontSize(18); doc.text("House Expenses Ledger", 14, 22); doc.setFontSize(11); doc.text(`Cycle: ${formatNiceDate(db.startDate)} to Present`, 14, 30);
+            let y = 40; let validExpenses = db.expenses || [];
             validExpenses.forEach((ex, i) => {
                 if (y > 270) { doc.addPage(); y = 20; }
-                let exSym = ex.originalSym || sym;
-                let cleanDesc = ex.desc ? ex.desc.replace(/\n/g, ' ') : '';
-                doc.text(`${formatNiceDate(ex.date || db.startDate)} - ${ex.name} - ${exSym}${(ex.amount * rate).toFixed(2)}`, 14, y);
-                doc.setFontSize(9);
-                doc.setTextColor(100);
-                doc.text(cleanDesc.substring(0, 80), 14, y+5);
-                doc.setFontSize(11);
-                doc.setTextColor(0);
-                y += 15;
+                let exSym = ex.originalSym || sym; let cleanDesc = ex.desc ? ex.desc.replace(/\n/g, ' ') : '';
+                doc.text(`${formatNiceDate(ex.date || db.startDate)} - ${ex.name} - ${exSym}${(ex.amount * rate).toFixed(2)}`, 14, y); doc.setFontSize(9); doc.setTextColor(100); doc.text(cleanDesc.substring(0, 80), 14, y+5); doc.setFontSize(11); doc.setTextColor(0); y += 15;
             });
-            
-            doc.save(`House_Ledger_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`);
-            showToast("PDF Downloaded", 2000);
-        } catch(e) {
-            showToast("PDF Generation Failed", 3000);
-        }
+            doc.save(`House_Ledger_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`); showToast("PDF Downloaded", 2000);
+        } catch(e) { showToast("PDF Generation Failed", 3000); }
     }
     
     async function downloadZIP() {
         showToast("COMPILING ZIP...", 0);
         try {
-            const zip = new JSZip();
-            const imgFolder = zip.folder("Receipts");
-            
-            let allUrls = [];
-            const extractUrls = (receiptField) => {
-                if(!receiptField) return;
-                if(typeof receiptField === 'string' && receiptField.startsWith('[')) {
-                    try { JSON.parse(receiptField).forEach(u => allUrls.push(u)); } catch(e){}
-                } else if(typeof receiptField === 'string') {
-                    receiptField.split(',').forEach(u => allUrls.push(u.trim()));
-                } else if(Array.isArray(receiptField)) {
-                    receiptField.forEach(u => allUrls.push(u));
-                }
-            };
-
-            (db.expenses||[]).forEach(ex => extractUrls(ex.receipt));
-            (db.archives||[]).forEach(arc => (arc.details||[]).forEach(ex => extractUrls(ex.receipt)));
-            
+            const zip = new JSZip(); const imgFolder = zip.folder("Receipts"); let allUrls = [];
+            const extractUrls = (receiptField) => { if(!receiptField) return; if(typeof receiptField === 'string' && receiptField.startsWith('[')) { try { JSON.parse(receiptField).forEach(u => allUrls.push(u)); } catch(e){} } else if(typeof receiptField === 'string') { receiptField.split(',').forEach(u => allUrls.push(u.trim())); } else if(Array.isArray(receiptField)) { receiptField.forEach(u => allUrls.push(u)); } };
+            (db.expenses||[]).forEach(ex => extractUrls(ex.receipt)); (db.archives||[]).forEach(arc => (arc.details||[]).forEach(ex => extractUrls(ex.receipt)));
             let validUrls = allUrls.filter(u => u && u.startsWith('http'));
             if(validUrls.length === 0) { showToast("No receipts found.", 3000); return; }
-            
             showToast(`COMPILING ${validUrls.length} RECEIPTS...`, 0);
-
             const batchSize = 10;
             for (let i = 0; i < validUrls.length; i += batchSize) {
                 const batch = validUrls.slice(i, i + batchSize);
-                await Promise.all(batch.map(async (url, idx) => {
-                    try {
-                        const response = await fetch(url, { mode: 'cors' });
-                        if(response.ok) {
-                            const blob = await response.blob();
-                            let filename = `receipt_${i+idx}_${Date.now()}.jpg`;
-                            imgFolder.file(filename, blob);
-                        }
-                    } catch(e) {}
-                }));
+                await Promise.all(batch.map(async (url, idx) => { try { const response = await fetch(url, { mode: 'cors' }); if(response.ok) { const blob = await response.blob(); let filename = `receipt_${i+idx}_${Date.now()}.jpg`; imgFolder.file(filename, blob); } } catch(e) {} }));
                 await new Promise(r => setTimeout(r, 50)); 
             }
-            
-            const content = await zip.generateAsync({type:"blob"});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = `House_Receipts_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.zip`;
-            link.click();
-            showToast("ZIP Downloaded", 2000);
-        } catch(e) {
-            showToast("ZIP Compilation Failed", 3000);
-        }
+            const content = await zip.generateAsync({type:"blob"}); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `House_Receipts_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.zip`; link.click(); showToast("ZIP Downloaded", 2000);
+        } catch(e) { showToast("ZIP Compilation Failed", 3000); }
     }
 
     function initializeDB() {
@@ -1643,1478 +1630,612 @@
         if (!db.expenses || !Array.isArray(db.expenses)) db.expenses = []; 
         if (!db.archives || !Array.isArray(db.archives)) db.archives = [];
         if (!db.paidStatus || typeof db.paidStatus !== 'object') db.paidStatus = {};
-        if (!db.startDate) {
-            const today = new Date();
-            db.startDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-        }
+        if (!db.startDate) { const today = new Date(); db.startDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`; }
         if (!db.users || !Array.isArray(db.users) || db.users.length === 0) db.users = [...defaultUsers];
         if (!db.activeUsers || !Array.isArray(db.activeUsers) || db.activeUsers.length === 0) db.activeUsers = [...db.users];
-        
         db.activeUsers = db.activeUsers.filter(u => db.users.includes(u));
         if (db.activeUsers.length === 0) db.activeUsers = [...db.users];
-        
         if (!db.trash || !Array.isArray(db.trash)) db.trash = [];
         if (!db.auditLog || !Array.isArray(db.auditLog)) db.auditLog = [];
     }
 
     function renderSkeletons() {
-        const list = document.getElementById('expenseList');
-        let html = `<div class="timeline-wrapper">`;
-        for(let i=0; i<4; i++) {
-            let mt = (i === 0) ? '0px' : '20px';
-            html += `<div class="date-marker" style="margin-top: ${mt};"><div class="skel-block" style="width: 80px; height: 12px; margin-left: 8px;"></div></div><div class="linear-row" style="padding: 10px 0; border-bottom: none;"><div style="flex: 1;"><div class="skel-block" style="width: 50px; height: 16px; border-radius: 20px; margin-bottom: 8px;"></div><div class="skel-block" style="width: 70px; height: 20px; margin-bottom: 4px;"></div><div class="skel-block" style="width: 140px; height: 12px;"></div></div></div>`;
-        }
-        html += `</div>`;
-        list.innerHTML = html;
-        document.getElementById('currentExpensesWrapper').classList.add('expanded');
+        const list = document.getElementById('expenseList'); let html = `<div class="timeline-wrapper">`;
+        for(let i=0; i<4; i++) { let mt = (i === 0) ? '0px' : '20px'; html += `<div class="date-marker" style="margin-top: ${mt};"><div class="skel-block" style="width: 80px; height: 12px; margin-left: 8px;"></div></div><div class="linear-row" style="padding: 10px 0; border-bottom: none;"><div style="flex: 1;"><div class="skel-block" style="width: 50px; height: 16px; border-radius: 20px; margin-bottom: 8px;"></div><div class="skel-block" style="width: 70px; height: 20px; margin-bottom: 4px;"></div><div class="skel-block" style="width: 140px; height: 12px;"></div></div></div>`; }
+        html += `</div>`; list.innerHTML = html; document.getElementById('currentExpensesWrapper').classList.add('expanded');
     }
 
     function checkPayloadSize() {
-        const payloadStr = JSON.stringify(db);
-        const bytes = new TextEncoder().encode(payloadStr).length;
-        if (bytes > 900000) { 
-            showToast("Vault approaching capacity. Export CSV and initialize a new Bin.", 4000);
-            return false;
-        }
+        const payloadStr = JSON.stringify(db); const bytes = new TextEncoder().encode(payloadStr).length;
+        if (bytes > 900000) { showToast("Vault approaching capacity. Export CSV and initialize a new Bin.", 4000); return false; }
         return true;
     }
 
-    // v7.9.42: Secure Fetch Wrapper without JSONBin Cache Reject
-    async function secureFetch(url, options = {}, timeoutMs = 8000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeoutMs);
-
-        try {
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal,
-                cache: 'no-store', // Fixes JSONBin loop
-                headers: {
-                    ...options.headers,
-                    'Pragma': 'no-cache',
-                    'Cache-Control': 'no-cache'
-                }
-            });
-            clearTimeout(id);
-            
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("text/html") !== -1 && !url.includes('api.imgbb')) {
-                throw new Error("CAPTIVE_PORTAL_DETECTED");
-            }
-            return response;
-        } catch (error) {
-            clearTimeout(id);
-            throw error;
-        }
-    }
-
-    async function loadData(force = false) {
-        if (isSyncing) return;
-        if (!force && Date.now() - lastSyncTime < 2500) return;
-        
-        lastSyncTime = Date.now();
-        isSyncing = true;
-        
-        const isReallyOnline = await checkTrueNetwork();
-        if (!isReallyOnline) { 
-            showToast("OFFLINE - LOCAL MODE", 2000); 
-            loadLocalBackup(); 
-            isSyncing = false;
-            return; 
-        }
-        
-        if (!db.expenses || db.expenses.length === 0) renderSkeletons();
-        
-        const syncIcon = document.getElementById('syncIconElement');
-        if(syncIcon) syncIcon.classList.add('spin');
-        
-        try {
-            const res = await secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
-                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }
-            });
-            
-            if (res.status === 429) throw new Error("429");
-            if (!res.ok) throw new Error("HTTP_API_ERROR");
-            
-            const data = await res.json();
-            const targetData = data.record ? data.record : data;
-            
-            if (targetData && (targetData.expenses || targetData.users)) {
-                if (targetData.encrypted) {
-                    showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000);
-                    initializeDB();
-                } else {
-                    db = targetData;
-                }
-            } else {
-                showToast("INITIALIZING NEW VAULT...", 3000);
-                initializeDB();
-                saveData(); 
-            }
-            
-            initializeDB(); 
-            
-            if (db.trash && Array.isArray(db.trash)) {
-                const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000;
-                let originalLength = db.trash.length;
-                db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs);
-                if (db.trash.length !== originalLength) executeActionWithSave(); 
-            }
-            
-            renderUsers(); saveLocalBackup(); 
-            
-            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
-            else {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('topUserName').innerText = escapeHTML(currentUser); 
-                const menuUser = document.getElementById('menuUserName');
-                if(menuUser) menuUser.innerText = escapeHTML(currentUser);
-                render();
-            }
-            
-            offlineActionsCount = 0;
-            updateOfflineBadge();
-            
-            processUploadQueue();
-        } catch (e) {
-            if (e.message === "429") {
-                setTimeout(() => { loadData(true); }, 1500);
-            } else if (e.message === "HTTP_API_ERROR") {
-                showToast("CLOUD SERVER OFFLINE", 3000);
-                loadLocalBackup();
-            } else {
-                showToast("OFFLINE - LOCAL MODE", 2000); 
-                loadLocalBackup();
-            }
-        } finally {
-            if(syncIcon) syncIcon.classList.remove('spin');
-            if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") {
-                document.getElementById('loading').style.display = 'none'; 
-            }
-            isSyncing = false;
-        }
-    }
-
-
-    function executeActionWithSave() {
-        if (!checkPayloadSize()) return; 
-        
-        offlineActionsCount++;
-        updateOfflineBadge();
-        saveData();
-    }
-
-    async function saveData(retryCount = 0) {
-        saveLocalBackup(); 
-        
-        const isReallyOnline = await checkTrueNetwork();
-        if (!isReallyOnline) { 
-            setNeedsSync(true); 
-            return; 
-        }
-        
-        const now = Date.now();
-        if (now - lastApiSaveTime < 2000 && retryCount === 0) {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => { saveData(); }, 2000);
-            return;
-        }
-        lastApiSaveTime = now;
-        
-        if (isSyncing && retryCount === 0) return;
-        isSyncing = true;
-        
-        const syncIcon = document.getElementById('syncIconElement');
-        if(syncIcon) syncIcon.classList.add('spin');
-        
-        document.body.style.overscrollBehavior = 'none';
-
-        secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() },
-            body: JSON.stringify(db)
-        })
-        .then(res => { 
-            if (res.status === 429) throw new Error("429"); 
-            if (!res.ok) throw new Error("HTTP_API_ERROR"); 
-            setNeedsSync(false); 
-            offlineActionsCount = 0;
-            updateOfflineBadge();
-        })
-        .catch((e) => { 
-            if (e.message === "429" && retryCount < 2) {
-                setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1));
-            } else {
-                setNeedsSync(true); 
-            }
-        })
-        .finally(() => { 
-            if(syncIcon) syncIcon.classList.remove('spin'); 
-            isSyncing = false;
-            document.body.style.overscrollBehavior = 'auto'; 
-        });
-    }
-
     function getSettlements(expenses, totalBase, specificActiveUsers = null) {
-        let balances = {}; 
-        let active = specificActiveUsers || db.activeUsers || db.users;
-        db.users.forEach(u => balances[u] = 0);
-
+        let balances = {}; let active = specificActiveUsers || db.activeUsers || db.users; db.users.forEach(u => balances[u] = 0);
         expenses.forEach(e => {
-            if (balances[e.name] === undefined) balances[e.name] = 0;
-            balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
-
+            if (balances[e.name] === undefined) balances[e.name] = 0; balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
             let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active;
-            let activeCount = Math.max(involved.length, 1); 
-            let perHead = Math.round((e.amount / activeCount) * 100) / 100;
-
-            involved.forEach(u => {
-                if (balances[u] === undefined) balances[u] = 0;
-                balances[u] = Math.round((balances[u] - perHead) * 100) / 100;
-            });
+            let activeCount = Math.max(involved.length, 1); let perHead = Math.round((e.amount / activeCount) * 100) / 100;
+            involved.forEach(u => { if (balances[u] === undefined) balances[u] = 0; balances[u] = Math.round((balances[u] - perHead) * 100) / 100; });
         });
-        
         if (smartRoundingEnabled) {
-            let sum = 0;
-            let keys = Object.keys(balances);
-            for (let i=0; i<keys.length; i++) {
-                balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10;
-                sum += balances[keys[i]];
-            }
-            if (Math.abs(sum) > 0.001 && keys.length > 0) {
-                balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100; 
-            }
+            let sum = 0; let keys = Object.keys(balances);
+            for (let i=0; i<keys.length; i++) { balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10; sum += balances[keys[i]]; }
+            if (Math.abs(sum) > 0.001 && keys.length > 0) { balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100; }
         } else {
-             let sum = 0;
-             let keys = Object.keys(balances);
-             keys.forEach(k => sum += balances[k]);
-             if (Math.abs(sum) > 0.001 && keys.length > 0) {
-                 balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100;
-             }
+             let sum = 0; let keys = Object.keys(balances); keys.forEach(k => sum += balances[k]);
+             if (Math.abs(sum) > 0.001 && keys.length > 0) { balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100; }
         }
-
         let debtors = [], creditors = [];
         for (let u in balances) {
             if (Math.abs(balances[u]) < 0.005) balances[u] = 0; 
-            if (balances[u] < -0.01) debtors.push({ name: u, amt: Math.abs(balances[u]) });
-            else if (balances[u] > 0.01) creditors.push({ name: u, amt: balances[u] });
+            if (balances[u] < -0.01) debtors.push({ name: u, amt: Math.abs(balances[u]) }); else if (balances[u] > 0.01) creditors.push({ name: u, amt: balances[u] });
         }
-
         let txs = [];
         for (let i = 0; i < debtors.length; i++) {
             for (let j = 0; j < creditors.length; j++) {
-                if (debtors[i].amt > 0.01 && creditors[j].amt > 0.01 && Math.abs(debtors[i].amt - creditors[j].amt) < 0.01) {
-                    txs.push({ from: debtors[i].name, to: creditors[j].name, amt: debtors[i].amt });
-                    debtors[i].amt = 0; creditors[j].amt = 0;
-                }
+                if (debtors[i].amt > 0.01 && creditors[j].amt > 0.01 && Math.abs(debtors[i].amt - creditors[j].amt) < 0.01) { txs.push({ from: debtors[i].name, to: creditors[j].name, amt: debtors[i].amt }); debtors[i].amt = 0; creditors[j].amt = 0; }
             }
         }
-
         debtors.sort((a,b) => b.amt - a.amt); creditors.sort((a,b) => b.amt - a.amt);
         let d = 0, c = 0;
         while (d < debtors.length && c < creditors.length) {
-            if (debtors[d].amt <= 0.01) { d++; continue; }
-            if (creditors[c].amt <= 0.01) { c++; continue; }
-
-            let amount = Math.min(debtors[d].amt, creditors[c].amt);
-            txs.push({ from: debtors[d].name, to: creditors[c].name, amt: amount });
-            debtors[d].amt = Math.round((debtors[d].amt - amount) * 100) / 100; 
-            creditors[c].amt = Math.round((creditors[c].amt - amount) * 100) / 100;
+            if (debtors[d].amt <= 0.01) { d++; continue; } if (creditors[c].amt <= 0.01) { c++; continue; }
+            let amount = Math.min(debtors[d].amt, creditors[c].amt); txs.push({ from: debtors[d].name, to: creditors[c].name, amt: amount });
+            debtors[d].amt = Math.round((debtors[d].amt - amount) * 100) / 100; creditors[c].amt = Math.round((creditors[c].amt - amount) * 100) / 100;
         }
         return txs;
     }
 
     function toggleActiveUser(u) {
-        triggerHaptic();
-        if (!db.activeUsers) db.activeUsers = [...db.users];
+        triggerHaptic(); if (!db.activeUsers) db.activeUsers = [...db.users];
         const idx = db.activeUsers.indexOf(u);
-        if (idx > -1) {
-            if (db.activeUsers.length === 1) { showToast("At least 1 must be active.", 3000); return; }
-            db.activeUsers.splice(idx, 1);
-        } else {
-            db.activeUsers.push(u);
-        }
-        render();
-        executeActionWithSave();
+        if (idx > -1) { if (db.activeUsers.length === 1) { showToast("At least 1 must be active.", 3000); return; } db.activeUsers.splice(idx, 1); } 
+        else { db.activeUsers.push(u); }
+        render(); executeActionWithSave();
     }
 
     function generateActionPills(ex) {
         let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
-        if (ex.name === currentUser) {
-            html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">Edit</button>
-                     <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`;
-        }
+        if (ex.name === currentUser) { html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">Edit</button> <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`; }
         return html;
     }
 
     function render() {
         const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
-        
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
         
-        // v7.9.42: Bypass Ghost Click Armor by using JS-driven DIVs instead of inputs
         const chkContainer = document.getElementById('cycleSplitCheckboxes');
         chkContainer.innerHTML = db.users.map(u => {
-            const isChecked = db.activeUsers.includes(u);
-            const opac = isChecked ? '1' : '0.4';
-            return `<div class="interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="opacity: ${opac}; cursor: pointer; display: inline-flex; align-items: center; margin-right: 8px; margin-bottom: 8px;">
-                        <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span>
-                    </div>`;
+            const isChecked = db.activeUsers.includes(u); const opac = isChecked ? '1' : '0.4';
+            return `<div class="interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="opacity: ${opac}; cursor: pointer; display: inline-flex; align-items: center; margin-right: 8px; margin-bottom: 8px;"><span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span></div>`;
         }).join('');
 
         let allValid = db.expenses || [];
-        
-        if (activeHashtag) {
-            let tagStillExists = allValid.some(e => {
-                let match = (e.desc || "").match(/#([\w-]+)/);
-                return match && match[0] === activeHashtag;
-            });
-            if (!tagStillExists) activeHashtag = null;
-        }
+        if (activeHashtag) { let tagStillExists = allValid.some(e => { let match = (e.desc || "").match(/#([\w-]+)/); return match && match[0] === activeHashtag; }); if (!tagStillExists) activeHashtag = null; }
         
         let hashtags = new Set();
-        allValid.forEach(e => {
-            let primaryMatch = (e.desc || "").match(/#([\w-]+)/);
-            if(primaryMatch) hashtags.add(primaryMatch[0]);
-        });
+        allValid.forEach(e => { let primaryMatch = (e.desc || "").match(/#([\w-]+)/); if(primaryMatch) hashtags.add(primaryMatch[0]); });
         
         let tagHtml = '';
         if(hashtags.size > 0) {
-            hashtags.forEach(tag => {
-                let isActive = activeHashtag === tag;
-                tagHtml += `<button class="name-pill interactive-btn ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag('${escapeHTML(tag)}')">${escapeHTML(tag)}</button>`;
-            });
+            hashtags.forEach(tag => { let isActive = activeHashtag === tag; tagHtml += `<button class="name-pill interactive-btn ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag('${escapeHTML(tag)}')">${escapeHTML(tag)}</button>`; });
         }
         document.getElementById('hashtagContainer').innerHTML = tagHtml;
 
-        let contextExpenses = allValid.filter(e => {
-            let primaryMatch = (e.desc || "").match(/#([\w-]+)/);
-            if (activeHashtag) {
-                return primaryMatch && primaryMatch[0] === activeHashtag;
-            } else {
-                return !primaryMatch;
-            }
-        });
+        let contextExpenses = allValid.filter(e => { let primaryMatch = (e.desc || "").match(/#([\w-]+)/); if (activeHashtag) { return primaryMatch && primaryMatch[0] === activeHashtag; } else { return !primaryMatch; } });
 
         document.getElementById('heroTotalLabel').innerText = activeHashtag ? `${escapeHTML(activeHashtag)} Total` : "Total House Bill";
-
-        let totalBase = 0;
-        contextExpenses.forEach(ex => { totalBase += ex.amount; });
+        let totalBase = 0; contextExpenses.forEach(ex => { totalBase += ex.amount; });
         
         const trendEl = document.getElementById('monthlyTrendText');
-        if (activeHashtag) {
-            trendEl.innerText = `Viewing isolated ledger for ${escapeHTML(activeHashtag)}`;
-        } else {
+        if (activeHashtag) { trendEl.innerText = `Viewing isolated ledger for ${escapeHTML(activeHashtag)}`; } 
+        else {
             let trendHtml = "";
             if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) {
-                const lastTotal = db.archives[0].total;
-                const diff = totalBase - lastTotal;
-                const pct = (diff / lastTotal) * 100;
-                if (diff > 0) trendHtml = `House spending is ${pct.toFixed(1)}% higher than last cycle.`;
-                else if (diff < 0) trendHtml = `House spending is ${Math.abs(pct).toFixed(1)}% lower than last cycle.`;
-                else trendHtml = `House spending is exactly the same as last cycle.`;
-            } else {
-                trendHtml = `Tracking your first monthly cycle.`;
-            }
+                const lastTotal = db.archives[0].total; const diff = totalBase - lastTotal; const pct = (diff / lastTotal) * 100;
+                if (diff > 0) trendHtml = `House spending is ${pct.toFixed(1)}% higher than last cycle.`; else if (diff < 0) trendHtml = `House spending is ${Math.abs(pct).toFixed(1)}% lower than last cycle.`; else trendHtml = `House spending is exactly the same as last cycle.`;
+            } else { trendHtml = `Tracking your first monthly cycle.`; }
             trendEl.innerText = trendHtml;
         }
 
         let displayExpenses = [];
         db.expenses.forEach((ex) => {
-            let primaryMatch = (ex.desc || "").match(/#([\w-]+)/);
-            let matchesContext = activeHashtag ? (primaryMatch && primaryMatch[0] === activeHashtag) : !primaryMatch;
-            
-            if (matchesContext) {
-                let isMine = true;
-                if (myViewActive) {
-                    isMine = ex.name === currentUser;
-                }
-                if (isMine) displayExpenses.push(ex);
-            }
+            let primaryMatch = (ex.desc || "").match(/#([\w-]+)/); let matchesContext = activeHashtag ? (primaryMatch && primaryMatch[0] === activeHashtag) : !primaryMatch;
+            if (matchesContext) { let isMine = true; if (myViewActive) { isMine = ex.name === currentUser; } if (isMine) displayExpenses.push(ex); }
         });
 
         const list = document.getElementById('expenseList');
-        if (!displayExpenses || displayExpenses.length === 0) {
-            document.getElementById('currentExpensesWrapper').classList.remove('expanded');
-            list.innerHTML = `<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses found${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}.</div>`;
-        } else {
+        if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); list.innerHTML = `<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses found${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}.</div>`; } 
+        else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
-            let listHtml = `<div class="timeline-wrapper">`;
-            let currentGroupDate = null;
-
+            let listHtml = `<div class="timeline-wrapper">`; let currentGroupDate = null;
             displayExpenses.forEach((ex, renderIndex) => {
-                let exSym = ex.originalSym || sym;
-                let displayDesc = formatDescDisplay(ex.desc, exSym);
-                
-                let splitNote = "";
-                let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null;
-                if (involvedArr) {
-                    splitNote = `<div style="font-size:0.65rem; color:var(--accent); margin-top:2px;">Split: ${escapeHTML(involvedArr.join(', '))}</div>`;
-                }
+                let exSym = ex.originalSym || sym; let displayDesc = formatDescDisplay(ex.desc, exSym);
+                let splitNote = ""; let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null;
+                if (involvedArr) { splitNote = `<div style="font-size:0.65rem; color:var(--accent); margin-top:2px;">Split: ${escapeHTML(involvedArr.join(', '))}</div>`; }
                 
                 let exDate = ex.date || db.startDate || "Unknown Date"; 
-                if (exDate !== currentGroupDate) {
-                    let mt = (renderIndex === 0) ? '0px' : '20px';
-                    listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`;
-                    currentGroupDate = exDate;
-                }
+                if (exDate !== currentGroupDate) { let mt = (renderIndex === 0) ? '0px' : '20px'; listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`; currentGroupDate = exDate; }
 
                 let pillsHtml = generateActionPills(ex);
-                
                 let receiptSafeStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
                 let receiptHtml = ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
 
                 if (swipeActionsEnabled) {
-                    listHtml += `
-                    <div class="linear-row timeline-item" style="padding:0;">
-                        <div class="swipe-track">
-                            <div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;">
-                                <div style="display:flex; flex-direction:column; justify-content:center;">
-                                    <span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${escapeHTML(ex.name)}</span>
-                                    ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
-                                    <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                    <div class="item-desc">${displayDesc}</div>
-                                    ${splitNote}
-                                </div>
-                                ${receiptHtml ? `<div style="padding-right:15px; flex-shrink:0;">${receiptHtml}</div>` : `<div style="padding-right:15px; flex-shrink:0; width:1px;"></div>`}
-                            </div>
-                            <div class="swipe-actions" style="padding: 10px 0 10px 15px;">
-                                ${pillsHtml}
-                            </div>
-                        </div>
-                    </div>`;
+                    listHtml += `<div class="linear-row timeline-item" style="padding:0;"><div class="swipe-track"><div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;"><div style="display:flex; flex-direction:column; justify-content:center;"><span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${escapeHTML(ex.name)}</span>${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}<div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div><div class="item-desc">${displayDesc}</div>${splitNote}</div>${receiptHtml ? `<div style="padding-right:15px; flex-shrink:0;">${receiptHtml}</div>` : `<div style="padding-right:15px; flex-shrink:0; width:1px;"></div>`}</div><div class="swipe-actions" style="padding: 10px 0 10px 15px;">${pillsHtml}</div></div></div>`;
                 } else {
-                    listHtml += `
-                    <div class="linear-row timeline-item">
-                        <div class="item-main">
-                            <span class="name-pill main" style="margin-bottom: 6px;">${escapeHTML(ex.name)}</span>
-                            ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
-                            <div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                            <div class="item-desc">${displayDesc}</div>
-                            ${splitNote}
-                        </div>
-                        <div class="linear-meta">
-                            ${pillsHtml}
-                            ${receiptHtml}
-                        </div>
-                    </div>`;
+                    listHtml += `<div class="linear-row timeline-item"><div class="item-main"><span class="name-pill main" style="margin-bottom: 6px;">${escapeHTML(ex.name)}</span>${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}<div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div><div class="item-desc">${displayDesc}</div>${splitNote}</div><div class="linear-meta">${pillsHtml}${receiptHtml}</div></div>`;
                 }
             });
             list.innerHTML = listHtml + `</div>`;
         }
 
-        let totalLocal = Math.round(totalBase * rate * 100) / 100;
-        let activeCount = Math.max(db.activeUsers.length, 1);
-        let avgPerHead = Math.round((totalLocal / activeCount) * 100) / 100;
+        let totalLocal = Math.round(totalBase * rate * 100) / 100; let activeCount = Math.max(db.activeUsers.length, 1); let avgPerHead = Math.round((totalLocal / activeCount) * 100) / 100;
         
         const totalEl = document.getElementById('totalExp');
-        if (Math.abs(prevTotalAmount - totalLocal) > 0.01) {
-            animateValue(totalEl, prevTotalAmount, totalLocal, 800, sym);
-            prevTotalAmount = totalLocal;
-        } else {
-            totalEl.innerText = sym + totalLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
+        if (Math.abs(prevTotalAmount - totalLocal) > 0.01) { animateValue(totalEl, prevTotalAmount, totalLocal, 800, sym); prevTotalAmount = totalLocal; } 
+        else { totalEl.innerText = sym + totalLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
         
         const perPersonEl = document.getElementById('perPerson');
-        if (Math.abs(prevPerHeadAmount - avgPerHead) > 0.01) {
-            animateValue(perPersonEl, prevPerHeadAmount, avgPerHead, 800, sym);
-            prevPerHeadAmount = avgPerHead;
-        } else {
-            perPersonEl.innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
+        if (Math.abs(prevPerHeadAmount - avgPerHead) > 0.01) { animateValue(perPersonEl, prevPerHeadAmount, avgPerHead, 800, sym); prevPerHeadAmount = avgPerHead; } 
+        else { perPersonEl.innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
         
         const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
         let credMap = {};
         txs.forEach(t => {
-            if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
-            credMap[t.to].totalOwed += t.amt;
-            
+            if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] }; credMap[t.to].totalOwed += t.amt;
             const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
-            const paid = (db.paidStatus && db.paidStatus[key]) || 0;
-            if (paid > 0) credMap[t.to].received += paid;
+            const paid = (db.paidStatus && db.paidStatus[key]) || 0; if (paid > 0) credMap[t.to].received += paid;
             credMap[t.to].txs.push({ ...t, paid, key });
         });
 
-        document.getElementById('settlementCount').innerText = Object.keys(credMap).length;
-        document.getElementById('settlementCount').style.display = Object.keys(credMap).length > 0 ? 'inline-block' : 'none';
+        document.getElementById('settlementCount').innerText = Object.keys(credMap).length; document.getElementById('settlementCount').style.display = Object.keys(credMap).length > 0 ? 'inline-block' : 'none';
         
         let sHtml = "";
         for (let c in credMap) {
             const data = credMap[c], rem = data.totalOwed - data.received, can = currentUser === c;
-            
-            let showCreditor = !myViewActive || (c === currentUser) || data.txs.some(t => t.from === currentUser);
-            if (!showCreditor) continue;
+            let showCreditor = !myViewActive || (c === currentUser) || data.txs.some(t => t.from === currentUser); if (!showCreditor) continue;
 
             let sHtmlTemp = `<div class="archive-item"><div style="font-weight:900; font-size:1.1rem; margin-bottom:12px; display:flex; justify-content:space-between;"><div>${escapeHTML(c)} is owed</div><div style="color:var(--accent)">${sym}${(rem * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`;
             let hasVisibleTxs = false;
 
             data.txs.forEach((t, ti) => {
                 if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
-                hasVisibleTxs = true;
-                const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
+                hasVisibleTxs = true; const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
                 
                 sHtmlTemp += `<div class="flow-row timeline-item" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">`;
                 
                 if (can) {
-                    if (!isS) {
-                        sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button>
-                                      <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
-                    }
+                    if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
                     sHtmlTemp += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
-                } else {
-                    sHtmlTemp += `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
-                }
-                
+                } else { sHtmlTemp += `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`; }
                 sHtmlTemp += `</div></div></div>`;
             });
             sHtmlTemp += `</div>`;
-            
             if (hasVisibleTxs) sHtml += sHtmlTemp;
         }
         document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
-        
         renderArchives(sym, rate);
     }
 
     function toggleFullPaid(key, totalBaseAmt) {
         if(!db.paidStatus) db.paidStatus = {};
         const current = db.paidStatus[key] || 0;
-        if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } 
-        else { db.paidStatus[key] = totalBaseAmt; }
-        logAudit("Toggled Paid Status", key);
-        render(); executeActionWithSave();
+        if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } else { db.paidStatus[key] = totalBaseAmt; }
+        logAudit("Toggled Paid Status", key); render(); executeActionWithSave();
     }
 
     function logPayment(key, remainingLocal, rate) {
         customPrompt(`Log Partial Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
-            if (val === null || val.trim() === "") return;
-            let amtLocal = parseFloat(val.replace(/,/g, '.'));
-            if (isNaN(amtLocal) || amtLocal < 0) return;
-
+            if (val === null || val.trim() === "") return; let amtLocal = parseFloat(val.replace(/,/g, '.')); if (isNaN(amtLocal) || amtLocal < 0) return;
             if(!db.paidStatus) db.paidStatus = {};
-            if (amtLocal === 0) { db.paidStatus[key] = 0; } 
-            else {
-                if(!db.paidStatus[key]) db.paidStatus[key] = 0;
-                db.paidStatus[key] += (amtLocal / rate);
-            }
-            logAudit("Partial Payment Logged", key);
-            render(); executeActionWithSave();
+            if (amtLocal === 0) { db.paidStatus[key] = 0; } else { if(!db.paidStatus[key]) db.paidStatus[key] = 0; db.paidStatus[key] += (amtLocal / rate); }
+            logAudit("Partial Payment Logged", key); render(); executeActionWithSave();
         }, "decimal");
     }
 
     function toggleArchiveFullPaid(arcIdx, key, totalBaseAmt) {
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
         const current = db.archives[arcIdx].paidStatus[key] || 0;
-        if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } 
-        else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
-        logAudit("Toggled Archive Paid", key);
-        render(); executeActionWithSave();
+        if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
+        logAudit("Toggled Archive Paid", key); render(); executeActionWithSave();
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
         customPrompt(`Log Archive Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
-            if (val === null || val.trim() === "") return;
-            let amtLocal = parseFloat(val.replace(/,/g, '.'));
-            if (isNaN(amtLocal) || amtLocal < 0) return;
-
+            if (val === null || val.trim() === "") return; let amtLocal = parseFloat(val.replace(/,/g, '.')); if (isNaN(amtLocal) || amtLocal < 0) return;
             if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
-            if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } 
-            else {
-                if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0;
-                db.archives[arcIdx].paidStatus[key] += (amtLocal / rate);
-            }
-            logAudit("Partial Archive Payment Logged", key);
-            render(); executeActionWithSave();
+            if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } else { if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0; db.archives[arcIdx].paidStatus[key] += (amtLocal / rate); }
+            logAudit("Partial Archive Payment Logged", key); render(); executeActionWithSave();
         }, "decimal");
     }
 
     function renderArchives(sym, rate) {
-        const arcDiv = document.getElementById('archiveList');
-        let globalUnpaidHtml = "", hasUnpaidPast = false, totalUnpaidCount = 0;
+        const arcDiv = document.getElementById('archiveList'); let globalUnpaidHtml = "", hasUnpaidPast = false, totalUnpaidCount = 0;
+        const arcCount = db.archives ? db.archives.length : 0; const arcBadge = document.getElementById('archivesCount');
+        if(arcBadge) { arcBadge.innerText = arcCount; arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none'; }
 
-        const arcCount = db.archives ? db.archives.length : 0;
-        const arcBadge = document.getElementById('archivesCount');
-        if(arcBadge) {
-            arcBadge.innerText = arcCount;
-            arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none';
-        }
-
-        if (!db.archives || !Array.isArray(db.archives) || db.archives.length === 0) {
-            arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>";
-        } else {
+        if (!db.archives || !Array.isArray(db.archives) || db.archives.length === 0) { arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>"; } 
+        else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
-                const pastActive = a.activeUsers || db.users;
-                
-                let validArcEx = Array.isArray(a.details) ? a.details : [];
-                const txs = getSettlements(validArcEx, a.total, pastActive);
-                let credMap = {};
-                
+                const pastActive = a.activeUsers || db.users; let validArcEx = Array.isArray(a.details) ? a.details : [];
+                const txs = getSettlements(validArcEx, a.total, pastActive); let credMap = {};
                 const displayStart = a.tag ? `<span style="color:var(--accent); font-weight:800;">${escapeHTML(a.tag)}</span> • ${formatNiceDate(a.start)}` : formatNiceDate(a.start);
                 const displayEnd = formatNiceDate(a.end);
-                
-                let cycleHasUnpaid = false;
-                let cycleUnpaidHtml = "";
+                let cycleHasUnpaid = false; let cycleUnpaidHtml = "";
 
                 txs.forEach(t => {
-                    if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] };
-                    credMap[t.to].totalOwed += t.amt;
-                    const key = `${t.from}_${t.to}`;
-                    const amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
-                    if (amountPaidBase > 0) credMap[t.to].received += amountPaidBase;
-                    credMap[t.to].txs.push({ ...t, amountPaidBase, key });
+                    if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] }; credMap[t.to].totalOwed += t.amt;
+                    const key = `${t.from}_${t.to}`; const amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
+                    if (amountPaidBase > 0) credMap[t.to].received += amountPaidBase; credMap[t.to].txs.push({ ...t, amountPaidBase, key });
 
                     const txRemainingBase = t.amt - amountPaidBase;
                     if (txRemainingBase > 0.01) {
                         if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
-                        
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        cycleUnpaidHtml += `
-                        <div class="flow-row timeline-item" style="padding: 12px 0; border:none;">
-                            <div>
-                                <div style="font-size:0.9rem; color:var(--text-main);">
-                                    <b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b>
-                                </div>
-                                <div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">
-                                    ${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                </div>
-                                ${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
-                            </div>
-                            <div>
-                                <div class="action-group">
-                                ${canMarkGlobal ? `
-                                        <button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button>
-                                        <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
-                                        <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
-                                ` : `<span class="name-pill">Pending</span>`}
-                                </div>
-                            </div>
-                        </div>`;
+                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : `<span class="name-pill">Pending</span>`}</div></div></div>`;
                     }
                 });
 
-                if (cycleHasUnpaid && cycleUnpaidHtml !== "") {
-                    globalUnpaidHtml += `
-                    <div class="archive-item timeline-item" style="margin-bottom: 8px;">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${displayStart} &rarr; ${displayEnd}</div>
-                        ${cycleUnpaidHtml}
-                    </div>`;
-                }
+                if (cycleHasUnpaid && cycleUnpaidHtml !== "") { globalUnpaidHtml += `<div class="archive-item timeline-item" style="margin-bottom: 8px;"><div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${displayStart} &rarr; ${displayEnd}</div>${cycleUnpaidHtml}</div>`; }
 
                 let archiveSettleHtml = "", hasUnpaidInArchive = false, archiveUnpaidCount = 0;
-
                 for (let cred in credMap) {
                     const data = credMap[cred];
                     data.txs.forEach(t => {
                         const txRemainingBase = t.amt - t.amountPaidBase;
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
-                            
-                            hasUnpaidInArchive = true; archiveUnpaidCount++;
-                            const remainingLocal = txRemainingBase * rate;
-                            const paidLocal = t.amountPaidBase * rate;
-                            const canMark = currentUser === cred;
-
-                            archiveSettleHtml += `
-                            <div class="flow-row timeline-item" style="padding: 12px 0; border:none;">
-                                <div>
-                                    <div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div>
-                                    <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                    ${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
-                                </div>
-                                <div>
-                                    <div class="action-group">
-                                    ${canMark ? `
-                                            <button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button>
-                                            <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
-                                            <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
-                                    ` : `<span class="name-pill">Pending</span>`}
-                                    </div>
-                                </div>
-                            </div>`;
+                            hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
+                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : `<span class="name-pill">Pending</span>`}</div></div></div>`;
                         }
                     });
                 }
 
-                const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== "");
-                let adminActionHtml = "";
-                if (!isFullySettled) {
-                    adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`;
-                } else {
-                    adminActionHtml = `<span class="name-pill success" style="margin-right:8px;">Settled</span>`;
-                }
+                const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== ""); let adminActionHtml = "";
+                if (!isFullySettled) { adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`; } 
+                else { adminActionHtml = `<span class="name-pill success" style="margin-right:8px;">Settled</span>`; }
 
                 let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
 
                 let hasVisibleLogs = false;
                 let logsHtml = validArcEx.map((d, dIdx) => {
-                    if (myViewActive) {
-                        const isMine = d.name === currentUser;
-                        if (!isMine) return '';
-                    }
-                    hasVisibleLogs = true;
-                    let exSym = d.originalSym || sym;
-                    let displayDesc = formatDescDisplay(d.desc, exSym);
-                    let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
-                    return `
-                    <div class="flow-row timeline-item" style="padding:10px 0; border:none;">
-                        <div style="flex-grow:1; padding-right:15px;">
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                                <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span>
-                                <span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
-                        </div>
-                        ${d.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}
-                    </div>`
+                    if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
+                    hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
+                    return `<div class="flow-row timeline-item" style="padding:10px 0; border:none;"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span><span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div></div>${d.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}</div>`
                 }).join('');
 
                 if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
 
-                return `
-                <div class="archive-item" id="archive-card-${idx}">
-                    <div class="archive-header interactive-btn" onclick="toggleSection(this)">
-                        <div>
-                            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div>
-                            <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>
-                            ${adminActionHtml}
-                            <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </div>
-                    </div>
-                    <div class="archive-details" onclick="event.stopPropagation()">
-                        ${finalUnpaidBlock}
-                        <div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};">
-                            <h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4>
-                            <div>
-                                ${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
+                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div><div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div><div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div style="display:flex; gap:8px; align-items:center;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${adminActionHtml}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()">${finalUnpaidBlock}<div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};"><h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4><div>${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}</div></div></div></div>`;
             }).join('');
         }
 
-        const unpaidSection = document.getElementById('unpaidArchivesSection');
-        const unpaidList = document.getElementById('unpaidArchivesList');
-        const unpaidNoticeWrapper = document.getElementById('unpaidDebtsNoticeWrapper');
-        const globalUnpaidBadge = document.getElementById('unpaidGlobalCount');
-        
-        if (globalUnpaidBadge) {
-            globalUnpaidBadge.innerText = totalUnpaidCount;
-            globalUnpaidBadge.style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none';
-        }
+        const unpaidSection = document.getElementById('unpaidArchivesSection'), unpaidList = document.getElementById('unpaidArchivesList'), unpaidNoticeWrapper = document.getElementById('unpaidDebtsNoticeWrapper'), globalUnpaidBadge = document.getElementById('unpaidGlobalCount');
+        if (globalUnpaidBadge) { globalUnpaidBadge.innerText = totalUnpaidCount; globalUnpaidBadge.style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none'; }
 
-        if (hasUnpaidPast) {
-            unpaidSection.style.display = 'block';
-            unpaidList.innerHTML = globalUnpaidHtml;
-            if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'block';
-        } else {
-            unpaidSection.style.display = 'none';
-            unpaidList.innerHTML = "";
-            if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'none';
-        }
+        if (hasUnpaidPast) { unpaidSection.style.display = 'block'; unpaidList.innerHTML = globalUnpaidHtml; if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'block'; } 
+        else { unpaidSection.style.display = 'none'; unpaidList.innerHTML = ""; if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'none'; }
     }
 
     async function downloadArchive(ev, idx) {
-        ev.stopPropagation();
-        const card = document.getElementById(`archive-card-${idx}`);
-        const wasExpanded = card.classList.contains('expanded');
-        
+        ev.stopPropagation(); const card = document.getElementById(`archive-card-${idx}`); const wasExpanded = card.classList.contains('expanded');
         if (!wasExpanded) card.classList.add('expanded');
-        
-        const loader = document.getElementById('loading');
-        loader.innerText = "SNAP...";
-        loader.style.display = 'block';
-
+        const loader = document.getElementById('loading'); loader.innerText = "SNAP..."; loader.style.display = 'block';
         await new Promise(r => setTimeout(r, 350));
-
         const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b0f1a' : '#f8fafc';
         try {
             const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2, useCORS: true, allowTaint: true });
-            const link = document.createElement('a');
-            link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            canvas.width = 0; 
-            canvas = null; 
+            const link = document.createElement('a'); link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`; link.href = canvas.toDataURL('image/png'); link.click(); canvas.width = 0; canvas = null; 
         } catch (e) { showToast("Failed to capture snapshot.", 3000); }
-
         if (!wasExpanded) card.classList.remove('expanded');
-        loader.innerText = "SYNCING";
-        loader.style.display = 'none';
+        loader.innerText = "SYNCING"; loader.style.display = 'none';
     }
 
     async function processUploadQueue() {
         if (isProcessingQueue) return;
-        let queue = safeJSONParse(localStorage.getItem('img_queue'), []);
-        if (!Array.isArray(queue) || queue.length === 0 || !navigator.onLine) return;
-        
-        isProcessingQueue = true;
-        let updatedDb = false;
-        let remainingQueue = [];
-        
+        let queue = safeJSONParse(localStorage.getItem('img_queue'), []); if (!Array.isArray(queue) || queue.length === 0 || !navigator.onLine) return;
+        isProcessingQueue = true; let updatedDb = false; let remainingQueue = [];
         try {
             for (let item of queue) {
                 try {
-                    const base64Data = item.image.split(',')[1];
-                    const formData = new FormData();
-                    formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
-                    formData.append("image", base64Data);
-
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-                    const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) throw new Error("HTTP Error");
-                    const json = await res.json();
-                    if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
-                    
+                    const base64Data = item.image.split(',')[1]; const formData = new FormData(); formData.append("key", "e1200f255e3515e499fe7215708ac0fe"); formData.append("image", base64Data);
+                    const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal }); clearTimeout(timeoutId);
+                    if (!res.ok) throw new Error("HTTP Error"); const json = await res.json(); if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
                     if (json.success) {
                         let ex = db.expenses.find(e => e.id === item.id);
                         if (ex) {
                             if (!ex.receipt) { ex.receipt = json.data.url; ex.receiptDelete = json.data.delete_url; }
-                            else { 
-                                let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt];
-                                let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete];
-                                recArr.push(json.data.url); delArr.push(json.data.delete_url);
-                                ex.receipt = recArr; ex.receiptDelete = delArr;
-                            }
+                            else { let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt]; let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete]; recArr.push(json.data.url); delArr.push(json.data.delete_url); ex.receipt = recArr; ex.receiptDelete = delArr; }
                             updatedDb = true;
                         }
-                    } else {
-                        remainingQueue.push(item);
-                    }
-                } catch(e) {
-                    remainingQueue.push(item);
-                }
+                    } else { remainingQueue.push(item); }
+                } catch(e) { remainingQueue.push(item); }
             }
-            
-            safeSetStorage('img_queue', JSON.stringify(remainingQueue));
-            if (updatedDb) { render(); executeActionWithSave(); }
-        } finally {
-            isProcessingQueue = false;
-        }
+            safeSetStorage('img_queue', JSON.stringify(remainingQueue)); if (updatedDb) { render(); executeActionWithSave(); }
+        } finally { isProcessingQueue = false; }
     }
 
     async function uploadToImgBB(file) {
         try {
             if (!file.type.startsWith('image/')) { showToast("Invalid image file.", 3000); return null; }
             if (file.size > 15 * 1024 * 1024) { showToast("File too large (Max 15MB).", 3000); return null; }
-
-            const dataUrl = await compressImage(file);
-            if (!dataUrl) { return null; }
-            
-            if (dataUrl.length > 4500000) {
-                showToast("Image dimensions too large for safe offline storage. Try another.", 4000);
-                return null;
-            }
-
-            const base64Data = dataUrl.split(',')[1];
-            const formData = new FormData();
-            formData.append("key", "e1200f255e3515e499fe7215708ac0fe");
-            formData.append("image", base64Data);
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal });
-            clearTimeout(timeoutId);
-            
-            if (!res.ok) throw new Error("HTTP Error");
-            const json = await res.json();
-            if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
-            
-            if (json.success) return { url: json.data.url, delete_url: json.data.delete_url };
-            else return { failedBase64: dataUrl }; 
-        } catch (e) {
-            return { failedBase64: await compressImage(file) }; 
-        }
+            const dataUrl = await compressImage(file); if (!dataUrl) { return null; }
+            if (dataUrl.length > 4500000) { showToast("Image dimensions too large for safe offline storage.", 4000); return null; }
+            const base64Data = dataUrl.split(',')[1]; const formData = new FormData(); formData.append("key", "e1200f255e3515e499fe7215708ac0fe"); formData.append("image", base64Data);
+            const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal }); clearTimeout(timeoutId);
+            if (!res.ok) throw new Error("HTTP Error"); const json = await res.json(); if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
+            if (json.success) return { url: json.data.url, delete_url: json.data.delete_url }; else return { failedBase64: dataUrl }; 
+        } catch (e) { return { failedBase64: await compressImage(file) }; }
     }
 
-    function sanitizeAmount(inputString) {
-        if (!inputString) return 0.00;
-        let cleanStr = inputString.toString().replace(/[^\d.,+]/g, '');
-        cleanStr = cleanStr.replace(/,/g, '.');
-        return cleanStr;
-    }
-
-    function extractAmount(text) {
-        if (!text) return 0;
+        function extractAmount(text) {
+        if (!text) return 0; 
         let safeText = text.substring(0, 500);
-        let normalized = safeText.replace(/(\d),(\d{3})/g, '$1$2'); 
-        normalized = normalized.replace(/(\d)\.(\d{3})/g, '$1$2'); 
-        normalized = normalized.replace(/,/g, (match, offset, string) => {
-            if (/^\d{2}(\D|$)/.test(string.substring(offset + 1))) return '.'; 
-            return '.'; 
-        });
         
-        let noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?\b/g, '');
-        let cleanForMath = sanitizeAmount(noDates);
+        // Normalize 1,000 or 1.000 (thousand separators) to 1000
+        let normalized = safeText.replace(/(\d)[,.](\d{3})(?!\d)/g, '$1$2'); 
         
-        const mathMatch = cleanForMath.match(/(?:\d+(?:\.\d+)?\s*\+\s*)+\d+(?:\.\d+)?/);
-        if (mathMatch) {
-            let total = mathMatch[0].split('+').reduce((acc, val) => acc + parseFloat(val.trim()), 0);
-            if(isNaN(total) || !isFinite(total)) return 0;
-            return total;
-        }
+        // Convert any remaining commas to decimal dots (e.g. 23,50 -> 23.50)
+        normalized = normalized.replace(/,/g, '.');
         
-        let nums = cleanForMath.match(/(?:\d*\.\d+)|\d+/g);
-        if (nums && nums.length > 0) {
-            let total = nums.reduce((sum, val) => sum + parseFloat(val), 0);
-            if(isNaN(total) || !isFinite(total)) return 0;
-            return total;
+        // Strip out dates (DD/MM or DD/MM/YYYY) so they aren't added to the total
+        let noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/g, ''); 
+        
+        // Extract all individual numbers (integers or decimals) directly from the raw string
+        let nums = noDates.match(/\d+\.\d+|\d+/g);
+        
+        if (nums && nums.length > 0) { 
+            let total = nums.reduce((sum, val) => sum + parseFloat(val), 0); 
+            if(isNaN(total) || !isFinite(total)) return 0; 
+            return total; 
         }
         
         return 0;
     }
 
     async function addExpense() {
-        if (isSubmitting) return; 
-        
-        const addBtn = document.getElementById('mainAddBtn');
-        if(addBtn.disabled) return;
-        
-        const now = Date.now();
-        if (now - lastSubmitTime < 1500) return; 
-        lastSubmitTime = now;
-
-        const rawInput = document.getElementById('amtInput').value;
-        let safeInput = rawInput.substring(0, 500);
-        const gNote = document.getElementById('groupNote').value;
-        
-        // v7.9.42: Combine Camera and Gallery Inputs
-        const galleryFiles = document.getElementById('receiptInput').files;
-        const cameraFiles = document.getElementById('cameraInput').files;
-        let files = [];
-        if (galleryFiles && galleryFiles.length > 0) files = [...files, ...galleryFiles];
-        if (cameraFiles && cameraFiles.length > 0) files = [...files, ...cameraFiles];
-        
-        const cur = document.getElementById('currency').value;
-        const sym = curSymbols[cur];
-        const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1;
-        
+        if (isSubmitting) return; const addBtn = document.getElementById('mainAddBtn'); if(addBtn.disabled) return;
+        const now = Date.now(); if (now - lastSubmitTime < 1500) return; lastSubmitTime = now;
+        const rawInput = document.getElementById('amtInput').value; let safeInput = rawInput.substring(0, 500); const gNote = document.getElementById('groupNote').value;
+        const galleryFiles = document.getElementById('receiptInput').files; const cameraFiles = document.getElementById('cameraInput').files;
+        let files = []; if (galleryFiles && galleryFiles.length > 0) files = [...files, ...galleryFiles]; if (cameraFiles && cameraFiles.length > 0) files = [...files, ...cameraFiles];
+        const cur = document.getElementById('currency').value; const sym = curSymbols[cur]; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1;
         if (!safeInput.trim()) { showToast("Please enter an amount.", 3000); return; }
+        let extractedBase = extractAmount(safeInput); if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
+        let baseAmt = Math.round((extractedBase / rate) * 100) / 100; if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
         
-        let extractedBase = extractAmount(safeInput);
-        if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
-
-        let baseAmt = Math.round((extractedBase / rate) * 100) / 100;
-        
-        if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
-        
-        isSubmitting = true;
-        addBtn.disabled = true;
-        addBtn.style.opacity = '0.5';
-
+        isSubmitting = true; addBtn.disabled = true; addBtn.style.opacity = '0.5';
         let rollbackDb = JSON.parse(JSON.stringify(db));
 
         try {
-            let involvedUsers = [];
-            document.querySelectorAll('.split-chk').forEach(chk => {
-                if (chk.checked) involvedUsers.push(chk.value);
-            });
-            if (involvedUsers.length === 0) involvedUsers = [];
-
-            let receiptDataArr = [];
-            let receiptDeleteArr = [];
-            let failedUploadsArr = [];
+            let involvedUsers = []; document.querySelectorAll('.split-chk').forEach(chk => { if (chk.checked) involvedUsers.push(chk.value); }); if (involvedUsers.length === 0) involvedUsers = [];
+            let receiptDataArr = []; let receiptDeleteArr = []; let failedUploadsArr = [];
             
             if (files && files.length > 0) {
                 for (let i = 0; i < files.length; i++) {
                     const uploadRes = await uploadToImgBB(files[i]);
-                    if (uploadRes && uploadRes.url) {
-                        receiptDataArr.push(uploadRes.url);
-                        receiptDeleteArr.push(uploadRes.delete_url);
-                    } else if (uploadRes && uploadRes.failedBase64) {
-                        failedUploadsArr.push(uploadRes.failedBase64);
-                    }
+                    if (uploadRes && uploadRes.url) { receiptDataArr.push(uploadRes.url); receiptDeleteArr.push(uploadRes.delete_url); } 
+                    else if (uploadRes && uploadRes.failedBase64) { failedUploadsArr.push(uploadRes.failedBase64); }
                 }
             }
             
-            let finalReceiptData = null;
-            let finalReceiptDelete = null;
+            let finalReceiptData = null; let finalReceiptDelete = null;
+            if(receiptDataArr.length === 1) { finalReceiptData = receiptDataArr[0]; finalReceiptDelete = receiptDeleteArr[0]; } 
+            else if (receiptDataArr.length > 1) { finalReceiptData = receiptDataArr; finalReceiptDelete = receiptDeleteArr; }
             
-            if(receiptDataArr.length === 1) {
-                finalReceiptData = receiptDataArr[0];
-                finalReceiptDelete = receiptDeleteArr[0];
-            } else if (receiptDataArr.length > 1) {
-                finalReceiptData = receiptDataArr;
-                finalReceiptDelete = receiptDeleteArr;
-            }
-            
-            let descToSave = gNote ? `[${gNote}] \n ${safeInput}` : safeInput;
-            if (activeHashtag && !descToSave.includes(activeHashtag)) descToSave += ` ${activeHashtag}`;
-            
+            let descToSave = gNote ? `[${gNote}] \n ${safeInput}` : safeInput; if (activeHashtag && !descToSave.includes(activeHashtag)) descToSave += ` ${activeHashtag}`;
             const expenseId = Date.now().toString(36) + Math.random().toString(36).substring(2) + performance.now().toString(36).replace('.','');
             
             if (editingId) {
                 let ex = db.expenses.find(e => e.id === editingId);
                 if (ex) {
-                    ex.amount = baseAmt;
-                    ex.desc = descToSave;
-                    if (involvedUsers.length > 0) ex.involved = involvedUsers;
-                    ex.originalSym = sym;
-                    ex.edited = true;
-                    ex.timestamp = Date.now();
-                    
+                    ex.amount = baseAmt; ex.desc = descToSave; if (involvedUsers.length > 0) ex.involved = involvedUsers;
+                    ex.originalSym = sym; ex.edited = true; ex.timestamp = Date.now();
                     if (finalReceiptData) { ex.receipt = finalReceiptData; ex.receiptDelete = finalReceiptDelete; }
-                    
-                    if (failedUploadsArr.length > 0) {
-                        let q = safeJSONParse(localStorage.getItem('img_queue'), []);
-                        if(!Array.isArray(q)) q = [];
-                        failedUploadsArr.forEach(img => q.push({ id: ex.id, image: img }));
-                        safeSetStorage('img_queue', JSON.stringify(q));
-                    }
+                    if (failedUploadsArr.length > 0) { let q = safeJSONParse(localStorage.getItem('img_queue'), []); if(!Array.isArray(q)) q = []; failedUploadsArr.forEach(img => q.push({ id: ex.id, image: img })); safeSetStorage('img_queue', JSON.stringify(q)); }
                 }
-                editingId = null;
-                logAudit("Edited Expense", expenseId);
+                editingId = null; logAudit("Edited Expense", expenseId);
             } else {
-                let safeTimestamp = Date.now();
-                if (db.expenses.length > 0 && safeTimestamp <= db.expenses[0].timestamp) {
-                    safeTimestamp = db.expenses[0].timestamp + 1; 
-                }
-
-                const today = new Date();
-                const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+                let safeTimestamp = Date.now(); if (db.expenses.length > 0 && safeTimestamp <= db.expenses[0].timestamp) { safeTimestamp = db.expenses[0].timestamp + 1; }
+                const today = new Date(); const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
                 if (!db.startDate || db.startDate === "Unknown Date") db.startDate = dateStr; 
-                
                 if (!Array.isArray(db.expenses)) db.expenses = [];
-                db.expenses.unshift({ 
-                    id: expenseId,
-                    timestamp: safeTimestamp,
-                    name: currentUser, 
-                    amount: baseAmt, 
-                    desc: descToSave, 
-                    involved: involvedUsers,
-                    originalSym: sym,
-                    receipt: finalReceiptData, 
-                    receiptDelete: finalReceiptDelete,
-                    date: dateStr 
-                });
-                
-                if (failedUploadsArr.length > 0) {
-                    let q = safeJSONParse(localStorage.getItem('img_queue'), []);
-                    if(!Array.isArray(q)) q = [];
-                    failedUploadsArr.forEach(img => q.push({ id: expenseId, image: img }));
-                    safeSetStorage('img_queue', JSON.stringify(q));
-                }
+                db.expenses.unshift({ id: expenseId, timestamp: safeTimestamp, name: currentUser, amount: baseAmt, desc: descToSave, involved: involvedUsers, originalSym: sym, receipt: finalReceiptData, receiptDelete: finalReceiptDelete, date: dateStr });
+                if (failedUploadsArr.length > 0) { let q = safeJSONParse(localStorage.getItem('img_queue'), []); if(!Array.isArray(q)) q = []; failedUploadsArr.forEach(img => q.push({ id: expenseId, image: img })); safeSetStorage('img_queue', JSON.stringify(q)); }
             }
             
-            const amtInputEl = document.getElementById('amtInput');
-            amtInputEl.value = ""; 
-            amtInputEl.style.height = "40px"; 
-            document.getElementById('groupNote').value = ""; 
+            const amtInputEl = document.getElementById('amtInput'); amtInputEl.value = ""; amtInputEl.style.height = "40px"; 
+            document.getElementById('groupNote').value = ""; document.getElementById('receiptInput').value = ""; document.getElementById('cameraInput').value = "";
+            document.getElementById('optionsMenu').style.display = "none"; document.getElementById('hashtagAutocomplete').style.display = "none";
+            render(); executeActionWithSave(); if(failedUploadsArr.length > 0) processUploadQueue();
             
-            // Clear dual camera buffers
-            document.getElementById('receiptInput').value = "";
-            document.getElementById('cameraInput').value = "";
-            
-            document.getElementById('optionsMenu').style.display = "none";
-            document.getElementById('hashtagAutocomplete').style.display = "none";
-            
-            render(); executeActionWithSave();
-            if(failedUploadsArr.length > 0) processUploadQueue();
-            
-        } catch (error) {
-            db = rollbackDb;
-            render();
-            showToast("Failed to process expense.", 3000);
-        } finally {
-            addBtn.disabled = false; addBtn.style.opacity = '1';
-            isSubmitting = false;
-        }
+        } catch (error) { db = rollbackDb; render(); showToast("Failed to process expense.", 3000); } 
+        finally { addBtn.disabled = false; addBtn.style.opacity = '1'; isSubmitting = false; }
     }
 
     function editEx(id) {
-        const ex = db.expenses.find(e => e.id === id);
-        if (!ex) return;
+        const ex = db.expenses.find(e => e.id === id); if (!ex) return;
         if (ex.name !== currentUser) { showToast("Cannot edit others' expenses.", 3000); return; }
-        
-        let rawDesc = ex.desc, note = "";
-        const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/);
+        let rawDesc = ex.desc, note = ""; const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/);
         if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
-        
-        document.getElementById('amtInput').value = rawDesc;
-        if (note) document.getElementById('groupNote').value = note;
-        
-        editingId = id;
-        toggleOptionsMenu(true);
-
-        document.getElementById('amtInput').focus();
-        showToast("EDITING MODE", 0);
-        render();
+        document.getElementById('amtInput').value = rawDesc; if (note) document.getElementById('groupNote').value = note;
+        editingId = id; toggleOptionsMenu(true); document.getElementById('amtInput').focus(); showToast("EDITING MODE", 0); render();
     }
 
     function exportCSV() {
-        let csv = "HOUSE EXPENSES EXPORT\n\n";
-        const sym = document.getElementById('currency').value;
-        const rate = (rates[document.getElementById('currency').value] && rates[document.getElementById('currency').value] > 0) ? rates[document.getElementById('currency').value] : 1;
-        
-        let validExpenses = db.expenses || [];
-        let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0);
-        let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length;
-        if(activeCount === 0) activeCount = 1;
-        
-        csv += `Cycle Start,${formatNiceDate(db.startDate)}\n`;
-        csv += `Current Total,${sym}${(totalBase * rate).toFixed(2)}\n`;
-        csv += `Per Head (Base),${sym}${(totalBase / activeCount * rate).toFixed(2)}\n`;
-        
-        let momText = "N/A";
-        if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) {
-            const diff = ((totalBase - db.archives[0].total) / db.archives[0].total) * 100;
-            momText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% vs last cycle`;
-        }
-        csv += `Trend,${momText}\n\n`;
-        
-        csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
+        let csv = "HOUSE EXPENSES EXPORT\n\n"; const sym = document.getElementById('currency').value; const rate = (rates[document.getElementById('currency').value] && rates[document.getElementById('currency').value] > 0) ? rates[document.getElementById('currency').value] : 1;
+        let validExpenses = db.expenses || []; let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0); let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; if(activeCount === 0) activeCount = 1;
+        csv += `Cycle Start,${formatNiceDate(db.startDate)}\n`; csv += `Current Total,${sym}${(totalBase * rate).toFixed(2)}\n`; csv += `Per Head (Base),${sym}${(totalBase / activeCount * rate).toFixed(2)}\n`;
+        let momText = "N/A"; if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) { const diff = ((totalBase - db.archives[0].total) / db.archives[0].total) * 100; momText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% vs last cycle`; }
+        csv += `Trend,${momText}\n\n`; csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
         validExpenses.forEach(e => {
-            let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
-            let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (db.activeUsers || db.users);
-            let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default';
-            let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
+            let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (db.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
             csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Current,${receipt}\n`;
         });
-        
         (db.archives || []).forEach(arc => {
-            csv += `\nARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`;
-            csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
+            csv += `\nARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`; csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
             let vArcEx = Array.isArray(arc.details) ? arc.details : [];
-            vArcEx.forEach(e => {
-                let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : '';
-                let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (arc.activeUsers || db.users);
-                let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default';
-                let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
-                let eDate = e.date || arc.start;
-                csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`;
-            });
+            vArcEx.forEach(e => { let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (arc.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None'); let eDate = e.date || arc.start; csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`; });
         });
-        
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.setAttribute('href', window.URL.createObjectURL(blob));
-        a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`);
-        a.click();
-        showToast("EXPORTED CSV", 2000);
+        const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.setAttribute('href', window.URL.createObjectURL(blob)); a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`); a.click(); showToast("EXPORTED CSV", 2000);
     }
 
     function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); canvas.width = 0; canvas = null; }; }; }); }
     
     async function copyExpense(id) { 
-        triggerHaptic();
-        let ex = (db.expenses||[]).find(e => e.id === id);
-        if (!ex) return;
-        const cur = document.getElementById('currency').value, sym = curSymbols[cur];
-        const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; 
-        const exSym = ex.originalSym || sym; 
-        
+        triggerHaptic(); let ex = (db.expenses||[]).find(e => e.id === id); if (!ex) return;
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur]; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; const exSym = ex.originalSym || sym; 
         let cleanDesc = formatDescDisplay(ex.desc, exSym).split('•').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
         let txt = `Expense logged by ${ex.name}:\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${cleanDesc}`;
-        let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null;
-        if (involvedArr) { txt += `\nSplit Between: ${involvedArr.join(', ')}`; }
-        
-        if (navigator.share) {
-            navigator.share({ title: 'House Expense', text: txt }).catch(async e => {
-                await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000);
-            });
-        } else {
-            await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000); 
-        }
+        let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null; if (involvedArr) { txt += `\nSplit Between: ${involvedArr.join(', ')}`; }
+        if (navigator.share) { navigator.share({ title: 'House Expense', text: txt }).catch(async e => { await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000); }); } else { await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000); }
     }
     
     async function copySummary() { 
-        triggerHaptic();
-        let allValid = db.expenses || [];
-        let contextExpenses = allValid.filter(e => {
-            let primaryMatch = (e.desc || "").match(/#([\w-]+)/);
-            return activeHashtag ? (primaryMatch && primaryMatch[0] === activeHashtag) : !primaryMatch;
-        });
-
-        if (contextExpenses.length === 0) {
-            showToast("No data to copy.", 3000);
-            return;
-        }
-
-        const cur = document.getElementById('currency').value, sym = curSymbols[cur];
-        const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; 
-        let totalBase = 0; 
-        let categories = { "💡 Bills": 0, "🛒 Groceries": 0, "🚕 Travel": 0, "📦 Other": 0 };
-
+        triggerHaptic(); let allValid = db.expenses || [];
+        let contextExpenses = allValid.filter(e => { let primaryMatch = (e.desc || "").match(/#([\w-]+)/); return activeHashtag ? (primaryMatch && primaryMatch[0] === activeHashtag) : !primaryMatch; });
+        if (contextExpenses.length === 0) { showToast("No data to copy.", 3000); return; }
+        const cur = document.getElementById('currency').value, sym = curSymbols[cur]; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; 
+        let totalBase = 0; let categories = { "💡 Bills": 0, "🛒 Groceries": 0, "🚕 Travel": 0, "📦 Other": 0 };
         contextExpenses.forEach(e => { 
-            totalBase += e.amount; 
-            let d = (e.desc || "").toLowerCase();
-            let amtLocal = e.amount * rate;
-            if (d.includes("bijli") || d.includes("electricity") || d.includes("gas") || d.includes("water") || d.includes("wifi") || d.includes("internet") || d.includes("council") || d.includes("rent")) {
-                categories["💡 Bills"] += amtLocal;
-            } else if (d.includes("tesco") || d.includes("aldi") || d.includes("asda") || d.includes("sainsbury") || d.includes("lidl") || d.includes("morrisons") || d.includes("milk") || d.includes("bread") || d.includes("groceries") || d.includes("food") || d.includes("meat")) {
-                categories["🛒 Groceries"] += amtLocal;
-            } else if (d.includes("uber") || d.includes("train") || d.includes("bus") || d.includes("taxi") || d.includes("petrol") || d.includes("fuel") || d.includes("ticket")) {
-                categories["🚕 Travel"] += amtLocal;
-            } else {
-                categories["📦 Other"] += amtLocal;
-            }
+            totalBase += e.amount; let d = (e.desc || "").toLowerCase(); let amtLocal = e.amount * rate;
+            if (d.includes("bijli") || d.includes("electricity") || d.includes("gas") || d.includes("water") || d.includes("wifi") || d.includes("internet") || d.includes("council") || d.includes("rent")) { categories["💡 Bills"] += amtLocal; } 
+            else if (d.includes("tesco") || d.includes("aldi") || d.includes("asda") || d.includes("sainsbury") || d.includes("lidl") || d.includes("morrisons") || d.includes("milk") || d.includes("bread") || d.includes("groceries") || d.includes("food") || d.includes("meat")) { categories["🛒 Groceries"] += amtLocal; } 
+            else if (d.includes("uber") || d.includes("train") || d.includes("bus") || d.includes("taxi") || d.includes("petrol") || d.includes("fuel") || d.includes("ticket")) { categories["🚕 Travel"] += amtLocal; } 
+            else { categories["📦 Other"] += amtLocal; }
         }); 
         
-        let balances = {}; db.users.forEach(u => balances[u] = 0); 
-        let active = db.activeUsers || db.users; 
-        
+        let balances = {}; db.users.forEach(u => balances[u] = 0); let active = db.activeUsers || db.users; 
         contextExpenses.forEach(e => { 
-            if (balances[e.name] === undefined) balances[e.name] = 0; 
-            balances[e.name] += e.amount; 
-            
-            let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active;
-            let perHead = e.amount / Math.max(involved.length, 1);
-            
-            involved.forEach(u => {
-                if (balances[u] === undefined) balances[u] = 0;
-                balances[u] -= perHead;
-            });
+            if (balances[e.name] === undefined) balances[e.name] = 0; balances[e.name] += e.amount; 
+            let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active; let perHead = e.amount / Math.max(involved.length, 1);
+            involved.forEach(u => { if (balances[u] === undefined) balances[u] = 0; balances[u] -= perHead; });
         }); 
         
         if (smartRoundingEnabled) {
-            let sum = 0;
-            let keys = Object.keys(balances);
-            for (let i=0; i<keys.length; i++) {
-                balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10;
-                sum += balances[keys[i]];
-            }
+            let sum = 0; let keys = Object.keys(balances);
+            for (let i=0; i<keys.length; i++) { balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10; sum += balances[keys[i]]; }
             if (Math.abs(sum) > 0.001 && keys.length > 0) balances[keys[0]] -= sum; 
         }
 
-        const activeCount = Math.max(active.length, 1); 
-        const perHeadHouse = totalBase / activeCount;
-        
+        const activeCount = Math.max(active.length, 1); const perHeadHouse = totalBase / activeCount;
         const todayStr = `${new Date().getDate().toString().padStart(2, '0')}/${(new Date().getMonth() + 1).toString().padStart(2, '0')}/${new Date().getFullYear()}`; 
         
         let titleText = activeHashtag ? `🏠 ${activeHashtag} SUMMARY` : `🏠 HOUSE SUMMARY`;
         let txt = `${titleText} (${formatNiceDate(db.startDate)} - ${formatNiceDate(todayStr)})\nTotal: ${sym}${(totalBase * rate).toFixed(2)}\nPer Head (Avg): ${sym}${(perHeadHouse * rate).toFixed(2)}\n`; 
         
         let hasSpecificCats = (categories["💡 Bills"] > 0.01 || categories["🛒 Groceries"] > 0.01 || categories["🚕 Travel"] > 0.01);
-        
-        if (hasSpecificCats) {
-            let catStr = `\n*SPENDING BREAKDOWN:*\n`;
-            for (let c in categories) {
-                if (categories[c] > 0.01) catStr += `${c}: ${sym}${categories[c].toFixed(2)}\n`;
-            }
-            txt += catStr;
-        }
+        if (hasSpecificCats) { let catStr = `\n*SPENDING BREAKDOWN:*\n`; for (let c in categories) { if (categories[c] > 0.01) catStr += `${c}: ${sym}${categories[c].toFixed(2)}\n`; } txt += catStr; }
         
         txt += `\n*BALANCES:*\n`; 
         db.users.forEach(u => { 
-            let bal = (balances[u] || 0) * rate; 
-            if (Math.abs(bal) < 0.01 && !active.includes(u)) return; 
-            
-            if (bal <= -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; 
-            else if (bal >= 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; 
-            else txt += `${u}: ✅ Settled\n`; 
+            let bal = (balances[u] || 0) * rate; if (Math.abs(bal) < 0.01 && !active.includes(u)) return; 
+            if (bal <= -0.01) txt += `${u}: ❌ Owes ${sym}${Math.abs(bal).toFixed(2)}\n`; else if (bal >= 0.01) txt += `${u}: ➕ Gets ${sym}${bal.toFixed(2)}\n`; else txt += `${u}: ✅ Settled\n`; 
         }); 
         
         txt += `\n*SETTLEMENTS:*\n`; 
         const txs = getSettlements(contextExpenses, totalBase, db.activeUsers); 
-        
         txs.forEach(t => { 
             const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
-            const pd = (db.paidStatus && db.paidStatus[key]) || 0; 
-            const rem = t.amt - pd; 
-            let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; 
-            txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; 
+            const pd = (db.paidStatus && db.paidStatus[key]) || 0; const rem = t.amt - pd; 
+            let status = rem <= 0.01 ? '(Settled)' : pd > 0.01 ? `(Paid: ${sym}${(pd * rate).toFixed(2)})` : ''; txt += `${t.from} -> ${t.to}: ${sym}${(rem * rate).toFixed(2)} ${status}\n`; 
         }); 
         if (txs.length === 0) txt += "All debts are settled.\n"; 
         
-        if (navigator.share) {
-            navigator.share({ title: 'House Summary', text: txt }).catch(async e => {
-                await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000);
-            });
-        } else {
-            await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000); 
-        }
+        if (navigator.share) { navigator.share({ title: 'House Summary', text: txt }).catch(async e => { await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000); }); } 
+        else { await copyToClipboard(txt); showToast("Summary Copied to Clipboard!", 2000); }
     }
 
     function deleteEx(id) { 
-        let idx = (db.expenses||[]).findIndex(e => e.id === id);
-        if (idx === -1) return;
+        let idx = (db.expenses||[]).findIndex(e => e.id === id); if (idx === -1) return;
         if (db.expenses[idx].name !== currentUser) { showToast("Cannot delete others' expenses.", 3000); return; }
-        
         let exArr = db.expenses.splice(idx, 1);
-        if (exArr.length > 0) {
-            let ex = exArr[0];
-            ex.deletedAt = Date.now();
-            if (!db.trash) db.trash = [];
-            db.trash.push(ex);
-            logAudit("Deleted Expense", id);
-            render(); executeActionWithSave(); 
-            showToast(`Moved to Vault`, 2000);
-        }
+        if (exArr.length > 0) { let ex = exArr[0]; ex.deletedAt = Date.now(); if (!db.trash) db.trash = []; db.trash.push(ex); logAudit("Deleted Expense", id); render(); executeActionWithSave(); showToast(`Moved to Vault`, 2000); }
     }
     
     function deleteArchive(ev, i) { 
         ev.stopPropagation(); 
         customConfirm("Delete this archive permanently?", () => { 
-            if (!db.archives || !db.archives[i]) return;
-            const arc = db.archives[i];
-            if (arc && Array.isArray(arc.details)) {
-                arc.details.forEach(ex => { 
-                    let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
-                    delUrls.forEach(u => { if (u) fetch(u, { mode: 'no-cors' }).catch(() => {}); });
-                });
-            }
-            db.archives.splice(i,1); 
-            logAudit("Deleted Archive");
-            render(); executeActionWithSave(); 
+            if (!db.archives || !db.archives[i]) return; const arc = db.archives[i];
+            if (arc && Array.isArray(arc.details)) { arc.details.forEach(ex => { let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []); delUrls.forEach(u => { if (u) fetch(u, { mode: 'no-cors' }).catch(() => {}); }); }); }
+            db.archives.splice(i,1); logAudit("Deleted Archive"); render(); executeActionWithSave(); 
         }); 
     }
     
     function changeStartDate() { 
-        customPrompt("Start Date (DD/MM/YYYY):", db.startDate, (val) => {
-            if(val && val.trim() !== "") { db.startDate = escapeHTML(val.trim()); render(); executeActionWithSave(); }
-        }); 
+        customPrompt("Start Date (DD/MM/YYYY):", db.startDate, (val) => { if(val && val.trim() !== "") { db.startDate = escapeHTML(val.trim()); render(); executeActionWithSave(); } }); 
     }
 
     function endMonth() {
-        if (isArchiving) return;
-        
-        let validExpenses = db.expenses || [];
-        if (validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
-
+        if (isArchiving) return; let validExpenses = db.expenses || []; if (validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
         customConfirm("End the current month and move expenses to archive?", () => {
-            isArchiving = true; 
-            if(!Array.isArray(db.archives)) db.archives = [];
-            const today = new Date();
-            const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-
-            let tags = new Set();
-            validExpenses.forEach(e => {
-                let match = (e.desc || "").match(/#([\w-]+)/);
-                if(match) tags.add(match[0]);
-            });
+            isArchiving = true; if(!Array.isArray(db.archives)) db.archives = [];
+            const today = new Date(); const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+            let tags = new Set(); validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match) tags.add(match[0]); });
 
             tags.forEach(tag => {
-                let tagEx = validExpenses.filter(e => {
-                    let match = (e.desc || "").match(/#([\w-]+)/);
-                    return match && match[0] === tag;
-                });
-                
+                let tagEx = validExpenses.filter(e => { let match = (e.desc || "").match(/#([\w-]+)/); return match && match[0] === tag; });
                 if (tagEx.length > 0) {
-                    let tTotal = 0; tagEx.forEach(e => tTotal += e.amount);
-                    
-                    let tagPaidStatus = {};
-                    for (let pk in db.paidStatus) {
-                        if (pk.endsWith('_' + tag)) {
-                            let baseKey = pk.substring(0, pk.lastIndexOf('_' + tag));
-                            tagPaidStatus[baseKey] = db.paidStatus[pk];
-                        }
-                    }
-                    
-                    db.archives.unshift({
-                        start: db.startDate, end: endDateStr, total: tTotal,
-                        details: tagEx, paidStatus: tagPaidStatus, activeUsers: [...(db.activeUsers || db.users)],
-                        tag: tag
-                    });
+                    let tTotal = 0; tagEx.forEach(e => tTotal += e.amount); let tagPaidStatus = {};
+                    for (let pk in db.paidStatus) { if (pk.endsWith('_' + tag)) { let baseKey = pk.substring(0, pk.lastIndexOf('_' + tag)); tagPaidStatus[baseKey] = db.paidStatus[pk]; } }
+                    db.archives.unshift({ start: db.startDate, end: endDateStr, total: tTotal, details: tagEx, paidStatus: tagPaidStatus, activeUsers: [...(db.activeUsers || db.users)], tag: tag });
                 }
             });
 
-            let normalEx = validExpenses.filter(e => {
-                let hasTags = /#([\w-]+)/.test(e.desc || "");
-                return !hasTags;
-            });
-
+            let normalEx = validExpenses.filter(e => { let hasTags = /#([\w-]+)/.test(e.desc || ""); return !hasTags; });
             if (normalEx.length > 0) {
-                let nTotal = 0; normalEx.forEach(e => nTotal += e.amount);
-                
-                let normalPaidStatus = {};
-                for (let pk in db.paidStatus) {
-                    if (!pk.includes('#')) { 
-                        normalPaidStatus[pk] = db.paidStatus[pk];
-                    }
-                }
-                
-                db.archives.unshift({
-                    start: db.startDate, end: endDateStr, total: nTotal,
-                    details: normalEx, paidStatus: normalPaidStatus, activeUsers: [...(db.activeUsers || db.users)],
-                    tag: null
-                });
+                let nTotal = 0; normalEx.forEach(e => nTotal += e.amount); let normalPaidStatus = {};
+                for (let pk in db.paidStatus) { if (!pk.includes('#')) { normalPaidStatus[pk] = db.paidStatus[pk]; } }
+                db.archives.unshift({ start: db.startDate, end: endDateStr, total: nTotal, details: normalEx, paidStatus: normalPaidStatus, activeUsers: [...(db.activeUsers || db.users)], tag: null });
             }
 
             if (db.archives.length > 15) db.archives = db.archives.slice(0, 15);
-
-            db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr; db.activeUsers = [...db.users];
-            activeHashtag = null;
-            logAudit("Ended Month");
-            render(); executeActionWithSave();
-            isArchiving = false;
+            db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr; db.activeUsers = [...db.users]; activeHashtag = null;
+            logAudit("Ended Month"); render(); executeActionWithSave(); isArchiving = false;
         });
     }
 
     function logout() { 
-        currentUser = "";
-        localStorage.removeItem('house_user');
-        document.getElementById('sideMenu').classList.remove('open');
-        document.getElementById('menuOverlay').style.display = 'none';
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('userButtons').innerHTML = '';
-        renderUsers();
+        currentUser = ""; localStorage.removeItem('house_user'); document.getElementById('sideMenu').classList.remove('open'); document.getElementById('menuOverlay').style.display = 'none'; document.getElementById('loginOverlay').style.display = 'flex'; document.getElementById('userButtons').innerHTML = ''; renderUsers();
     }
     
     function login(u) { 
-        currentUser = u; 
-        localStorage.setItem('house_user', u); 
-        document.getElementById('loginOverlay').style.display='none'; 
-        document.getElementById('topUserName').innerText = escapeHTML(u); 
-        const menuUser = document.getElementById('menuUserName');
-        if(menuUser) menuUser.innerText = escapeHTML(u);
-        
-        if (!localStorage.getItem('has_seen_input')) {
-            document.getElementById('chatWrapper').classList.add('intro-glow');
-            document.getElementById('amtInput').addEventListener('focus', function() {
-                document.getElementById('chatWrapper').classList.remove('intro-glow');
-                localStorage.setItem('has_seen_input', 'true');
-            }, { once: true });
-        }
-        
+        currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = escapeHTML(u); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(u);
+        if (!localStorage.getItem('has_seen_input')) { document.getElementById('chatWrapper').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
         render(); 
     }
 
-        window.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            if (navigator.onLine) {
-                if (needsSync) {
-                    saveData();
-                } else {
-                    loadData(false);
-                }
-                processUploadQueue();
-            }
-            checkForUpdates();
-        }
-    });
-
-    window.addEventListener('online', () => { 
-        const jitterMs = Math.floor(Math.random() * 1400) + 100;
-        setTimeout(() => {
-            if (needsSync) { saveData(); } 
-            else { loadData(false); processUploadQueue(); }
-        }, jitterMs);
-    });
-    
-    window.addEventListener('offline', () => { 
-        showToast("YOU ARE OFFLINE", 2000); 
-    });
+    window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (navigator.onLine) { if (needsSync) { saveData(); } else { loadData(false); } processUploadQueue(); } checkForUpdates(); } });
+    window.addEventListener('online', () => { const jitterMs = Math.floor(Math.random() * 1400) + 100; setTimeout(() => { if (needsSync) { saveData(); } else { loadData(false); processUploadQueue(); } }, jitterMs); });
+    window.addEventListener('offline', () => { showToast("YOU ARE OFFLINE", 2000); });
 
     window.onload = async () => {
-        initializeDB();
-        renderUsers();
-        
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('loginOverlay').style.display = 'none';
+        initializeDB(); renderUsers();
+        document.getElementById('loading').style.display = 'block'; document.getElementById('loginOverlay').style.display = 'none';
         
         await loadData(true);
         
-        fetchLiveRates();
-        checkForUpdates();
+        // PWA Quick Actions URL Handler
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        if (action === 'log') {
+            setTimeout(() => {
+                const el = document.getElementById('amtInput');
+                if (el) el.focus();
+            }, 500);
+        } else if (action === 'vault') {
+            setTimeout(() => openTrash(), 500);
+        }
+        
+        fetchLiveRates(); checkForUpdates();
     };
 </script>
 </body>
