@@ -162,6 +162,21 @@
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
         .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); min-width: 0; position: relative; }
         
+        /* Light Mode Specific Input Fixes */
+        [data-theme="light"] .chat-input-wrapper {
+            background-color: #e2e8f0;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        [data-theme="light"] .chat-note {
+            background-color: #e2e8f0 !important;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        [data-theme="light"] .chat-input-wrapper:focus-within, [data-theme="light"] .chat-note:focus {
+            border-color: var(--accent);
+        }
+
         .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 8px; color: var(--text-main) !important; background-color: transparent !important; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; min-width: 0; font-size: 16px !important; }
         .chat-textarea::-webkit-scrollbar { display: none; }
         
@@ -260,6 +275,39 @@
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Audit Trail</h2>
         <div id="auditList" style="margin-bottom: 15px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
         <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeAuditLog()">Close</button>
+    </div>
+</div>
+
+<div id="helpOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="width:90%; max-width:360px; max-height: 85vh; overflow-y: auto;">
+        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center; color:var(--accent);">How to Use</h2>
+        
+        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">👉 Swipe Actions</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">Swipe any expense horizontally on the timeline to reveal quick actions.</p>
+            <div style="margin-top: 8px; display:flex; gap:5px;">
+                <span class="btn-pill" style="font-size:0.6rem;">Share</span>
+                <span class="btn-pill" style="font-size:0.6rem;">Edit</span>
+                <span class="btn-pill danger" style="font-size:0.6rem;">Delete</span>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">#️⃣ Hashtag Splitting</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">Add a tag (like #groceries) to your amount box. Tap the tag pill at the top of the dashboard to isolate that specific pot of money.</p>
+        </div>
+
+        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">👥 Smart Split</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">In the Settlements tab, toggle "Active Housemates". If someone is unchecked, the entire house math recalculates without them.</p>
+        </div>
+
+        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">🗑️ Recovery Vault</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">Deleted something by accident? Go to Settings -> Recovery Vault to restore deleted expenses before they expire.</p>
+        </div>
+
+        <button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000; margin-top: 10px;" onclick="triggerHaptic(); closeHelp()">Got It</button>
     </div>
 </div>
 
@@ -391,6 +439,7 @@
             <button id="topUserName" aria-label="Toggle My View" class="name-pill main interactive-btn" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer; border: none;" onclick="triggerHaptic(); toggleMyView()" title="Toggle My View"></button>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
+            <button class="action-icon interactive-btn" aria-label="Help Guide" onclick="triggerHaptic(); openHelp()" style="font-weight: 800; font-size: 0.85rem; color: var(--accent);">HELP</button>
             <div style="position: relative;">
                 <button class="action-icon interactive-btn" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
                     <svg id="syncIconElement" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
@@ -522,7 +571,6 @@
     let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
     const defaultUsers = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
-    // GLOBAL STATE VARIABLES
     let db = { startDate: "", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], trash: [], auditLog: [] };
     let currentUser = localStorage.getItem('house_user') || "";
     let activeHashtag = null;
@@ -546,20 +594,16 @@
     let toastTimeout;
     let confirmAction = null;
     let promptAction = null;
-    let isHardwareDebounceActive = false;
     let isSubmitting = false; 
 
-    // Lightbox & Pinch-to-Zoom State
     let currentLightboxImages = [];
     let currentLightboxIndex = 0;
     let lightboxRotation = 0;
     let scale = 1;
-    let startDist = 0;
 
     let lastTouchTime = 0;
     document.body.addEventListener('touchstart', (e) => {
         lastTouchTime = Date.now();
-        // Ghost Keyboard Pre-Wipe Blur
         if (e.target.classList.contains('wipe-trigger') && document.activeElement && document.activeElement.tagName === 'INPUT') {
             document.activeElement.blur();
         }
@@ -570,6 +614,7 @@
         else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
         else if (document.getElementById('trashOverlay').style.display === 'flex') { closeTrash(); history.pushState(null, null, location.href); }
         else if (document.getElementById('auditOverlay').style.display === 'flex') { closeAuditLog(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('helpOverlay').style.display === 'flex') { closeHelp(); history.pushState(null, null, location.href); }
         else if (document.getElementById('sideMenu').classList.contains('open')) { toggleMenu(); history.pushState(null, null, location.href); }
     });
 
@@ -607,7 +652,19 @@
         }
     });
 
-    // v7.9.45: Feature 8 - Audit Trail Logic
+    // HELP GUIDE LOGIC
+    function openHelp() {
+        if(document.activeElement) document.activeElement.blur();
+        history.pushState(null, null, location.href); 
+        document.getElementById('helpOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeHelp() {
+        document.getElementById('helpOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    // AUDIT TRAIL LOGIC
     function openAuditLog() {
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu');
@@ -629,30 +686,19 @@
         document.getElementById('auditOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
-
     function closeAuditLog() { 
-        const el = document.getElementById('auditOverlay');
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-        el.style.pointerEvents = 'auto';
+        document.getElementById('auditOverlay').style.display = 'none';
         document.body.style.overflow = '';
     }
 
     function escapeHTML(str) {
         if (!str || typeof str !== 'string') return str;
-        let clean = str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '');
-        return clean.toString()
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;"); 
+        return str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); 
     }
     
     function sanitizeName(str) {
         if (!str) return "";
-        let clean = str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '');
-        return clean.replace(/['"<>\\\/&]/g, '').trim();
+        return str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '').replace(/['"<>\\\/&]/g, '').trim();
     }
     
     function sanitizeURL(url) {
@@ -661,15 +707,11 @@
     }
 
     function safeJSONParse(str, defaultVal) {
-        try { return JSON.parse(str) || defaultVal; } 
-        catch (e) { return defaultVal; }
+        try { return JSON.parse(str) || defaultVal; } catch (e) { return defaultVal; }
     }
 
     function safeSetStorage(key, val) {
-        if (typeof val === 'string' && val.length > 4500000) { 
-             showToast("Payload too massive for local vault. Aborting.", 4000);
-             return false;
-        }
+        if (typeof val === 'string' && val.length > 4500000) { showToast("Payload too massive for local vault. Aborting.", 4000); return false; }
         try {
             localStorage.setItem('v7_write_test', '1');
             localStorage.removeItem('v7_write_test');
@@ -682,17 +724,11 @@
                     if(q.length > 0) { q.shift(); safeSetStorage('img_queue', JSON.stringify(q)); }
                 } else if (key === 'house_db_backup') {
                     if (db.archives && db.archives.length > 5) {
-                        db.archives.pop(); 
-                        safeSetStorage(key, JSON.stringify(db));
-                        showToast("Vault Full. Oldest archive pruned.", 4000);
+                        db.archives.pop(); safeSetStorage(key, JSON.stringify(db)); showToast("Vault Full. Oldest archive pruned.", 4000);
                     } else {
-                        window.ephemeralStorage = window.ephemeralStorage || {};
-                        window.ephemeralStorage[key] = val;
-                        showToast("Memory Limit Reached. Running Volatile.", 4000);
+                        window.ephemeralStorage = window.ephemeralStorage || {}; window.ephemeralStorage[key] = val; showToast("Memory Limit Reached. Running Volatile.", 4000);
                     }
-                } else {
-                     showToast("Storage Limit Reached. Clear Vault.", 4000);
-                }
+                } else { showToast("Storage Limit Reached. Clear Vault.", 4000); }
             }
             return false;
         }
@@ -700,40 +736,26 @@
 
     function updateOfflineBadge() {
         const badge = document.getElementById('offlineBadge');
-        if (offlineActionsCount > 0 && (!navigator.onLine || needsSync)) {
-            badge.innerText = offlineActionsCount;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
+        if (offlineActionsCount > 0 && (!navigator.onLine || needsSync)) { badge.innerText = offlineActionsCount; badge.style.display = 'flex'; } 
+        else { badge.style.display = 'none'; }
     }
 
     window.addEventListener('storage', (e) => {
-        if (e.key === 'house_db_backup' && e.newValue) {
-            loadLocalBackup();
-            showToast("SYNCED FROM ANOTHER TAB", 2000);
-        }
+        if (e.key === 'house_db_backup' && e.newValue) { loadLocalBackup(); showToast("SYNCED FROM ANOTHER TAB", 2000); }
     });
 
-    function triggerHaptic() {
-        if (window.navigator && window.navigator.vibrate) navigator.vibrate(40);
-    }
+    function triggerHaptic() { if (window.navigator && window.navigator.vibrate) navigator.vibrate(40); }
     
     function animateValue(obj, start, end, duration, prefix) {
-        let startTimestamp = null;
-        let animationFrameId = null;
-        
+        let startTimestamp = null; let animationFrameId = null;
         const step = (timestamp) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
             const ease = 1 - Math.pow(1 - progress, 4); 
             const current = start + (end - start) * ease;
             obj.innerText = prefix + current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            if (progress < 1) {
-                animationFrameId = window.requestAnimationFrame(step);
-            } else {
-                obj.innerText = prefix + end.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
+            if (progress < 1) { animationFrameId = window.requestAnimationFrame(step); } 
+            else { obj.innerText = prefix + end.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
         };
         if(animationFrameId) cancelAnimationFrame(animationFrameId);
         animationFrameId = window.requestAnimationFrame(step);
@@ -741,12 +763,9 @@
 
     async function checkForUpdates() {
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            const res = await fetch(location.href.split('?')[0] + '?t=' + Date.now(), {cache: "no-store", signal: controller.signal});
-            clearTimeout(timeoutId);
-            const text = await res.text();
-            const match = text.match(/<meta name="app-version" content="([^"]+)">/);
+            const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch(location.href.split('?')[0] + '?t=' + Date.now(), {cache: "no-store", signal: controller.signal}); clearTimeout(timeoutId);
+            const text = await res.text(); const match = text.match(/<meta name="app-version" content="([^"]+)">/);
             if (match && match[1] && match[1] !== APP_VERSION) {
                 showToast(`Update Available <span style="color:var(--accent); font-weight:900; margin-left:12px; cursor:pointer; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 12px;" onclick="location.reload(true)">REFRESH</span>`, 10000);
             }
@@ -761,772 +780,307 @@
 
     function customConfirm(msg, action) {
         if(document.activeElement) document.activeElement.blur(); 
-        document.getElementById('confirmMessage').innerHTML = msg;
-        confirmAction = action;
-        document.getElementById('confirmOverlay').style.display = 'flex';
+        document.getElementById('confirmMessage').innerHTML = msg; confirmAction = action; document.getElementById('confirmOverlay').style.display = 'flex';
     }
-    function closeConfirm() {
-        const el = document.getElementById('confirmOverlay');
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-        el.style.pointerEvents = 'auto';
-        confirmAction = null;
-    }
-    function executeConfirm() {
-        if (confirmAction) confirmAction();
-        closeConfirm();
-    }
+    function closeConfirm() { document.getElementById('confirmOverlay').style.display = 'none'; confirmAction = null; }
+    function executeConfirm() { if (confirmAction) confirmAction(); closeConfirm(); }
 
     function customPrompt(msg, defaultValue, action, inputMode = "text") {
         if(document.activeElement) document.activeElement.blur(); 
-        document.getElementById('promptMessage').innerHTML = msg;
-        const input = document.getElementById('promptInput');
-        input.value = defaultValue || "";
-        input.inputMode = inputMode;
-        promptAction = action;
-        document.getElementById('promptOverlay').style.display = 'flex';
-        setTimeout(() => input.focus(), 100);
+        document.getElementById('promptMessage').innerHTML = msg; const input = document.getElementById('promptInput'); input.value = defaultValue || ""; input.inputMode = inputMode; promptAction = action; document.getElementById('promptOverlay').style.display = 'flex'; setTimeout(() => input.focus(), 100);
     }
-    function closePrompt() {
-        const el = document.getElementById('promptOverlay');
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-        el.style.pointerEvents = 'auto';
-        promptAction = null;
-    }
-    function executePrompt() {
-        if (promptAction) promptAction(document.getElementById('promptInput').value);
-        closePrompt();
-    }
+    function closePrompt() { document.getElementById('promptOverlay').style.display = 'none'; promptAction = null; }
+    function executePrompt() { if (promptAction) promptAction(document.getElementById('promptInput').value); closePrompt(); }
 
     function openSettings() {
         if(document.activeElement) document.activeElement.blur();
-        const menu = document.getElementById('sideMenu');
-        if (menu.classList.contains('open')) toggleMenu();
-        
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         history.pushState(null, null, location.href); 
         document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
-        
         const roundingContainer = document.getElementById('smartRoundingContainer');
-        if (currentUser === "Shahzeb") {
-            roundingContainer.style.display = 'flex';
-            document.getElementById('smartRoundingInput').checked = smartRoundingEnabled;
-        } else {
-            roundingContainer.style.display = 'none';
-        }
-        
+        if (currentUser === "Shahzeb") { roundingContainer.style.display = 'flex'; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; } else { roundingContainer.style.display = 'none'; }
         const trashBtn = document.getElementById('trashBtn');
-        if (currentUser === "Shahzeb") {
-            trashBtn.style.display = 'flex';
-            document.getElementById('trashExpirySelect').parentElement.style.display = 'flex';
-            document.getElementById('trashExpirySelect').value = trashExpiryDays.toString();
-        } else {
-            trashBtn.style.display = 'none';
-            document.getElementById('trashExpirySelect').parentElement.style.display = 'none';
-        }
-        
-        document.getElementById('settingsOverlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden'; 
+        if (currentUser === "Shahzeb") { trashBtn.style.display = 'flex'; document.getElementById('trashExpirySelect').parentElement.style.display = 'flex'; document.getElementById('trashExpirySelect').value = trashExpiryDays.toString(); } else { trashBtn.style.display = 'none'; document.getElementById('trashExpirySelect').parentElement.style.display = 'none'; }
+        document.getElementById('settingsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden'; 
     }
-    function closeSettings() {
-        const el = document.getElementById('settingsOverlay');
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-        el.style.pointerEvents = 'auto';
-        document.body.style.overflow = '';
-    }
+    function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
 
-    function toggleSwipeSetting() {
-        swipeActionsEnabled = !swipeActionsEnabled;
-        document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
-        safeSetStorage('house_swipe_actions', swipeActionsEnabled);
-        render();
-    }
-    function toggleSmartRounding() {
-        smartRoundingEnabled = !smartRoundingEnabled;
-        document.getElementById('smartRoundingInput').checked = smartRoundingEnabled;
-        safeSetStorage('house_smart_rounding', smartRoundingEnabled);
-        render();
-    }
-    function updateTrashExpiry() {
-        trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value);
-        localStorage.setItem('house_trash_expiry', trashExpiryDays);
-        showToast("Trash Expiry Updated", 1500);
-    }
+    function toggleSwipeSetting() { swipeActionsEnabled = !swipeActionsEnabled; document.getElementById('swipeToggleInput').checked = swipeActionsEnabled; safeSetStorage('house_swipe_actions', swipeActionsEnabled); render(); }
+    function toggleSmartRounding() { smartRoundingEnabled = !smartRoundingEnabled; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; safeSetStorage('house_smart_rounding', smartRoundingEnabled); render(); }
+    function updateTrashExpiry() { trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value); localStorage.setItem('house_trash_expiry', trashExpiryDays); showToast("Trash Expiry Updated", 1500); }
 
     function handleTagInput(e) {
-        const val = e.target.value;
-        const match = val.match(/#([\w-]+)$/);
-        const dropdown = document.getElementById('hashtagAutocomplete');
-        
+        const val = e.target.value; const match = val.match(/#([\w-]+)$/); const dropdown = document.getElementById('hashtagAutocomplete');
         if (match) {
-            const currentTyping = match[0];
-            let allTags = new Set();
-            (db.expenses||[]).forEach(ex => {
-                let tMatch = (ex.desc || "").match(/#([\w-]+)/g);
-                if(tMatch) tMatch.forEach(t => allTags.add(t));
-            });
-            (db.archives||[]).forEach(arc => {
-                if(arc.tag) allTags.add(arc.tag);
-                (arc.details||[]).forEach(ex => {
-                    let tMatch = (ex.desc || "").match(/#([\w-]+)/g);
-                    if(tMatch) tMatch.forEach(t => allTags.add(t));
-                });
-            });
-            
+            const currentTyping = match[0]; let allTags = new Set();
+            (db.expenses||[]).forEach(ex => { let tMatch = (ex.desc || "").match(/#([\w-]+)/g); if(tMatch) tMatch.forEach(t => allTags.add(t)); });
+            (db.archives||[]).forEach(arc => { if(arc.tag) allTags.add(arc.tag); (arc.details||[]).forEach(ex => { let tMatch = (ex.desc || "").match(/#([\w-]+)/g); if(tMatch) tMatch.forEach(t => allTags.add(t)); }); });
             let suggestions = Array.from(allTags).filter(t => t.toLowerCase().startsWith(currentTyping.toLowerCase()) && t !== currentTyping);
-            
-            if (suggestions.length > 0) {
-                dropdown.innerHTML = suggestions.map(t => `<div class="autocomplete-item" onclick="applyTag('${t}', '${e.target.id}')">${t}</div>`).join('');
-                dropdown.style.display = 'flex';
-            } else {
-                dropdown.style.display = 'none';
-            }
-
+            if (suggestions.length > 0) { dropdown.innerHTML = suggestions.map(t => `<div class="autocomplete-item" onclick="applyTag('${t}', '${e.target.id}')">${t}</div>`).join(''); dropdown.style.display = 'flex'; } else { dropdown.style.display = 'none'; }
             let lastEx = (db.expenses||[]).find(ex => (ex.desc||"").includes(currentTyping));
-            if (lastEx && lastEx.involved && lastEx.involved.length > 0) {
-                db.activeUsers = [...lastEx.involved];
-                render(); 
-            }
-
-        } else {
-            dropdown.style.display = 'none';
-        }
+            if (lastEx && lastEx.involved && lastEx.involved.length > 0) { db.activeUsers = [...lastEx.involved]; render(); }
+        } else { dropdown.style.display = 'none'; }
     }
     
-    function applyTag(fullTag, targetId) {
-        const input = document.getElementById(targetId);
-        input.value = input.value.replace(/#([\w-]+)$/, fullTag);
-        document.getElementById('hashtagAutocomplete').style.display = 'none';
-        input.focus();
-    }
-
-    function toggleHashtag(tag) {
-        if (editingId) {
-            showToast("Finish editing before changing tags.", 3000);
-            return;
-        }
-        if (activeHashtag === tag) {
-            activeHashtag = null;
-        } else {
-            activeHashtag = tag;
-        }
-        render();
-    }
+    function applyTag(fullTag, targetId) { const input = document.getElementById(targetId); input.value = input.value.replace(/#([\w-]+)$/, fullTag); document.getElementById('hashtagAutocomplete').style.display = 'none'; input.focus(); }
+    function toggleHashtag(tag) { if (editingId) { showToast("Finish editing before changing tags.", 3000); return; } if (activeHashtag === tag) { activeHashtag = null; } else { activeHashtag = tag; } render(); }
 
     function openTrash() {
-        closeSettings();
-        history.pushState(null, null, location.href); 
-        
-        const list = document.getElementById('trashList');
-        const sym = curSymbols[document.getElementById('currency').value];
-        const rate = rates[document.getElementById('currency').value];
-        
+        closeSettings(); history.pushState(null, null, location.href); 
+        const list = document.getElementById('trashList'); const sym = curSymbols[document.getElementById('currency').value]; const rate = rates[document.getElementById('currency').value];
         document.getElementById('trashExpiryText').innerText = `Items permanently deleted after ${trashExpiryDays} days.`;
-        
-        if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) {
-            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>Vault is empty.</div>";
-        } else {
+        if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) { list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>Vault is empty.</div>"; } 
+        else {
             list.innerHTML = db.trash.map((ex, i) => {
-                const daysLeft = trashExpiryDays - Math.floor((Date.now() - ex.deletedAt) / (1000 * 60 * 60 * 24));
-                const shortDesc = ex.desc ? escapeHTML(ex.desc.split('\n')[0].substring(0, 20)) : "Expense";
-                return `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
-                    <div>
-                        <div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${sym}${(ex.amount * rate).toFixed(2)} - ${shortDesc}</div>
-                        <div style="font-size:0.65rem; color:var(--danger); margin-top:3px;">${daysLeft} days until deletion</div>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-pill success" onclick="triggerHaptic(); restoreTrash(${i})">Restore</button>
-                        <button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i})">Delete</button>
-                    </div>
-                </div>`;
+                const daysLeft = trashExpiryDays - Math.floor((Date.now() - ex.deletedAt) / (1000 * 60 * 60 * 24)); const shortDesc = ex.desc ? escapeHTML(ex.desc.split('\n')[0].substring(0, 20)) : "Expense";
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);"><div><div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${sym}${(ex.amount * rate).toFixed(2)} - ${shortDesc}</div><div style="font-size:0.65rem; color:var(--danger); margin-top:3px;">${daysLeft} days until deletion</div></div><div style="display:flex; gap:5px;"><button class="btn-pill success" onclick="triggerHaptic(); restoreTrash(${i})">Restore</button><button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i})">Delete</button></div></div>`;
             }).join('');
         }
-        document.getElementById('trashOverlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        document.getElementById('trashOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     
-    function closeTrash() { 
-        const el = document.getElementById('trashOverlay');
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-        el.style.pointerEvents = 'auto';
-        document.body.style.overflow = '';
-    }
+    function closeTrash() { document.getElementById('trashOverlay').style.display = 'none'; document.body.style.overflow = ''; }
     
     function restoreTrash(i) {
-        if(db.trash && db.trash[i]) {
-            let ex = db.trash.splice(i, 1)[0];
-            delete ex.deletedAt;
-            if(!Array.isArray(db.expenses)) db.expenses = [];
-            db.expenses.unshift(ex);
-            db.expenses.sort((a,b) => b.timestamp - a.timestamp);
-            logAudit("Restored Expense", ex.id);
-            openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000);
-        }
+        if(db.trash && db.trash[i]) { let ex = db.trash.splice(i, 1)[0]; delete ex.deletedAt; if(!Array.isArray(db.expenses)) db.expenses = []; db.expenses.unshift(ex); db.expenses.sort((a,b) => b.timestamp - a.timestamp); logAudit("Restored Expense", ex.id); openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000); }
     }
     
     function permDeleteTrash(i) {
         if(db.trash && db.trash[i]) {
             customConfirm("Permanently delete this expense?", () => {
-                if(!db.trash[i]) return;
-                let ex = db.trash[i];
-                let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
-                
-                delUrls.forEach(u => {
-                     if (u) fetch(u, { mode: 'no-cors' }).catch(() => {});
-                });
-                db.trash.splice(i, 1);
-                logAudit("Permanently Deleted", ex.id);
-                openTrash(); executeActionWithSave(); showToast("Deleted Permanently", 2000);
+                if(!db.trash[i]) return; let ex = db.trash[i]; let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
+                delUrls.forEach(u => { if (u) fetch(u, { mode: 'no-cors' }).catch(() => {}); }); db.trash.splice(i, 1); logAudit("Permanently Deleted", ex.id); openTrash(); executeActionWithSave(); showToast("Deleted Permanently", 2000);
             });
         }
     }
 
     async function checkTrueNetwork() {
         if (!navigator.onLine) return false;
-        try {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), 3000);
-            await fetch('https://open.er-api.com/v6/latest/GBP', { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
-            clearTimeout(id);
-            return true;
-        } catch (e) {
-            return false;
-        }
+        try { const controller = new AbortController(); const id = setTimeout(() => controller.abort(), 3000); await fetch('https://open.er-api.com/v6/latest/GBP', { method: 'HEAD', mode: 'no-cors', signal: controller.signal }); clearTimeout(id); return true; } catch (e) { return false; }
     }
 
     async function fetchLiveRates() {
         let cached = safeJSONParse(localStorage.getItem('currency_rates_cache'), null);
-        if (cached) {
-            rates.PKR = cached.PKR || rates.PKR;
-            rates.USD = cached.USD || rates.USD;
-            rates.EUR = cached.EUR || rates.EUR;
-            rates.AED = cached.AED || rates.AED;
-        }
+        if (cached) { rates.PKR = cached.PKR || rates.PKR; rates.USD = cached.USD || rates.USD; rates.EUR = cached.EUR || rates.EUR; rates.AED = cached.AED || rates.AED; }
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            const res = await fetch('https://open.er-api.com/v6/latest/GBP', {signal: controller.signal});
-            clearTimeout(timeoutId);
-            const data = await res.json();
-            if (data && data.rates) {
-                rates.PKR = data.rates.PKR || rates.PKR;
-                rates.USD = data.rates.USD || rates.USD;
-                rates.EUR = data.rates.EUR || rates.EUR;
-                rates.AED = data.rates.AED || rates.AED;
-                safeSetStorage('currency_rates_cache', JSON.stringify(rates));
-                render(); 
-            }
+            const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch('https://open.er-api.com/v6/latest/GBP', {signal: controller.signal}); clearTimeout(timeoutId); const data = await res.json();
+            if (data && data.rates) { rates.PKR = data.rates.PKR || rates.PKR; rates.USD = data.rates.USD || rates.USD; rates.EUR = data.rates.EUR || rates.EUR; rates.AED = data.rates.AED || rates.AED; safeSetStorage('currency_rates_cache', JSON.stringify(rates)); render(); }
         } catch(e) {}
     }
 
     document.addEventListener('click', function(event) {
-        const menu = document.getElementById('optionsMenu');
-        const inputSection = document.getElementById('inputSection');
-        if (menu && menu.style.display === 'block' && inputSection && !inputSection.contains(event.target)) {
-            menu.style.display = 'none';
-        }
+        const menu = document.getElementById('optionsMenu'); const inputSection = document.getElementById('inputSection');
+        if (menu && menu.style.display === 'block' && inputSection && !inputSection.contains(event.target)) { menu.style.display = 'none'; }
     });
 
     function showToast(msg, duration = 0) {
         if(document.activeElement && document.activeElement.tagName === 'TEXTAREA') document.activeElement.blur(); 
-        const loader = document.getElementById('loading');
-        loader.innerHTML = msg;
-        loader.style.display = 'block';
-        clearTimeout(toastTimeout);
-        if (duration > 0) toastTimeout = setTimeout(() => { 
-            loader.style.display = 'none'; 
-            loader.innerHTML = "SYNCING..."; 
-        }, duration);
+        const loader = document.getElementById('loading'); loader.innerHTML = msg; loader.style.display = 'block'; clearTimeout(toastTimeout);
+        if (duration > 0) toastTimeout = setTimeout(() => { loader.style.display = 'none'; loader.innerHTML = "SYNCING..."; }, duration);
     }
 
     function setNeedsSync(val) { needsSync = val; safeSetStorage('house_needs_sync', val); }
-    
     function saveLocalBackup() { safeSetStorage('house_db_backup', JSON.stringify(db)); }
     
     function loadLocalBackup() {
         const backup = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup');
         if (backup) { 
             try { 
-                db = typeof backup === 'string' ? JSON.parse(backup) : backup;
-                if (db.encrypted) throw new Error("Encrypted backup format found.");
-                initializeDB(); renderUsers(); 
-                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
-                else {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('topUserName').innerText = escapeHTML(currentUser); 
-                    const menuUser = document.getElementById('menuUserName');
-                    if(menuUser) menuUser.innerText = escapeHTML(currentUser);
-                    render();
-                }
-            } catch (err) {
-                initializeDB();
-            }
+                db = typeof backup === 'string' ? JSON.parse(backup) : backup; if (db.encrypted) throw new Error("Encrypted backup format found."); initializeDB(); renderUsers(); 
+                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
+            } catch (err) { initializeDB(); }
         }
     }
 
-    // v7.9.45: Feature 3 - Twin-Sync Collision Resolution Matrix
     function mergeDatabases(local, remote) {
         const merged = JSON.parse(JSON.stringify(remote));
         const remoteIds = new Set(remote.expenses.map(e => e.id));
-        
-        local.expenses.forEach(ex => {
-            if (!remoteIds.has(ex.id)) merged.expenses.unshift(ex);
-        });
+        local.expenses.forEach(ex => { if (!remoteIds.has(ex.id)) merged.expenses.unshift(ex); });
         merged.expenses.sort((a,b) => b.timestamp - a.timestamp);
-        
         if (local.auditLog) {
             const remoteAuditTimes = new Set(remote.auditLog.map(a => a.t));
             local.auditLog.forEach(a => { if(!remoteAuditTimes.has(a.t)) merged.auditLog.unshift(a); });
-            merged.auditLog.sort((a,b) => b.t - a.t);
-            if (merged.auditLog.length > 200) merged.auditLog.length = 200;
+            merged.auditLog.sort((a,b) => b.t - a.t); if (merged.auditLog.length > 200) merged.auditLog.length = 200;
         }
         return merged;
     }
 
     async function secureFetch(url, options = {}, timeoutMs = 8000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeoutMs);
-
+        const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeoutMs);
         try {
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal,
-                cache: 'no-store', 
-                headers: {
-                    ...options.headers,
-                    'Pragma': 'no-cache',
-                    'Cache-Control': 'no-cache'
-                }
-            });
-            clearTimeout(id);
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("text/html") !== -1 && !url.includes('api.imgbb')) {
-                throw new Error("CAPTIVE_PORTAL_DETECTED");
-            }
-            return response;
-        } catch (error) {
-            clearTimeout(id);
-            throw error;
-        }
+            const response = await fetch(url, { ...options, signal: controller.signal, cache: 'no-store', headers: { ...options.headers, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } }); clearTimeout(id);
+            const contentType = response.headers.get("content-type"); if (contentType && contentType.indexOf("text/html") !== -1 && !url.includes('api.imgbb')) { throw new Error("CAPTIVE_PORTAL_DETECTED"); } return response;
+        } catch (error) { clearTimeout(id); throw error; }
     }
 
     async function loadData(force = false) {
-        if (isSyncing) return;
-        if (!force && Date.now() - lastSyncTime < 2500) return;
-        
-        lastSyncTime = Date.now();
-        isSyncing = true;
-        
+        if (isSyncing) return; if (!force && Date.now() - lastSyncTime < 2500) return;
+        lastSyncTime = Date.now(); isSyncing = true;
         const isReallyOnline = await checkTrueNetwork();
-        if (!isReallyOnline) { 
-            showToast("OFFLINE - LOCAL MODE", 2000); 
-            loadLocalBackup(); 
-            isSyncing = false;
-            return; 
-        }
-        
+        if (!isReallyOnline) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); isSyncing = false; return; }
         if (!db.expenses || db.expenses.length === 0) renderSkeletons();
-        
-        const syncIcon = document.getElementById('syncIconElement');
-        if(syncIcon) syncIcon.classList.add('spin');
-        
+        const syncIcon = document.getElementById('syncIconElement'); if(syncIcon) syncIcon.classList.add('spin');
         try {
-            const res = await secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
-                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }
-            });
-            
-            if (res.status === 429) throw new Error("429");
-            if (!res.ok) throw new Error("HTTP_API_ERROR");
-            
-            const data = await res.json();
-            const targetData = data.record ? data.record : data;
-            
+            const res = await secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' } });
+            if (res.status === 429) throw new Error("429"); if (!res.ok) throw new Error("HTTP_API_ERROR");
+            const data = await res.json(); const targetData = data.record ? data.record : data;
             if (targetData && (targetData.expenses || targetData.users)) {
-                if (targetData.encrypted) {
-                    showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000);
-                    initializeDB();
-                } else {
-                    if (offlineActionsCount > 0 && db.expenses) {
-                        db = mergeDatabases(db, targetData);
-                        saveData();
-                    } else {
-                        db = targetData;
-                    }
-                }
-            } else {
-                showToast("INITIALIZING NEW VAULT...", 3000);
-                initializeDB();
-                saveData(); 
-            }
-            
+                if (targetData.encrypted) { showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000); initializeDB(); } 
+                else { if (offlineActionsCount > 0 && db.expenses) { db = mergeDatabases(db, targetData); saveData(); } else { db = targetData; } }
+            } else { showToast("INITIALIZING NEW VAULT...", 3000); initializeDB(); saveData(); }
             initializeDB(); 
-            
-            if (db.trash && Array.isArray(db.trash)) {
-                const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000;
-                let originalLength = db.trash.length;
-                db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs);
-                if (db.trash.length !== originalLength) executeActionWithSave(); 
-            }
-            
+            if (db.trash && Array.isArray(db.trash)) { const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000; let originalLength = db.trash.length; db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs); if (db.trash.length !== originalLength) executeActionWithSave(); }
             renderUsers(); saveLocalBackup(); 
-            
-            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
-            else {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('topUserName').innerText = escapeHTML(currentUser); 
-                const menuUser = document.getElementById('menuUserName');
-                if(menuUser) menuUser.innerText = escapeHTML(currentUser);
-                render();
-            }
-            
-            offlineActionsCount = 0;
-            updateOfflineBadge();
-            
-            processUploadQueue();
+            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
+            offlineActionsCount = 0; updateOfflineBadge(); processUploadQueue();
         } catch (e) {
-            if (e.message === "429") {
-                setTimeout(() => { loadData(true); }, 1500);
-            } else if (e.message === "HTTP_API_ERROR") {
-                showToast("CLOUD SERVER OFFLINE", 3000);
-                loadLocalBackup();
-            } else {
-                showToast("OFFLINE - LOCAL MODE", 2000); 
-                loadLocalBackup();
-            }
-        } finally {
-            if(syncIcon) syncIcon.classList.remove('spin');
-            if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") {
-                document.getElementById('loading').style.display = 'none'; 
-            }
-            isSyncing = false;
-        }
+            if (e.message === "429") { setTimeout(() => { loadData(true); }, 1500); } else if (e.message === "HTTP_API_ERROR") { showToast("CLOUD SERVER OFFLINE", 3000); loadLocalBackup(); } else { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); }
+        } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") { document.getElementById('loading').style.display = 'none'; } isSyncing = false; }
     }
 
-    function executeActionWithSave() {
-        if (!checkPayloadSize()) return; 
-        offlineActionsCount++;
-        updateOfflineBadge();
-        saveData();
-    }
+    function executeActionWithSave() { if (!checkPayloadSize()) return; offlineActionsCount++; updateOfflineBadge(); saveData(); }
 
     async function saveData(retryCount = 0) {
-        saveLocalBackup(); 
-        
-        const isReallyOnline = await checkTrueNetwork();
-        if (!isReallyOnline) { 
-            setNeedsSync(true); 
-            return; 
-        }
-        
-        const now = Date.now();
-        if (now - lastApiSaveTime < 2000 && retryCount === 0) {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => { saveData(); }, 2000);
-            return;
-        }
-        lastApiSaveTime = now;
-        
-        if (isSyncing && retryCount === 0) return;
-        isSyncing = true;
-        
-        const syncIcon = document.getElementById('syncIconElement');
-        if(syncIcon) syncIcon.classList.add('spin');
-        document.body.style.overscrollBehavior = 'none';
-
-        secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() },
-            body: JSON.stringify(db)
-        })
-        .then(res => { 
-            if (res.status === 429) throw new Error("429"); 
-            if (!res.ok) throw new Error("HTTP_API_ERROR"); 
-            setNeedsSync(false); 
-            offlineActionsCount = 0;
-            updateOfflineBadge();
-        })
-        .catch((e) => { 
-            if (e.message === "429" && retryCount < 2) {
-                setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1));
-            } else {
-                setNeedsSync(true); 
-            }
-        })
-        .finally(() => { 
-            if(syncIcon) syncIcon.classList.remove('spin'); 
-            isSyncing = false;
-            document.body.style.overscrollBehavior = 'auto'; 
-        });
+        saveLocalBackup(); const isReallyOnline = await checkTrueNetwork(); if (!isReallyOnline) { setNeedsSync(true); return; }
+        const now = Date.now(); if (now - lastApiSaveTime < 2000 && retryCount === 0) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 2000); return; } lastApiSaveTime = now;
+        if (isSyncing && retryCount === 0) return; isSyncing = true;
+        const syncIcon = document.getElementById('syncIconElement'); if(syncIcon) syncIcon.classList.add('spin'); document.body.style.overscrollBehavior = 'none';
+        secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() }, body: JSON.stringify(db) })
+        .then(res => { if (res.status === 429) throw new Error("429"); if (!res.ok) throw new Error("HTTP_API_ERROR"); setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); })
+        .catch((e) => { if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { setNeedsSync(true); } })
+        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = 'auto'; });
     }
 
     function toggleMyView() {
-        myViewActive = !myViewActive;
-        const el = document.getElementById('topUserName');
-        if (myViewActive) {
-            el.style.background = 'var(--accent)'; el.style.color = '#000';
-            showToast("MY VIEW: ON", 1500);
-        } else {
-            el.style.background = 'rgba(45, 212, 191, 0.1)'; el.style.color = 'var(--accent)';
-            showToast("HOUSE VIEW", 1500);
-        }
-        render();
+        myViewActive = !myViewActive; const el = document.getElementById('topUserName');
+        if (myViewActive) { el.style.background = 'var(--accent)'; el.style.color = '#000'; showToast("MY VIEW: ON", 1500); } 
+        else { el.style.background = 'rgba(45, 212, 191, 0.1)'; el.style.color = 'var(--accent)'; showToast("HOUSE VIEW", 1500); } render();
     }
 
+    // FOCUS FIX: Explicitly lock focus onto the amount input field, never the description
     function toggleOptionsMenu(forceOpen = false) {
         const menu = document.getElementById('optionsMenu');
         const isOpening = forceOpen || menu.style.display === 'none';
         menu.style.display = isOpening ? 'block' : 'none';
-        if (isOpening) document.getElementById('groupNote').focus();
+        if (isOpening) document.getElementById('amtInput').focus();
     }
 
     function toggleTheme() {
-        let current = document.documentElement.getAttribute('data-theme');
-        let next = current === 'dark' ? 'light' : 'dark';
-        sessionStorage.setItem('house_theme', next);
-        sessionStorage.setItem('house_theme_time', Date.now().toString());
-        if (typeof applyTheme === 'function') applyTheme();
+        let current = document.documentElement.getAttribute('data-theme'); let next = current === 'dark' ? 'light' : 'dark';
+        sessionStorage.setItem('house_theme', next); sessionStorage.setItem('house_theme_time', Date.now().toString()); if (typeof applyTheme === 'function') applyTheme();
     }
 
     function toggleMenu() {
         if(document.activeElement) document.activeElement.blur();
-        const menu = document.getElementById('sideMenu');
-        const overlay = document.getElementById('menuOverlay');
-        const isOpen = menu.classList.contains('open');
-        if(!isOpen) history.pushState(null, null, location.href); 
-        menu.classList.toggle('open');
-        overlay.style.display = isOpen ? 'none' : 'block';
+        const menu = document.getElementById('sideMenu'); const overlay = document.getElementById('menuOverlay'); const isOpen = menu.classList.contains('open');
+        if(!isOpen) history.pushState(null, null, location.href); menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block';
     }
 
-    let pressTimer;
-    let isLongPress = false;
-    function startPress(e) {
-        isLongPress = false;
-        pressTimer = setTimeout(() => {
-            isLongPress = true;
-            triggerHaptic();
-            markAllSettled();
-        }, 1000);
-    }
+    let pressTimer; let isLongPress = false;
+    function startPress(e) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; triggerHaptic(); markAllSettled(); }, 1000); }
     function cancelPress() { clearTimeout(pressTimer); }
 
     function markAllSettled() {
         if (isSettling) return;
         customConfirm("Mark ALL displayed debts as Settled?", () => {
-            isSettling = true;
-            let totalBase = 0;
-            
-            let allValid = db.expenses || [];
-            let contextExpenses = allValid.filter(e => {
-                let hasTags = /#([\w-]+)/.test(e.desc || "");
-                return activeHashtag ? (e.desc || "").includes(activeHashtag) : !hasTags;
-            });
-            
-            contextExpenses.forEach(e => totalBase += e.amount);
-            const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
-            
-            txs.forEach(t => {
-                const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
-                if (!db.paidStatus) db.paidStatus = {};
-                db.paidStatus[key] = t.amt; 
-            });
-            logAudit("Marked All Active Settled");
-            render();
-            executeActionWithSave();
-            showToast("ALL SETTLED", 2000);
-            isSettling = false;
+            isSettling = true; let totalBase = 0; let allValid = db.expenses || []; let contextExpenses = allValid.filter(e => { let hasTags = /#([\w-]+)/.test(e.desc || ""); return activeHashtag ? (e.desc || "").includes(activeHashtag) : !hasTags; });
+            contextExpenses.forEach(e => totalBase += e.amount); const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
+            txs.forEach(t => { const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`; if (!db.paidStatus) db.paidStatus = {}; db.paidStatus[key] = t.amt; });
+            logAudit("Marked All Active Settled"); render(); executeActionWithSave(); showToast("ALL SETTLED", 2000); isSettling = false;
         });
     }
 
     function toggleSection(headerEl) {
         if (isLongPress) { isLongPress = false; return; }
         const parent = headerEl.parentElement;
-        if (parent.classList.contains('content-section')) {
-            document.querySelectorAll('.content-section.expanded').forEach(el => {
-                if (el !== parent && !(el.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) el.classList.remove('expanded');
-            });
-        } else if (parent.classList.contains('archive-item')) {
-            document.querySelectorAll('.archive-item.expanded').forEach(el => { if (el !== parent) el.classList.remove('expanded'); });
-        }
+        if (parent.classList.contains('content-section')) { document.querySelectorAll('.content-section.expanded').forEach(el => { if (el !== parent && !(el.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) el.classList.remove('expanded'); }); } 
+        else if (parent.classList.contains('archive-item')) { document.querySelectorAll('.archive-item.expanded').forEach(el => { if (el !== parent) el.classList.remove('expanded'); }); }
         parent.classList.toggle('expanded');
     }
     
     function jumpToSection(event, id) {
-        event.preventDefault();
-        const menu = document.getElementById('sideMenu');
-        if (menu.classList.contains('open')) toggleMenu(); 
+        event.preventDefault(); const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu(); 
         const el = document.getElementById(id);
         if (el) {
-            if (id !== 'inputSection' && el.classList.contains('content-section')) {
-                document.querySelectorAll('.content-section.expanded').forEach(sec => {
-                    if (sec !== el && !(sec.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) sec.classList.remove('expanded');
-                });
-            }
+            if (id !== 'inputSection' && el.classList.contains('content-section')) { document.querySelectorAll('.content-section.expanded').forEach(sec => { if (sec !== el && !(sec.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) sec.classList.remove('expanded'); }); }
             if (!el.classList.contains('expanded') && el.querySelector('.flow-header')) el.classList.add('expanded');
-            if (id !== 'inputSection') el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.classList.add('highlight-pulse');
-            setTimeout(() => el.classList.remove('highlight-pulse'), 1500);
+            if (id !== 'inputSection') el.scrollIntoView({ behavior: 'smooth', block: 'start' }); el.classList.add('highlight-pulse'); setTimeout(() => el.classList.remove('highlight-pulse'), 1500);
         }
     }
 
     function openManageUsers() {
         if(document.activeElement) document.activeElement.blur();
-        const menu = document.getElementById('sideMenu');
-        if (menu.classList.contains('open')) toggleMenu();
-        
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         history.pushState(null, null, location.href); 
-        
         const list = document.getElementById('manageUserList');
-        list.innerHTML = db.users.map(u => {
-            return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-                <span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button>
-                    <button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button>
-                </div>
-            </div>`;
-        }).join('');
-        
-        const addBtn = document.getElementById('addHousemateBtn');
-        if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
-        
-        document.getElementById('manageUsersOverlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        list.innerHTML = db.users.map(u => { return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);"><span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span><div style="display:flex; gap:5px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button></div></div>`; }).join('');
+        const addBtn = document.getElementById('addHousemateBtn'); if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
+        document.getElementById('manageUsersOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
 
-    function closeManageUsers() { 
-        const el = document.getElementById('manageUsersOverlay');
-        el.style.pointerEvents = 'none'; el.style.display = 'none'; el.style.pointerEvents = 'auto'; document.body.style.overflow = '';
-    }
+    function closeManageUsers() { document.getElementById('manageUsersOverlay').style.display = 'none'; document.body.style.overflow = ''; }
 
     function addUser() {
         if (currentUser !== 'Shahzeb') { showToast("Only Shahzeb can add housemates.", 3000); return; }
         customPrompt("Enter new housemate's name:", "", (val) => {
-            const n = sanitizeName(val); if (!n) return;
-            const nLower = n.toLowerCase();
-            if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("User already exists.", 3000); return; }
-            db.users.push(n); db.activeUsers.push(n);
-            logAudit("Added User", n);
-            renderUsers(); openManageUsers(); render(); executeActionWithSave();
+            const n = sanitizeName(val); if (!n) return; const nLower = n.toLowerCase(); if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("User already exists.", 3000); return; }
+            db.users.push(n); db.activeUsers.push(n); logAudit("Added User", n); renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
     }
 
     function editUser(oldName) {
         customPrompt(`Rename ${oldName} to:`, oldName, (newName) => {
-            const n = sanitizeName(newName); if (!n || n === oldName) return;
-            const nLower = n.toLowerCase();
-            if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("Name already exists.", 3000); return; }
-            
-            db.users[db.users.indexOf(oldName)] = n;
-            if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
-            
-            db.expenses.forEach(ex => {
-                if (ex.name === oldName) ex.name = n;
-                if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n;
-            });
-            
+            const n = sanitizeName(newName); if (!n || n === oldName) return; const nLower = n.toLowerCase(); if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("Name already exists.", 3000); return; }
+            db.users[db.users.indexOf(oldName)] = n; if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
+            db.expenses.forEach(ex => { if (ex.name === oldName) ex.name = n; if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; });
             db.archives.forEach(arc => {
                 if (arc.activeUsers && arc.activeUsers.includes(oldName)) arc.activeUsers[arc.activeUsers.indexOf(oldName)] = n;
-                if (arc.details) {
-                    arc.details.forEach(ex => {
-                        if (ex.name === oldName) ex.name = n;
-                        if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n;
-                    });
-                }
-                let arcPaid = {};
-                for (let key in arc.paidStatus) {
-                    let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_');
-                    if (from === oldName) from = n; if (to === oldName) to = n;
-                    let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; arcPaid[newKey] = arc.paidStatus[key]; 
-                }
-                arc.paidStatus = arcPaid;
+                if (arc.details) { arc.details.forEach(ex => { if (ex.name === oldName) ex.name = n; if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; }); }
+                let arcPaid = {}; for (let key in arc.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; arcPaid[newKey] = arc.paidStatus[key]; } arc.paidStatus = arcPaid;
             });
-
-            let newPaid = {};
-            for (let key in db.paidStatus) {
-                let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_');
-                if (from === oldName) from = n; if (to === oldName) to = n;
-                let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key];
-            }
-            db.paidStatus = newPaid;
-            
+            let newPaid = {}; for (let key in db.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key]; } db.paidStatus = newPaid;
             logAudit(`Renamed ${oldName} to`, n);
-            if (currentUser === oldName) {
-                currentUser = n; localStorage.setItem('house_user', n);
-                document.getElementById('topUserName').innerText = escapeHTML(n);
-                const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(n);
-            }
+            if (currentUser === oldName) { currentUser = n; localStorage.setItem('house_user', n); document.getElementById('topUserName').innerText = escapeHTML(n); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(n); }
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
     }
 
     function deleteUser(name) {
         if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
-        
-        let validExpenses = db.expenses || [];
-        let contexts = [null]; 
-        validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match && !contexts.includes(match[0])) contexts.push(match[0]); });
-
+        let validExpenses = db.expenses || []; let contexts = [null]; validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match && !contexts.includes(match[0])) contexts.push(match[0]); });
         let canDelete = true;
         for(let i=0; i<contexts.length; i++) {
-            let ctx = contexts[i];
-            let ctxEx = validExpenses.filter(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(ctx) return match && match[0] === ctx; return !match; });
+            let ctx = contexts[i]; let ctxEx = validExpenses.filter(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(ctx) return match && match[0] === ctx; return !match; });
             let balances = {}; db.users.forEach(u => balances[u] = 0);
-            ctxEx.forEach(e => {
-                balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
-                let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : db.activeUsers;
-                let activeCount = Math.max(involved.length, 1);
-                let perHead = Math.round((e.amount / activeCount) * 100) / 100;
-                involved.forEach(u => { balances[u] = Math.round((balances[u] - perHead) * 100) / 100; });
-            });
+            ctxEx.forEach(e => { balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100; let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : db.activeUsers; let activeCount = Math.max(involved.length, 1); let perHead = Math.round((e.amount / activeCount) * 100) / 100; involved.forEach(u => { balances[u] = Math.round((balances[u] - perHead) * 100) / 100; }); });
             if (Math.abs(balances[name]) > 0.05) { canDelete = false; break; }
         }
-
         if (!canDelete) { showToast(`Cannot remove ${escapeHTML(name)}. Balance must be settled in all tags.`, 4000); return; }
-
         customConfirm(`Remove ${escapeHTML(name)} from housemates? Past expenses are kept.`, () => {
-            const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1);
-            const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
-            logAudit("Removed User", name);
-            if (currentUser === name) { closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
+            const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1); const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
+            logAudit("Removed User", name); if (currentUser === name) { closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
 
     function renderUsers() {
-        const btns = document.getElementById('userButtons');
-        if (!btns) return; btns.innerHTML = '';
-        
-        let usersList = defaultUsers;
-        if (db && Array.isArray(db.users) && db.users.length > 0) usersList = db.users;
-        
+        const btns = document.getElementById('userButtons'); if (!btns) return; btns.innerHTML = '';
+        let usersList = defaultUsers; if (db && Array.isArray(db.users) && db.users.length > 0) usersList = db.users;
         let validUsersFound = false;
-
         usersList.forEach(u => {
             try {
-                let nameStr = "";
-                if (typeof u === 'string') nameStr = u; else if (u && typeof u === 'object' && u.name) nameStr = String(u.name); else if (u) nameStr = String(u);
-                nameStr = nameStr.trim(); if (!nameStr) return; 
-                validUsersFound = true;
+                let nameStr = ""; if (typeof u === 'string') nameStr = u; else if (u && typeof u === 'object' && u.name) nameStr = String(u.name); else if (u) nameStr = String(u);
+                nameStr = nameStr.trim(); if (!nameStr) return; validUsersFound = true;
                 btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(nameStr)}')"><div class="user-avatar">${escapeHTML(nameStr.charAt(0))}</div>${escapeHTML(nameStr)}</button>`;
             } catch (e) {}
         });
-
-        if (!validUsersFound) {
-            db.users = [...defaultUsers];
-            defaultUsers.forEach(u => {
-                btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(u)}')"><div class="user-avatar">${escapeHTML(u.charAt(0))}</div>${escapeHTML(u)}</button>`;
-            });
-        }
+        if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(u)}')"><div class="user-avatar">${escapeHTML(u.charAt(0))}</div>${escapeHTML(u)}</button>`; }); }
     }
 
     function formatDescDisplay(desc, origSym = '') {
         if (!desc) return "";
         let cleanInput = desc.replace(/[•+]/g, ' ').replace(/&bull;/g, ' ').replace(/\n+/g, ' ').trim();
-        let tokens = cleanInput.split(/\s+/).filter(Boolean);
-        let processedDesc = tokens[0] || '';
+        let tokens = cleanInput.split(/\s+/).filter(Boolean); let processedDesc = tokens[0] || '';
         if (/^\d+(\.\d+)?$/.test(processedDesc)) processedDesc = origSym + processedDesc;
         for (let i = 1; i < tokens.length; i++) {
             let t = tokens[i];
@@ -1542,8 +1096,7 @@
         const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
         const dateObj = new Date(y, m, d); if (isNaN(dateObj.getTime())) return escapeHTML(dateStr);
         const day = dateObj.getDate(), month = dateObj.toLocaleString('default', { month: 'short' }), year = dateObj.getFullYear();
-        const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th';
-        return `${day}${nth} ${month} ${year}`;
+        const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th'; return `${day}${nth} ${month} ${year}`;
     }
 
     async function copyToClipboard(text) {
@@ -1554,22 +1107,17 @@
     }
 
     function sendNudge(name, amount, sym) {
-        triggerHaptic();
-        const text = `Hey ${name}, just a heads up you owe ${sym}${amount.toFixed(2)} for the current house cycle. Catch you later!`;
+        triggerHaptic(); const text = `Hey ${name}, just a heads up you owe ${sym}${amount.toFixed(2)} for the current house cycle. Catch you later!`;
         if (navigator.share) { navigator.share({ title: 'House Expenses', text: text }).catch(e => { copyToClipboard(text); showToast("Nudge Copied!", 2000); }); } 
         else { copyToClipboard(text); showToast("Nudge Copied!", 2000); }
     }
 
     function viewImg(urlArrayRaw) { 
         triggerHaptic(); let urls = [];
-        try {
-            if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw);
-            else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw;
-        } catch(e) { urls = [urlArrayRaw]; }
+        try { if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw); else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw; } catch(e) { urls = [urlArrayRaw]; }
         if(!urls || urls.length === 0) { showToast("Invalid receipt link.", 3000); return; }
         currentLightboxImages = urls.map(u => sanitizeURL(u.trim())).filter(u => u !== null);
         if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
-        
         currentLightboxIndex = 0; lightboxRotation = 0; scale = 1; updateLightboxDOM();
         const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; initPinchZoom();
     }
@@ -1577,8 +1125,7 @@
     function updateLightboxDOM() {
         const loader = document.getElementById('lightboxLoader'), img = document.getElementById('lightboxImg'), prev = document.getElementById('lightboxPrev'), next = document.getElementById('lightboxNext'), pag = document.getElementById('lightboxPagination');
         loader.style.display = 'block'; img.style.display = 'none'; img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; img.src = currentLightboxImages[currentLightboxIndex];
-        if(currentLightboxImages.length > 1) { prev.style.display = 'flex'; next.style.display = 'flex'; pag.style.display = 'block'; pag.innerText = `${currentLightboxIndex + 1}/${currentLightboxImages.length}`; } 
-        else { prev.style.display = 'none'; next.style.display = 'none'; pag.style.display = 'none'; }
+        if(currentLightboxImages.length > 1) { prev.style.display = 'flex'; next.style.display = 'flex'; pag.style.display = 'block'; pag.innerText = `${currentLightboxIndex + 1}/${currentLightboxImages.length}`; } else { prev.style.display = 'none'; next.style.display = 'none'; pag.style.display = 'none'; }
     }
     
     function changeLightboxImage(e, dir) { e.stopPropagation(); triggerHaptic(); currentLightboxIndex += dir; if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1; if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0; lightboxRotation = 0; scale = 1; updateLightboxDOM(); }
@@ -1612,10 +1159,8 @@
             const zip = new JSZip(); const imgFolder = zip.folder("Receipts"); let allUrls = [];
             const extractUrls = (receiptField) => { if(!receiptField) return; if(typeof receiptField === 'string' && receiptField.startsWith('[')) { try { JSON.parse(receiptField).forEach(u => allUrls.push(u)); } catch(e){} } else if(typeof receiptField === 'string') { receiptField.split(',').forEach(u => allUrls.push(u.trim())); } else if(Array.isArray(receiptField)) { receiptField.forEach(u => allUrls.push(u)); } };
             (db.expenses||[]).forEach(ex => extractUrls(ex.receipt)); (db.archives||[]).forEach(arc => (arc.details||[]).forEach(ex => extractUrls(ex.receipt)));
-            let validUrls = allUrls.filter(u => u && u.startsWith('http'));
-            if(validUrls.length === 0) { showToast("No receipts found.", 3000); return; }
-            showToast(`COMPILING ${validUrls.length} RECEIPTS...`, 0);
-            const batchSize = 10;
+            let validUrls = allUrls.filter(u => u && u.startsWith('http')); if(validUrls.length === 0) { showToast("No receipts found.", 3000); return; }
+            showToast(`COMPILING ${validUrls.length} RECEIPTS...`, 0); const batchSize = 10;
             for (let i = 0; i < validUrls.length; i += batchSize) {
                 const batch = validUrls.slice(i, i + batchSize);
                 await Promise.all(batch.map(async (url, idx) => { try { const response = await fetch(url, { mode: 'cors' }); if(response.ok) { const blob = await response.blob(); let filename = `receipt_${i+idx}_${Date.now()}.jpg`; imgFolder.file(filename, blob); } } catch(e) {} }));
@@ -1623,6 +1168,24 @@
             }
             const content = await zip.generateAsync({type:"blob"}); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `House_Receipts_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.zip`; link.click(); showToast("ZIP Downloaded", 2000);
         } catch(e) { showToast("ZIP Compilation Failed", 3000); }
+    }
+
+    function exportCSV() {
+        let csv = "HOUSE EXPENSES EXPORT\n\n"; const sym = document.getElementById('currency').value; const rate = (rates[document.getElementById('currency').value] && rates[document.getElementById('currency').value] > 0) ? rates[document.getElementById('currency').value] : 1;
+        let validExpenses = db.expenses || []; let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0); let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; if(activeCount === 0) activeCount = 1;
+        csv += `Cycle Start,${formatNiceDate(db.startDate)}\nCurrent Total,${sym}${(totalBase * rate).toFixed(2)}\nPer Head (Base),${sym}${(totalBase / activeCount * rate).toFixed(2)}\n`;
+        let momText = "N/A"; if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) { const diff = ((totalBase - db.archives[0].total) / db.archives[0].total) * 100; momText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% vs last cycle`; }
+        csv += `Trend,${momText}\n\nDate,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n`;
+        validExpenses.forEach(e => {
+            let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (db.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
+            csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Current,${receipt}\n`;
+        });
+        (db.archives || []).forEach(arc => {
+            csv += `\nARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\nDate,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n`;
+            let vArcEx = Array.isArray(arc.details) ? arc.details : [];
+            vArcEx.forEach(e => { let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (arc.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None'); let eDate = e.date || arc.start; csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`; });
+        });
+        const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.setAttribute('href', window.URL.createObjectURL(blob)); a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`); a.click(); showToast("EXPORTED CSV", 2000);
     }
 
     function initializeDB() {
@@ -1976,20 +1539,13 @@
         } catch (e) { return { failedBase64: await compressImage(file) }; }
     }
 
-        function extractAmount(text) {
+    // FIX: Math calculation properly extracts numbers without squishing them
+    function extractAmount(text) {
         if (!text) return 0; 
         let safeText = text.substring(0, 500);
-        
-        // Normalize 1,000 or 1.000 (thousand separators) to 1000
         let normalized = safeText.replace(/(\d)[,.](\d{3})(?!\d)/g, '$1$2'); 
-        
-        // Convert any remaining commas to decimal dots (e.g. 23,50 -> 23.50)
         normalized = normalized.replace(/,/g, '.');
-        
-        // Strip out dates (DD/MM or DD/MM/YYYY) so they aren't added to the total
         let noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/g, ''); 
-        
-        // Extract all individual numbers (integers or decimals) directly from the raw string
         let nums = noDates.match(/\d+\.\d+|\d+/g);
         
         if (nums && nums.length > 0) { 
@@ -1997,7 +1553,6 @@
             if(isNaN(total) || !isFinite(total)) return 0; 
             return total; 
         }
-        
         return 0;
     }
 
@@ -2009,7 +1564,9 @@
         let files = []; if (galleryFiles && galleryFiles.length > 0) files = [...files, ...galleryFiles]; if (cameraFiles && cameraFiles.length > 0) files = [...files, ...cameraFiles];
         const cur = document.getElementById('currency').value; const sym = curSymbols[cur]; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1;
         if (!safeInput.trim()) { showToast("Please enter an amount.", 3000); return; }
-        let extractedBase = extractAmount(safeInput); if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
+        
+        let extractedBase = extractAmount(safeInput); 
+        if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
         let baseAmt = Math.round((extractedBase / rate) * 100) / 100; if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
         
         isSubmitting = true; addBtn.disabled = true; addBtn.style.opacity = '0.5';
