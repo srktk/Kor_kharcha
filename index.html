@@ -1669,19 +1669,16 @@
         return true;
     }
 
-    // v7.9.40: Secure Fetch Wrapper
+        // v7.9.40.1: Fixed Secure Fetch (Removed URL Mutation for Strict APIs)
     async function secureFetch(url, options = {}, timeoutMs = 8000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeoutMs);
-        
-        const cacheBuster = `?t=${Date.now()}&v=7.9.40`;
-        const finalUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}${cacheBuster}`;
 
         try {
-            const response = await fetch(finalUrl, {
+            const response = await fetch(url, {
                 ...options,
                 signal: controller.signal,
-                cache: 'no-store',
+                cache: 'no-store', // Bypasses carrier cache safely
                 headers: {
                     ...options.headers,
                     'Pragma': 'no-cache',
@@ -1701,6 +1698,7 @@
         }
     }
 
+    // v7.9.40.1: Smarter Payload Parsing
     async function loadData(force = false) {
         if (isSyncing) return;
         if (!force && Date.now() - lastSyncTime < 2500) return;
@@ -1731,12 +1729,15 @@
             
             const data = await res.json();
             
-            if (data && data.record) {
-                if (data.record.encrypted) {
+            // Handles both '{ record: {...} }' and flat '{ expenses: [...] }' responses
+            const targetData = data.record ? data.record : data;
+            
+            if (targetData && (targetData.expenses || targetData.users)) {
+                if (targetData.encrypted) {
                     showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000);
                     initializeDB();
                 } else {
-                    db = data.record;
+                    db = targetData;
                 }
             } else {
                 showToast("INITIALIZING NEW VAULT...", 3000);
@@ -1786,6 +1787,7 @@
             isSyncing = false;
         }
     }
+
     
     function executeActionWithSave() {
         if (!checkPayloadSize()) return; 
