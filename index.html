@@ -7,16 +7,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.9.4">
+    <meta name="app-version" content="7.9.40">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <script>
+        // v7.9.40: Synchronous Theme Execution
         const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
         let themeTimeout;
 
@@ -54,18 +54,29 @@
             if (!sessionStorage.getItem('house_theme')) applyTheme();
         });
 
+        // v7.9.40: Armored Service Worker (Network-First, Garbage Collection, Byte-Range Fix)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.9.4';
-                    self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['/']))));
+                    const CACHE_NAME = 'house-expenses-v7.9.40';
+                    self.addEventListener('install', e => self.skipWaiting());
                     self.addEventListener('activate', e => {
                         e.waitUntil(caches.keys().then(keys => Promise.all(
                             keys.map(key => { if(key !== CACHE_NAME) return caches.delete(key); })
                         )));
                     });
                     self.addEventListener('fetch', e => {
-                        e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                        if (e.request.headers.has('range')) return;
+                        if (e.request.mode === 'navigate') {
+                            e.respondWith(fetch(e.request).then(res => {
+                                return caches.open(CACHE_NAME).then(cache => {
+                                    cache.put(e.request, res.clone());
+                                    return res;
+                                });
+                            }).catch(() => caches.match(e.request)));
+                        } else {
+                            e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                        }
                     });
                 `;
                 const blob = new Blob([swCode], {type: 'application/javascript'});
@@ -75,6 +86,9 @@
     </script>
     
     <style>
+        /* ==========================================================================
+           v7.9.40 GOLD MASTER CSS: HARDWARE LOCKS & QUARANTINED AESTHETICS
+           ========================================================================== */
         :root { 
             --bg: #f8fafc; --text-main: #0f172a; --text-muted: #475569; 
             --border: #cbd5e1; --accent: #0d9488; --accent-glow: rgba(13, 148, 136, 0.15);
@@ -91,16 +105,34 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100dvh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; touch-action: pan-x pan-y; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+        /* Hardware Typography & Physics Locks */
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100dvh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; touch-action: pan-x pan-y; overscroll-behavior-y: none; -webkit-user-select: none; user-select: none; }
         
         input, textarea, select { font-size: 16px !important; -webkit-user-select: auto; user-select: auto; color: var(--text-main) !important; background-color: var(--input-bg) !important; touch-action: manipulation; }
         
         button svg, .badge svg, .action-icon svg { pointer-events: none; }
-        button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; }
+        button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; -webkit-user-drag: none; }
 
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
+        /* Glassmorphic Hardware GPU Isolation */
+        .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note {
+            transform: translateZ(0); 
+            backface-visibility: hidden; 
+            transform-style: flat;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+        }
+        
+        /* Low-Power Mode GPU Fallback */
+        @media (prefers-reduced-transparency: reduce) {
+            .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note, [style*="backdrop-filter"] {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background-color: var(--nav-bg) !important;
+            }
+        }
+
         .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 20px; padding-top: max(12px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .badge { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
@@ -109,6 +141,7 @@
 
         .offline-badge { position: absolute; top: -2px; right: -2px; background: var(--danger); color: white; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
+        /* Modal Over-Scroll Lock */
         #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
@@ -146,8 +179,9 @@
         .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
         .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
         
-        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: none; }
-        .item-main { flex: 1; padding-right: 10px; min-width: 0; }
+        /* Flex-Basis Calculation Drift Locks */
+        .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: none; flex-shrink: 0; min-height: min-content; transform: translateZ(0); backface-visibility: hidden; }
+        .item-main { flex: 1; padding-right: 10px; min-width: 0; flex-shrink: 0; min-height: min-content; }
         .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
         .item-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; }
         .linear-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 150px; }
@@ -157,7 +191,8 @@
         .swipe-content { width: 100%; flex-shrink: 0; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; min-width: 0;}
         .swipe-actions { flex-shrink: 0; scroll-snap-align: end; display: flex; align-items: center; gap: 6px; padding-left: 15px; }
 
-        .input-section { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 10px 15px calc(10px + env(safe-area-inset-bottom)) 15px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.1s; }
+        /* Hardware CSS Inset Fallback */
+        .input-section { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 10px 15px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.1s; }
         .input-section > * { pointer-events: auto; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
         .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; gap: 4px; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; flex-grow: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); min-width: 0; position: relative; }
@@ -176,7 +211,6 @@
         
         select { background: transparent; color: var(--text-muted); border: none; font-weight: 800; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; font-size: 16px !important; }
         
-        /* v7.8 Autocomplete Dropdown */
         #hashtagAutocomplete { position: absolute; bottom: 100%; left: 10px; width: calc(100% - 20px); background: var(--nav-bg); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 8px; max-height: 140px; overflow-y: auto; display: none; flex-direction: column; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.1); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
         .autocomplete-item { padding: 12px 16px; color: var(--text-main); font-weight: 600; font-size: 0.95rem; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 16px !important; }
         .autocomplete-item:last-child { border-bottom: none; }
@@ -211,7 +245,7 @@
         .expanded > .flow-header .chevron { transform: rotate(180deg); }
         .chevron { transition: 0.3s; color: var(--text-muted); }
 
-        .archive-item { background: var(--input-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px 20px; margin-bottom: 15px; transition: 0.2s; }
+        .archive-item { background: var(--input-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px 20px; margin-bottom: 15px; transition: 0.2s; flex-shrink: 0; min-height: min-content; transform: translateZ(0); backface-visibility: hidden; }
         .archive-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .archive-details { display: none; padding-top: 15px; margin-top: 15px; border-top: 1px solid var(--border); }
         .archive-item.expanded .archive-details { display: block; }
@@ -255,39 +289,23 @@
 
 <div id="loading" aria-live="polite">SYNCING...</div>
 
-<div id="passcodeOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10001; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-    <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
-        <div style="margin-bottom: 15px; display:flex; justify-content:center;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        </div>
-        <h3 style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Enter House Passcode</h3>
-        <input type="password" id="passcodeInput" aria-label="Passcode" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.5rem; font-weight: bold; letter-spacing: 4px;" autocomplete="off" data-1p-ignore="true" data-lpignore="true">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000; width: 100%;" onclick="triggerHaptic(); submitPasscode()">Unlock</button>
-            <button id="bioBtn" class="btn-glowing" style="display:none; background: transparent; border-color: var(--accent); color: var(--accent); width: auto; padding: 0 15px;" onclick="triggerHaptic(); authenticateBiometric()" aria-label="Use FaceID/TouchID">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><circle cx="12" cy="12" r="3"></circle><path d="M12 19v-2"></path></svg>
-            </button>
-        </div>
-    </div>
-</div>
-
-<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+<div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:340px; text-align:center;">
         <h2 style="margin:0 0 25px 0; font-size: 1.4rem; font-weight:900; letter-spacing:-0.5px;">Select User</h2>
         <div id="userButtons" style="display: flex; flex-direction: column;"></div>
     </div>
 </div>
 
-<div id="manageUsersOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+<div id="manageUsersOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Manage Housemates</h2>
         <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <button class="btn-glowing" style="margin-bottom: 15px;" onclick="triggerHaptic(); addUser()">Add New Housemate</button>
+        <button id="addHousemateBtn" class="btn-glowing" style="margin-bottom: 15px;" onclick="triggerHaptic(); addUser()">Add New Housemate</button>
         <button class="btn-glowing" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeManageUsers()">Close</button>
     </div>
 </div>
 
-<div id="settingsOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+<div id="settingsOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
         
@@ -319,7 +337,6 @@
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             <button id="trashBtn" class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
             <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
-            <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); promptBiometricSetup();">Enable FaceID / TouchID</button>
             <div style="display:flex; gap:10px;">
                 <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
                 <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export CSV</button>
@@ -331,7 +348,7 @@
     </div>
 </div>
 
-<div id="trashOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+<div id="trashOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Recovery Vault</h2>
         <div id="trashExpiryText" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:15px;"></div>
@@ -356,7 +373,7 @@
 <div id="promptOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
         <h3 id="promptMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;"></h3>
-        <input type="text" id="promptInput" aria-label="Input field" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
+        <input type="text" id="promptInput" aria-label="Input field" class="chat-note wipe-trigger" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
         <div style="display:flex; gap:10px;">
             <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closePrompt()">Cancel</button>
             <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="triggerHaptic(); executePrompt()">OK</button>
@@ -380,12 +397,12 @@
         <div>
             <h2 id="menuUserName" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--accent); text-transform:uppercase; letter-spacing:1px;"></h2>
         </div>
-        <button class="action-icon" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()">
+        <button class="action-icon interactive-btn" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     </div>
     
-    <a href="#" class="menu-link" style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); background: var(--input-bg); margin-bottom: 15px;" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();">
+    <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); background: var(--input-bg); margin-bottom: 15px;" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();">
         <span>Toggle Theme</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     </a>
@@ -398,20 +415,20 @@
     
     <div style="flex-grow: 1;"></div>
     <a href="#" class="menu-link" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
-    <a href="#" class="menu-link" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
+    <a href="#" class="menu-link interactive-btn" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
 </nav>
 
 <main class="wrapper">
     <nav class="glass-nav" aria-label="Top Navigation">
         <div style="display:flex; align-items:center; gap:12px;">
-            <button class="action-icon" aria-label="Open Menu" onclick="triggerHaptic(); toggleMenu()">
+            <button class="action-icon interactive-btn" aria-label="Open Menu" onclick="triggerHaptic(); toggleMenu()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <button id="topUserName" aria-label="Toggle My View" class="name-pill main" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer; border: none;" onclick="triggerHaptic(); toggleMyView()" title="Toggle My View"></button>
+            <button id="topUserName" aria-label="Toggle My View" class="name-pill main interactive-btn" style="margin:0; padding: 4px 10px; font-size: 0.7rem; cursor:pointer; border: none;" onclick="triggerHaptic(); toggleMyView()" title="Toggle My View"></button>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <div style="position: relative;">
-                <button class="action-icon" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
+                <button class="action-icon interactive-btn" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
                     <svg id="syncIconElement" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                 </button>
                 <div id="offlineBadge" class="offline-badge" style="display: none;">0</div>
@@ -436,7 +453,7 @@
                 <span class="label">Per Head</span>
                 <span id="perPerson" class="val">0</span>
             </div>
-            <div class="stat-block" style="cursor:pointer;" onclick="triggerHaptic(); changeStartDate()">
+            <div class="stat-block interactive-btn" style="cursor:pointer;" onclick="triggerHaptic(); changeStartDate()">
                 <span class="label">Cycle Started</span>
                 <div style="display:flex; align-items:center; gap:6px;">
                     <span id="startDateDisplay" class="val">--/--</span>
@@ -447,29 +464,29 @@
         <div id="hashtagContainer" class="swipe-track" style="margin-top: 15px; gap: 8px; position: relative; z-index: 1;"></div>
         <div id="monthlyTrendText" style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 15px; font-weight: 600;"></div>
         <div style="margin-top: 15px;">
-            <button class="btn-glowing" onclick="triggerHaptic(); endMonth()">END MONTH/START NEW</button>
+            <button class="btn-glowing interactive-btn" onclick="triggerHaptic(); endMonth()">END MONTH/START NEW</button>
         </div>
     </header>
 
     <section class="content-section" id="settlementsWrapper">
-        <div class="flow-header" onclick="toggleSection(this)">
+        <div class="flow-header interactive-btn" onclick="toggleSection(this)">
             <h3 class="flow-title" style="cursor:pointer;" onmousedown="startPress(event)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchstart="startPress(event)" ontouchend="cancelPress()" ontouchcancel="cancelPress()">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
             <div style="display:flex; align-items:center; gap:15px;">
-                <button class="btn-pill primary" style="margin:0; padding:4px 10px;" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
+                <button class="btn-pill primary interactive-btn" style="margin:0; padding:4px 10px;" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
                 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
         </div>
         <div class="collapsible-content">
             
             <div style="margin-bottom: 15px;">
-                <button class="badge" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
+                <button class="badge interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Active Housemates
                 </button>
                 <div id="cycleSplitCheckboxes" style="display: none; flex-wrap: wrap; gap: 10px;"></div>
             </div>
 
             <div id="settleList"></div>
-            <div id="unpaidDebtsNoticeWrapper" style="display:none; padding-top: 5px; margin-bottom: 10px;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
+            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none; padding-top: 5px; margin-bottom: 10px;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 14px; text-align: center; cursor: pointer;">
                     <span style="color:var(--danger); font-size:0.85rem; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Unpaid Past Debts <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span>
                 </div>
@@ -478,7 +495,7 @@
     </section>
 
     <section class="content-section expanded" id="currentExpensesWrapper">
-        <div class="flow-header" onclick="toggleSection(this)">
+        <div class="flow-header interactive-btn" onclick="toggleSection(this)">
             <h3 class="flow-title">Current Expenses</h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
@@ -488,7 +505,7 @@
     </section>
 
     <section class="content-section" id="unpaidArchivesSection" style="display:none; padding-top: 15px; border-top: 1px solid var(--border);">
-        <div class="flow-header" onclick="toggleSection(this)">
+        <div class="flow-header interactive-btn" onclick="toggleSection(this)">
             <h3 class="flow-title danger-text">Unpaid Past Debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
@@ -498,8 +515,8 @@
     </section>
 
     <section class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
-        <div class="flow-header" onclick="toggleSection(this)">
-            <h3 class="flow-title" onclick="triggerSecretBackup(event)">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
+        <div class="flow-header interactive-btn" onclick="toggleSection(this)">
+            <h3 class="flow-title">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
@@ -512,25 +529,24 @@
     <div id="hashtagAutocomplete"></div>
     <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <input type="text" id="groupNote" aria-label="General Note" class="chat-note" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
-        <button class="btn-glowing" style="padding: 10px; font-size: 0.85rem;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
+        <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
             Attach Photo(s)
         </button>
     </div>
     <div class="chat-row">
         <div class="chat-input-wrapper" id="chatWrapper">
-            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea" placeholder="Write Amount here" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
+            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Write Amount here" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
             <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
-            <button class="chat-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
+            <button class="chat-btn interactive-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
         </div>
-        <button id="mainAddBtn" aria-label="Submit Expense" class="chat-btn primary" onclick="triggerHaptic(); addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        <button id="mainAddBtn" aria-label="Submit Expense" class="chat-btn primary interactive-btn" onclick="triggerHaptic(); addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
     </div>
 </section>
-
 <script>
-    const APP_VERSION = "7.9.4";
+    const APP_VERSION = "7.9.40";
     const BIN_ID = '69e2bb7736566621a8c5920c';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
@@ -538,7 +554,7 @@
     const defaultUsers = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
     // GLOBAL STATE VARIABLES
-    let db = { startDate: "", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], userLinks: {}, trash: [], auditLog: [] };
+    let db = { startDate: "", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], trash: [], auditLog: [] };
     let currentUser = localStorage.getItem('house_user') || "";
     let activeHashtag = null;
     let prevTotalAmount = 0;
@@ -551,14 +567,12 @@
     let saveTimeout = null;
     let isArchiving = false;
     let isSettling = false;
-    let isUnlocked = false;
     let lastSubmitTime = 0;
     let editingId = null;
     let myViewActive = false;
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
     let swipeActionsEnabled = localStorage.getItem('house_swipe_actions') === 'true';
     let smartRoundingEnabled = localStorage.getItem('house_smart_rounding') === 'true';
-    let housePasscode = localStorage.getItem('house_passcode') || "";
     let trashExpiryDays = parseInt(localStorage.getItem('house_trash_expiry')) || 30;
     let toastTimeout;
     let confirmAction = null;
@@ -573,6 +587,27 @@
     let scale = 1;
     let startDist = 0;
 
+    // ==========================================================================
+    // v7.9.40 GOLD MASTER: HARDWARE EVENT DELEGATION & LOCKS
+    // ==========================================================================
+    let lastTouchTime = 0;
+    document.body.addEventListener('touchstart', (e) => {
+        lastTouchTime = Date.now();
+        // Ghost Keyboard Pre-Wipe Blur
+        if (e.target.classList.contains('wipe-trigger') && document.activeElement && document.activeElement.tagName === 'INPUT') {
+            document.activeElement.blur();
+        }
+    }, { passive: true, capture: true });
+
+    document.body.addEventListener('click', (e) => {
+        // Synthetic Ghost Click Annihilator (Older WebViews)
+        if (Date.now() - lastTouchTime < 400 && e.pointerType === "") {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+    }, { capture: true });
+
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
         else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
@@ -581,7 +616,7 @@
     });
 
     window.addEventListener('pageshow', (e) => {
-        if (e.persisted && !isSyncing && isUnlocked) {
+        if (e.persisted && !isSyncing) {
             loadLocalBackup();
             loadData(false);
         }
@@ -598,9 +633,7 @@
         isSyncing = false;
         isArchiving = false;
         isSettling = false;
-        if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE") {
-            document.getElementById('loading').style.display = 'none';
-        }
+        document.getElementById('loading').style.display = 'none';
         return true; 
     };
     
@@ -609,21 +642,23 @@
         isSubmitting = false;
         isProcessingQueue = false;
         isSyncing = false;
-        if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE") {
-            document.getElementById('loading').style.display = 'none';
-        }
+        document.getElementById('loading').style.display = 'none';
         if(document.getElementById('mainAddBtn')) {
             document.getElementById('mainAddBtn').disabled = false;
             document.getElementById('mainAddBtn').style.opacity = '1';
         }
     });
 
+    // v7.9.40: Safe HTML Escaping (XSS & Single-Quote DOM Rupture Fix)
     function escapeHTML(str) {
         if (!str || typeof str !== 'string') return str;
         let clean = str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '');
-        return clean.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[tag]));
+        return clean.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;"); 
     }
     
     function sanitizeName(str) {
@@ -642,16 +677,20 @@
         catch (e) { return defaultVal; }
     }
 
+    // v7.9.40: Database Hardware Write Protocol (UTF-16 & Quota Crash Failsafe)
     function safeSetStorage(key, val) {
         if (typeof val === 'string' && val.length > 4500000) { 
              showToast("Payload too massive for local vault. Aborting.", 4000);
              return false;
         }
         try {
+            // Hardware Write Test
+            localStorage.setItem('v7_write_test', '1');
+            localStorage.removeItem('v7_write_test');
             localStorage.setItem(key, val);
             return true;
         } catch (e) {
-            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.name === 'SecurityError') {
                 if (key === 'img_queue') {
                     let q = safeJSONParse(localStorage.getItem('img_queue'), []);
                     if(q.length > 0) { q.shift(); safeSetStorage('img_queue', JSON.stringify(q)); }
@@ -661,9 +700,10 @@
                         safeSetStorage(key, JSON.stringify(db));
                         showToast("Vault Full. Oldest archive pruned to save space.", 4000);
                     } else {
-                        showToast("Vault Full. Cannot save.", 4000);
-                        if(isUnlocked) loadLocalBackup();
-                        render();
+                        console.error("v7.9.40: Quota limit hit. Using RAM fallback.");
+                        window.ephemeralStorage = window.ephemeralStorage || {};
+                        window.ephemeralStorage[key] = val;
+                        showToast("Memory Limit Reached. Running in Volatile Mode.", 4000);
                     }
                 } else {
                      showToast("Storage Limit Reached. Clear Vault.", 4000);
@@ -684,7 +724,6 @@
     }
 
     window.addEventListener('storage', (e) => {
-        if (!isUnlocked) return;
         if (e.key === 'house_db_backup' && e.newValue) {
             loadLocalBackup();
             showToast("SYNCED FROM ANOTHER TAB", 2000);
@@ -695,8 +734,11 @@
         if (window.navigator && window.navigator.vibrate) navigator.vibrate(40);
     }
     
+    // v7.9.40: rAF Debounce Matrix for Animations
     function animateValue(obj, start, end, duration, prefix) {
         let startTimestamp = null;
+        let animationFrameId = null;
+        
         const step = (timestamp) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
@@ -704,12 +746,13 @@
             const current = start + (end - start) * ease;
             obj.innerText = prefix + current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             if (progress < 1) {
-                window.requestAnimationFrame(step);
+                animationFrameId = window.requestAnimationFrame(step);
             } else {
                 obj.innerText = prefix + end.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
         };
-        window.requestAnimationFrame(step);
+        if(animationFrameId) cancelAnimationFrame(animationFrameId);
+        animationFrameId = window.requestAnimationFrame(step);
     }
 
     async function checkForUpdates() {
@@ -770,89 +813,6 @@
     function executePrompt() {
         if (promptAction) promptAction(document.getElementById('promptInput').value);
         closePrompt();
-    }
-
-    async function promptBiometricSetup() {
-        if (window.PublicKeyCredential) {
-             customConfirm("Use FaceID / TouchID to unlock House Expenses seamlessly?", async () => {
-                 try {
-                     const publicKey = {
-                         challenge: new Uint8Array(32),
-                         rp: { name: "House Expenses" },
-                         user: { id: new Uint8Array(16), name: currentUser || "Flatmate", displayName: currentUser || "Flatmate" },
-                         pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-                         authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                         timeout: 60000
-                     };
-                     const cred = await navigator.credentials.create({ publicKey });
-                     localStorage.setItem('house_bio_cred', btoa(String.fromCharCode.apply(null, new Uint8Array(cred.rawId))));
-                     showToast("Biometrics Enabled", 2000);
-                     document.getElementById('bioBtn').style.display = 'flex';
-                 } catch(e) {
-                     showToast("Biometrics setup skipped.", 3000);
-                 }
-             });
-        }
-    }
-
-    async function authenticateBiometric() {
-        if (isHardwareDebounceActive) return; 
-        isHardwareDebounceActive = true;
-        
-        let bioCred = localStorage.getItem('house_bio_cred');
-        if (!bioCred || !window.PublicKeyCredential) {
-            isHardwareDebounceActive = false;
-            return;
-        }
-        try {
-            const rawIdStr = atob(bioCred);
-            const rawId = new Uint8Array(rawIdStr.length);
-            for(let i=0; i<rawIdStr.length; i++) rawId[i] = rawIdStr.charCodeAt(i);
-            await navigator.credentials.get({
-                publicKey: { challenge: new Uint8Array(32), allowCredentials: [{ type: "public-key", id: rawId }], userVerification: "required" }
-            });
-            
-            housePasscode = localStorage.getItem('house_passcode') || "";
-            document.getElementById('passcodeOverlay').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            
-            loadData(true).then(() => {
-                if (!isUnlocked) document.getElementById('passcodeOverlay').style.display = 'flex';
-                isHardwareDebounceActive = false;
-            });
-        } catch(e) {
-            isHardwareDebounceActive = false;
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('passcodeOverlay').style.display = 'flex';
-            document.getElementById('passcodeInput').focus();
-            if (e.name === 'NotAllowedError') {
-                showToast("Biometric cancelled. Enter PIN.", 3000);
-            } else {
-                showToast("Biometric timeout. Enter PIN.", 3000);
-            }
-        }
-    }
-
-    function submitPasscode() {
-        const inputEl = document.getElementById('passcodeInput');
-        const val = inputEl.value.trim();
-        if (!val) return;
-        
-        if (val.length > 100) {
-            showToast("Invalid Input.", 3000);
-            inputEl.value = "";
-            return;
-        }
-        
-        housePasscode = val;
-        document.getElementById('passcodeOverlay').style.display = 'none';
-        document.getElementById('loading').style.display = 'block';
-        
-        loadData(true).then(() => {
-            if (!isUnlocked) {
-                document.getElementById('passcodeOverlay').style.display = 'flex';
-            }
-        });
     }
 
     function openSettings() {
@@ -1000,6 +960,7 @@
         document.getElementById('trashOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
+    
     function closeTrash() { 
         const el = document.getElementById('trashOverlay');
         el.style.pointerEvents = 'none';
@@ -1019,6 +980,7 @@
             openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000);
         }
     }
+    
     function permDeleteTrash(i) {
         if(db.trash && db.trash[i]) {
             customConfirm("Permanently delete this expense?", () => {
@@ -1070,7 +1032,7 @@
                 rates.EUR = data.rates.EUR || rates.EUR;
                 rates.AED = data.rates.AED || rates.AED;
                 safeSetStorage('currency_rates_cache', JSON.stringify(rates));
-                if(isUnlocked) render(); 
+                render(); 
             }
         } catch(e) {}
     }
@@ -1083,6 +1045,7 @@
         }
     });
 
+    // v7.9.40: Centralized Delta-Time Toast Matrix
     function showToast(msg, duration = 0) {
         if(document.activeElement && document.activeElement.tagName === 'TEXTAREA') document.activeElement.blur(); 
         const loader = document.getElementById('loading');
@@ -1098,43 +1061,26 @@
     function setNeedsSync(val) { needsSync = val; safeSetStorage('house_needs_sync', val); }
     
     function saveLocalBackup() { 
-        if (housePasscode && isUnlocked) {
-            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(db), housePasscode).toString();
-            safeSetStorage('house_db_backup', encrypted);
-        }
+        safeSetStorage('house_db_backup', JSON.stringify(db));
     }
     
     function loadLocalBackup() {
-        const backup = localStorage.getItem('house_db_backup');
+        const backup = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup');
         if (backup) { 
             try { 
-                if (backup.startsWith('U2Fsd')) {
-                    if (!housePasscode) throw new Error("No passcode provided");
-                    const bytes = CryptoJS.AES.decrypt(backup, housePasscode);
-                    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
-                    if (!decryptedString || !decryptedString.includes("expenses")) throw new Error("Decryption failed or invalid JSON"); 
-                    db = JSON.parse(decryptedString);
-                    isUnlocked = true;
-                } else {
-                    db = JSON.parse(backup); 
-                    isUnlocked = true;
-                }
-                
+                db = typeof backup === 'string' ? JSON.parse(backup) : backup;
+                if (db.encrypted) throw new Error("Encrypted backup format found.");
                 initializeDB(); renderUsers(); 
-                
-                if (isUnlocked) {
-                    if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
-                    else {
-                        document.getElementById('loginOverlay').style.display = 'none';
-                        render();
-                    }
+                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
+                else {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('topUserName').innerText = escapeHTML(currentUser); 
+                    const menuUser = document.getElementById('menuUserName');
+                    if(menuUser) menuUser.innerText = escapeHTML(currentUser);
+                    render();
                 }
             } catch (err) {
-                showToast("INCORRECT PASSCODE", 3000);
-                isUnlocked = false;
-                housePasscode = localStorage.getItem('house_passcode') || ""; 
-                document.getElementById('passcodeOverlay').style.display = 'flex';
-                document.getElementById('passcodeInput').value = "";
+                initializeDB();
             }
         }
     }
@@ -1257,17 +1203,23 @@
         
         const list = document.getElementById('manageUserList');
         list.innerHTML = db.users.map(u => {
-            let isVacation = false; 
             return `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-pill ${db.userLinks && db.userLinks[u] ? 'success' : ''}" onclick="triggerHaptic(); editUserLink('${escapeHTML(u)}')">Link</button>
                     <button class="btn-pill" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button>
                     <button class="btn-pill danger" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button>
                 </div>
             </div>`;
         }).join('');
+        
+        const addBtn = document.getElementById('addHousemateBtn');
+        if (currentUser === "Shahzeb") {
+            addBtn.style.display = 'flex';
+        } else {
+            addBtn.style.display = 'none';
+        }
+        
         document.getElementById('manageUsersOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -1281,6 +1233,10 @@
     }
 
     function addUser() {
+        if (currentUser !== 'Shahzeb') {
+            showToast("Only Shahzeb can add housemates.", 3000);
+            return;
+        }
         customPrompt("Enter new housemate's name:", "", (val) => {
             const n = sanitizeName(val); if (!n) return;
             const nLower = n.toLowerCase();
@@ -1300,11 +1256,6 @@
             
             db.users[db.users.indexOf(oldName)] = n;
             if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
-            
-            if (db.userLinks && db.userLinks[oldName] !== undefined) {
-                db.userLinks[n] = db.userLinks[oldName];
-                delete db.userLinks[oldName];
-            }
             
             db.expenses.forEach(ex => {
                 if (ex.name === oldName) ex.name = n;
@@ -1361,19 +1312,6 @@
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
     }
-    
-    function editUserLink(name) {
-        let currentLink = (db.userLinks && db.userLinks[name]) ? db.userLinks[name] : "";
-        customPrompt(`Paste payment link (monzo.me/name) OR Bank Details (Sort/Acc) for ${name}:`, currentLink, (val) => {
-            if (val === null) return;
-            if (!db.userLinks) db.userLinks = {};
-            db.userLinks[name] = val.trim();
-            showToast("Details Saved", 2000);
-            openManageUsers(); 
-            render();
-            executeActionWithSave();
-        });
-    }
 
     function deleteUser(name) {
         if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
@@ -1422,8 +1360,6 @@
             if (idx > -1) db.users.splice(idx, 1);
             const aIdx = db.activeUsers.indexOf(name);
             if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
-            
-            if (db.userLinks) delete db.userLinks[name];
             
             logAudit("Removed User", name);
 
@@ -1486,11 +1422,6 @@
             document.execCommand('copy'); 
             document.body.removeChild(el);
         } catch (e) { showToast("Copy manually.", 3000); }
-    }
-    
-    function copyBankDetails(text) {
-        copyToClipboard(text); 
-        showToast("Bank Details Copied!", 2000);
     }
 
     function sendNudge(name, amount, sym) {
@@ -1712,7 +1643,6 @@
         db.activeUsers = db.activeUsers.filter(u => db.users.includes(u));
         if (db.activeUsers.length === 0) db.activeUsers = [...db.users];
         
-        if (!db.userLinks || typeof db.userLinks !== 'object') db.userLinks = {};
         if (!db.trash || !Array.isArray(db.trash)) db.trash = [];
         if (!db.auditLog || !Array.isArray(db.auditLog)) db.auditLog = [];
     }
@@ -1739,6 +1669,38 @@
         return true;
     }
 
+    // v7.9.40: Secure Fetch Wrapper
+    async function secureFetch(url, options = {}, timeoutMs = 8000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeoutMs);
+        
+        const cacheBuster = `?t=${Date.now()}&v=7.9.40`;
+        const finalUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}${cacheBuster}`;
+
+        try {
+            const response = await fetch(finalUrl, {
+                ...options,
+                signal: controller.signal,
+                cache: 'no-store',
+                headers: {
+                    ...options.headers,
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            clearTimeout(id);
+            
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("text/html") !== -1 && !url.includes('api.imgbb')) {
+                throw new Error("CAPTIVE_PORTAL_DETECTED");
+            }
+            return response;
+        } catch (error) {
+            clearTimeout(id);
+            throw error;
+        }
+    }
+
     async function loadData(force = false) {
         if (isSyncing) return;
         if (!force && Date.now() - lastSyncTime < 2500) return;
@@ -1754,68 +1716,31 @@
             return; 
         }
         
-        if (isUnlocked && (!db.expenses || db.expenses.length === 0)) renderSkeletons();
+        if (!db.expenses || db.expenses.length === 0) renderSkeletons();
         
         const syncIcon = document.getElementById('syncIconElement');
         if(syncIcon) syncIcon.classList.add('spin');
         
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
-                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }, 
-                cache: 'no-store',
-                signal: controller.signal
+            const res = await secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
+                headers: { 'X-Master-Key': MASTER_KEY, 'X-Bin-Meta': 'false' }
             });
-            
-            clearTimeout(timeoutId);
             
             if (res.status === 429) throw new Error("429");
             if (!res.ok) throw new Error("HTTP_API_ERROR");
             
             const data = await res.json();
             
-            if (data && data.encrypted && data.payload) {
-                if (!housePasscode) {
-                    document.getElementById('passcodeOverlay').style.display = 'flex';
-                    if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE") {
-                        document.getElementById('loading').style.display = 'none';
-                    }
-                    if(syncIcon) syncIcon.classList.remove('spin');
-                    isSyncing = false;
-                    return;
-                }
-
-                try {
-                    const bytes = CryptoJS.AES.decrypt(data.payload, housePasscode);
-                    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
-                    if (!decryptedString || !decryptedString.includes("expenses")) throw new Error("Decryption failed or invalid JSON"); 
-                    
-                    db = JSON.parse(decryptedString);
-                    isUnlocked = true;
-                    
-                    bytes.words = [];
-                    
-                    if (housePasscode !== localStorage.getItem('house_passcode')) {
-                        safeSetStorage('house_passcode', housePasscode);
-                        setTimeout(() => promptBiometricSetup(), 1000);
-                    }
-                } catch (err) {
-                    showToast("INCORRECT PASSCODE", 3000);
-                    isUnlocked = false;
-                    housePasscode = localStorage.getItem('house_passcode') || "";
-                    document.getElementById('passcodeOverlay').style.display = 'flex';
-                    document.getElementById('passcodeInput').value = "";
-                    if(syncIcon) syncIcon.classList.remove('spin');
-                    isSyncing = false;
-                    return; 
+            if (data && data.record) {
+                if (data.record.encrypted) {
+                    showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000);
+                    initializeDB();
+                } else {
+                    db = data.record;
                 }
             } else {
                 showToast("INITIALIZING NEW VAULT...", 3000);
                 initializeDB();
-                isUnlocked = true;
-                safeSetStorage('house_passcode', housePasscode);
                 saveData(); 
             }
             
@@ -1829,12 +1754,14 @@
             }
             
             renderUsers(); saveLocalBackup(); 
-            if (isUnlocked) {
-                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
-                else {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    render();
-                }
+            
+            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex';
+            else {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('topUserName').innerText = escapeHTML(currentUser); 
+                const menuUser = document.getElementById('menuUserName');
+                if(menuUser) menuUser.innerText = escapeHTML(currentUser);
+                render();
             }
             
             offlineActionsCount = 0;
@@ -1843,7 +1770,7 @@
             processUploadQueue();
         } catch (e) {
             if (e.message === "429") {
-                setTimeout(() => { if(isUnlocked) loadData(true); }, 1500);
+                setTimeout(() => { loadData(true); }, 1500);
             } else if (e.message === "HTTP_API_ERROR") {
                 showToast("CLOUD SERVER OFFLINE", 3000);
                 loadLocalBackup();
@@ -1853,7 +1780,7 @@
             }
         } finally {
             if(syncIcon) syncIcon.classList.remove('spin');
-            if (document.getElementById('loading').innerHTML !== "INCORRECT PASSCODE" && document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") {
+            if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") {
                 document.getElementById('loading').style.display = 'none'; 
             }
             isSyncing = false;
@@ -1861,7 +1788,6 @@
     }
     
     function executeActionWithSave() {
-        if (!isUnlocked) return;
         if (!checkPayloadSize()) return; 
         
         offlineActionsCount++;
@@ -1870,12 +1796,6 @@
     }
 
     async function saveData(retryCount = 0) {
-        if (!isUnlocked) return;
-        if (!housePasscode) {
-            document.getElementById('passcodeOverlay').style.display = 'flex';
-            return;
-        }
-
         saveLocalBackup(); 
         
         const isReallyOnline = await checkTrueNetwork();
@@ -1899,28 +1819,13 @@
         if(syncIcon) syncIcon.classList.add('spin');
         
         document.body.style.overscrollBehavior = 'none';
-        
-        try {
-            const metaRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?meta=true`, { headers: { 'X-Master-Key': MASTER_KEY } });
-            if (metaRes.ok) {
-                const metaData = await metaRes.json();
-                const cloudTimestamp = metaData.record ? metaData.record.lastModified : null; 
-            }
-        } catch(e) {}
 
-        const encryptedPayload = CryptoJS.AES.encrypt(JSON.stringify(db), housePasscode).toString();
-        const secureData = { encrypted: true, payload: encryptedPayload };
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() },
-            body: JSON.stringify(secureData),
-            signal: controller.signal
+        secureFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Idempotency-Key': Date.now().toString() },
+            body: JSON.stringify(db)
         })
         .then(res => { 
-            clearTimeout(timeoutId);
             if (res.status === 429) throw new Error("429"); 
             if (!res.ok) throw new Error("HTTP_API_ERROR"); 
             setNeedsSync(false); 
@@ -1928,7 +1833,6 @@
             updateOfflineBadge();
         })
         .catch((e) => { 
-            clearTimeout(timeoutId);
             if (e.message === "429" && retryCount < 2) {
                 setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1));
             } else {
@@ -2026,16 +1930,15 @@
     }
 
     function generateActionPills(ex) {
-        let html = `<button class="btn-pill" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
+        let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
         if (ex.name === currentUser) {
-            html += `<button class="btn-pill" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">Edit</button>
-                     <button class="btn-pill danger" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`;
+            html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">Edit</button>
+                     <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`;
         }
         return html;
     }
 
     function render() {
-        if (!isUnlocked) return;
         const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
         
@@ -2045,7 +1948,7 @@
         chkContainer.innerHTML = db.users.map(u => {
             const isChecked = db.activeUsers.includes(u);
             const opac = isChecked ? '1' : '0.4';
-            return `<label class="split-label" style="opacity: ${opac};"><input type="checkbox" style="display:none;" onchange="toggleActiveUser('${escapeHTML(u)}')"> <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span></label>`;
+            return `<label class="split-label interactive-btn" style="opacity: ${opac};"><input type="checkbox" style="display:none;" onchange="toggleActiveUser('${escapeHTML(u)}')"> <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span></label>`;
         }).join('');
 
         let allValid = db.expenses || [];
@@ -2068,7 +1971,7 @@
         if(hashtags.size > 0) {
             hashtags.forEach(tag => {
                 let isActive = activeHashtag === tag;
-                tagHtml += `<button class="name-pill ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag('${escapeHTML(tag)}')">${escapeHTML(tag)}</button>`;
+                tagHtml += `<button class="name-pill interactive-btn ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag('${escapeHTML(tag)}')">${escapeHTML(tag)}</button>`;
             });
         }
         document.getElementById('hashtagContainer').innerHTML = tagHtml;
@@ -2148,11 +2051,11 @@
                 let pillsHtml = generateActionPills(ex);
                 
                 let receiptSafeStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
-                let receiptHtml = ex.receipt ? `<button class="btn-pill success" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
+                let receiptHtml = ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
 
                 if (swipeActionsEnabled) {
                     listHtml += `
-                    <div class="linear-row" style="padding:0;">
+                    <div class="linear-row timeline-item" style="padding:0;">
                         <div class="swipe-track">
                             <div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;">
                                 <div style="display:flex; flex-direction:column; justify-content:center;">
@@ -2171,7 +2074,7 @@
                     </div>`;
                 } else {
                     listHtml += `
-                    <div class="linear-row">
+                    <div class="linear-row timeline-item">
                         <div class="item-main">
                             <span class="name-pill main" style="margin-bottom: 6px;">${escapeHTML(ex.name)}</span>
                             ${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}
@@ -2239,31 +2142,16 @@
                 hasVisibleTxs = true;
                 const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
                 
-                sHtmlTemp += `<div class="flow-row" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">`;
+                sHtmlTemp += `<div class="flow-row timeline-item" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.4 : 1}; border-bottom: none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.05rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">`;
                 
                 if (can) {
                     if (!isS) {
-                        sHtmlTemp += `<button class="btn-pill" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button>
-                                      <button class="btn-pill" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
+                        sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button>
+                                      <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
                     }
-                    sHtmlTemp += `<button class="btn-pill ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
+                    sHtmlTemp += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
                 } else {
-                    let payLinkHtml = "";
-                    if (!isS && t.from === currentUser && db.userLinks && db.userLinks[t.to]) {
-                        let link = db.userLinks[t.to].trim();
-                        let amtLocalStr = (tr * rate).toFixed(2);
-                        if (link.toLowerCase().includes('paypal.me') || link.toLowerCase().includes('monzo.me') || link.toLowerCase().includes('revolut.me')) {
-                            let baseUrl = link;
-                            if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
-                            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-                            baseUrl = `${baseUrl}/${amtLocalStr}`;
-                            payLinkHtml = `<a class="btn-pill primary" style="text-decoration:none;" href="${escapeHTML(baseUrl)}" target="_blank" rel="noopener noreferrer">Pay</a>`;
-                        } else {
-                            let copyStr = `NAME: ${t.to} | DETAILS: ${link} | AMOUNT: ${sym}${amtLocalStr}`;
-                            payLinkHtml = `<button class="btn-pill primary" aria-label="Copy Bank Details" onclick="triggerHaptic(); copyBankDetails('${escapeHTML(copyStr)}')">Copy Bank</button>`;
-                        }
-                    }
-                    sHtmlTemp += `${payLinkHtml}<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
+                    sHtmlTemp += `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`;
                 }
                 
                 sHtmlTemp += `</div></div></div>`;
@@ -2372,7 +2260,7 @@
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
                         cycleUnpaidHtml += `
-                        <div class="flow-row" style="padding: 12px 0; border:none;">
+                        <div class="flow-row timeline-item" style="padding: 12px 0; border:none;">
                             <div>
                                 <div style="font-size:0.9rem; color:var(--text-main);">
                                     <b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b>
@@ -2385,9 +2273,9 @@
                             <div>
                                 <div class="action-group">
                                 ${canMarkGlobal ? `
-                                        <button class="btn-pill" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button>
-                                        <button class="btn-pill" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
-                                        <button class="btn-pill primary" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
+                                        <button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button>
+                                        <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button>
+                                        <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>
                                 ` : `<span class="name-pill">Pending</span>`}
                                 </div>
                             </div>
@@ -2397,7 +2285,7 @@
 
                 if (cycleHasUnpaid && cycleUnpaidHtml !== "") {
                     globalUnpaidHtml += `
-                    <div class="archive-item" style="margin-bottom: 8px;">
+                    <div class="archive-item timeline-item" style="margin-bottom: 8px;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${displayStart} &rarr; ${displayEnd}</div>
                         ${cycleUnpaidHtml}
                     </div>`;
@@ -2418,7 +2306,7 @@
                             const canMark = currentUser === cred;
 
                             archiveSettleHtml += `
-                            <div class="flow-row" style="padding: 12px 0; border:none;">
+                            <div class="flow-row timeline-item" style="padding: 12px 0; border:none;">
                                 <div>
                                     <div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div>
                                     <div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
@@ -2427,27 +2315,10 @@
                                 <div>
                                     <div class="action-group">
                                     ${canMark ? `
-                                            <button class="btn-pill" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button>
-                                            <button class="btn-pill" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
-                                            <button class="btn-pill primary" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
-                                    ` : (() => {
-                                        let payLinkHtml = "";
-                                        if (t.from === currentUser && db.userLinks && db.userLinks[t.to]) {
-                                            let link = db.userLinks[t.to].trim();
-                                            let amtLocalStr = remainingLocal.toFixed(2);
-                                            if (link.toLowerCase().includes('paypal.me') || link.toLowerCase().includes('monzo.me') || link.toLowerCase().includes('revolut.me')) {
-                                                let baseUrl = link;
-                                                if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
-                                                if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-                                                baseUrl = `${baseUrl}/${amtLocalStr}`;
-                                                payLinkHtml = `<a class="btn-pill primary" style="text-decoration:none;" href="${escapeHTML(baseUrl)}" target="_blank" rel="noopener noreferrer">Pay</a>`;
-                                            } else {
-                                                let copyStr = `NAME: ${t.to} | DETAILS: ${link} | AMOUNT: ${sym}${amtLocalStr}`;
-                                                payLinkHtml = `<button class="btn-pill primary" aria-label="Copy Bank Details" onclick="triggerHaptic(); copyBankDetails('${escapeHTML(copyStr)}')">Copy Bank</button>`;
-                                            }
-                                        }
-                                        return `${payLinkHtml}<span class="name-pill">Pending</span>`;
-                                    })()}
+                                            <button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button>
+                                            <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button>
+                                            <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>
+                                    ` : `<span class="name-pill">Pending</span>`}
                                     </div>
                                 </div>
                             </div>`;
@@ -2458,7 +2329,7 @@
                 const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== "");
                 let adminActionHtml = "";
                 if (!isFullySettled) {
-                    adminActionHtml = `<button class="btn-pill danger" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`;
+                    adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`;
                 } else {
                     adminActionHtml = `<span class="name-pill success" style="margin-right:8px;">Settled</span>`;
                 }
@@ -2476,7 +2347,7 @@
                     let displayDesc = formatDescDisplay(d.desc, exSym);
                     let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
                     return `
-                    <div class="flow-row" style="padding:10px 0; border:none;">
+                    <div class="flow-row timeline-item" style="padding:10px 0; border:none;">
                         <div style="flex-grow:1; padding-right:15px;">
                             <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
                                 <span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span>
@@ -2484,7 +2355,7 @@
                             </div>
                             <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div>
                         </div>
-                        ${d.receipt ? `<button class="btn-pill success" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}
+                        ${d.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}
                     </div>`
                 }).join('');
 
@@ -2492,13 +2363,13 @@
 
                 return `
                 <div class="archive-item" id="archive-card-${idx}">
-                    <div class="archive-header" onclick="toggleSection(this)">
+                    <div class="archive-header interactive-btn" onclick="toggleSection(this)">
                         <div>
                             <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div>
                             <div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                         <div style="display:flex; gap:8px; align-items:center;">
-                            <button class="btn-pill" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>
+                            <button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>
                             ${adminActionHtml}
                             <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
@@ -2653,6 +2524,14 @@
         }
     }
 
+    // v7.9.40: Math Sanitization & Regex Layer
+    function sanitizeAmount(inputString) {
+        if (!inputString) return 0.00;
+        let cleanStr = inputString.toString().replace(/[^\d.,+]/g, '');
+        cleanStr = cleanStr.replace(/,/g, '.');
+        return cleanStr;
+    }
+
     function extractAmount(text) {
         if (!text) return 0;
         let safeText = text.substring(0, 500);
@@ -2664,15 +2543,20 @@
         });
         
         let noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?\b/g, '');
+        let cleanForMath = sanitizeAmount(noDates);
         
-        const mathMatch = noDates.match(/(?:\d+(?:\.\d+)?\s*\+\s*)+\d+(?:\.\d+)?/);
+        const mathMatch = cleanForMath.match(/(?:\d+(?:\.\d+)?\s*\+\s*)+\d+(?:\.\d+)?/);
         if (mathMatch) {
-            return mathMatch[0].split('+').reduce((acc, val) => acc + parseFloat(val.trim()), 0);
+            let total = mathMatch[0].split('+').reduce((acc, val) => acc + parseFloat(val.trim()), 0);
+            if(isNaN(total) || !isFinite(total)) return 0;
+            return total;
         }
         
-        let nums = noDates.match(/(?:\d*\.\d+)|\d+/g);
+        let nums = cleanForMath.match(/(?:\d*\.\d+)|\d+/g);
         if (nums && nums.length > 0) {
-            return nums.reduce((sum, val) => sum + parseFloat(val), 0);
+            let total = nums.reduce((sum, val) => sum + parseFloat(val), 0);
+            if(isNaN(total) || !isFinite(total)) return 0;
+            return total;
         }
         
         return 0;
@@ -3175,7 +3059,6 @@
 
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            if (!isUnlocked) return;
             if (navigator.onLine) {
                 if (needsSync) {
                     saveData();
@@ -3189,7 +3072,6 @@
     });
 
     window.addEventListener('online', () => { 
-        if (!isUnlocked) return;
         const jitterMs = Math.floor(Math.random() * 1400) + 100;
         setTimeout(() => {
             if (needsSync) { saveData(); } 
@@ -3207,25 +3089,8 @@
         
         document.getElementById('loading').style.display = 'block';
         document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('passcodeOverlay').style.display = 'none';
         
-        let savedPin = localStorage.getItem('house_passcode');
-        
-        if (savedPin) {
-            housePasscode = savedPin;
-            let bioCred = localStorage.getItem('house_bio_cred');
-            
-            if (bioCred && window.PublicKeyCredential) {
-                document.getElementById('passcodeOverlay').style.display = 'flex';
-                document.getElementById('bioBtn').style.display = 'flex';
-                document.getElementById('loading').style.display = 'none';
-            } else {
-                await loadData(true);
-            }
-        } else {
-            document.getElementById('passcodeOverlay').style.display = 'flex';
-            document.getElementById('loading').style.display = 'none';
-        }
+        await loadData(true);
         
         fetchLiveRates();
         checkForUpdates();
