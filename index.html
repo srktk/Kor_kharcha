@@ -309,21 +309,22 @@
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
         
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
             <span style="font-weight:700; font-size: 0.95rem;">Swipe to Reveal Actions</span>
-            <label class="toggle-switch">
-                <input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" onchange="triggerHaptic(); toggleSwipeSetting()">
-                <span class="toggle-slider"></span>
-            </label>
+            <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSwipeSetting()">
+                <input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" style="pointer-events:none;">
+                <span class="toggle-slider" style="pointer-events:none;"></span>
+            </div>
         </div>
 
         <div id="smartRoundingContainer" style="display:none; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
             <span style="font-weight:700; font-size: 0.95rem;">Smart Rounding (10p)</span>
-            <label class="toggle-switch">
-                <input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" onchange="triggerHaptic(); toggleSmartRounding()">
-                <span class="toggle-slider"></span>
-            </label>
+            <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSmartRounding()">
+                <input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" style="pointer-events:none;">
+                <span class="toggle-slider" style="pointer-events:none;"></span>
+            </div>
         </div>
+
         
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
             <span style="font-weight:700; font-size: 0.95rem;">Trash Expiry</span>
@@ -599,14 +600,18 @@
         }
     }, { passive: true, capture: true });
 
-    document.body.addEventListener('click', (e) => {
+        document.body.addEventListener('click', (e) => {
         // Synthetic Ghost Click Annihilator (Older WebViews)
         if (Date.now() - lastTouchTime < 400 && e.pointerType === "") {
+            // v7.9.41: Whitelist native inputs to prevent UI freezing
+            if (e.target.closest('label') || e.target.tagName === 'INPUT' || e.target.closest('.toggle-switch')) return;
+            
             e.preventDefault();
             e.stopPropagation();
             return;
         }
     }, { capture: true });
+
 
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
@@ -852,16 +857,21 @@
         el.style.pointerEvents = 'auto';
         document.body.style.overflow = '';
     }
+        // v7.9.41: Explicit JS State Toggling (Bypasses Ghost Click Armor)
     function toggleSwipeSetting() {
-        swipeActionsEnabled = document.getElementById('swipeToggleInput').checked;
+        swipeActionsEnabled = !swipeActionsEnabled;
+        document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
         safeSetStorage('house_swipe_actions', swipeActionsEnabled);
         render();
     }
+    
     function toggleSmartRounding() {
-        smartRoundingEnabled = document.getElementById('smartRoundingInput').checked;
+        smartRoundingEnabled = !smartRoundingEnabled;
+        document.getElementById('smartRoundingInput').checked = smartRoundingEnabled;
         safeSetStorage('house_smart_rounding', smartRoundingEnabled);
         render();
     }
+
     function updateTrashExpiry() {
         trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value);
         localStorage.setItem('house_trash_expiry', trashExpiryDays);
@@ -1946,12 +1956,16 @@
         
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
         
-        const chkContainer = document.getElementById('cycleSplitCheckboxes');
+                const chkContainer = document.getElementById('cycleSplitCheckboxes');
         chkContainer.innerHTML = db.users.map(u => {
             const isChecked = db.activeUsers.includes(u);
             const opac = isChecked ? '1' : '0.4';
-            return `<label class="split-label interactive-btn" style="opacity: ${opac};"><input type="checkbox" style="display:none;" onchange="toggleActiveUser('${escapeHTML(u)}')"> <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span></label>`;
+            // v7.9.41: Converted from <label> to <div> to bypass native checkbox freezes
+            return `<div class="interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="opacity: ${opac}; cursor: pointer; display: inline-flex; align-items: center;">
+                        <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span>
+                    </div>`;
         }).join('');
+
 
         let allValid = db.expenses || [];
         
