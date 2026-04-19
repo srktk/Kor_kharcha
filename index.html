@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.9.40">
+    <meta name="app-version" content="7.9.42">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses</title>
     
@@ -16,7 +16,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <script>
-        // v7.9.40: Synchronous Theme Execution
         const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
         let themeTimeout;
 
@@ -54,11 +53,10 @@
             if (!sessionStorage.getItem('house_theme')) applyTheme();
         });
 
-        // v7.9.40: Armored Service Worker (Network-First, Garbage Collection, Byte-Range Fix)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.9.40';
+                    const CACHE_NAME = 'house-expenses-v7.9.42';
                     self.addEventListener('install', e => self.skipWaiting());
                     self.addEventListener('activate', e => {
                         e.waitUntil(caches.keys().then(keys => Promise.all(
@@ -86,9 +84,6 @@
     </script>
     
     <style>
-        /* ==========================================================================
-           v7.9.40 GOLD MASTER CSS: HARDWARE LOCKS & QUARANTINED AESTHETICS
-           ========================================================================== */
         :root { 
             --bg: #f8fafc; --text-main: #0f172a; --text-muted: #475569; 
             --border: #cbd5e1; --accent: #0d9488; --accent-glow: rgba(13, 148, 136, 0.15);
@@ -105,7 +100,6 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Hardware Typography & Physics Locks */
         html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100dvh; transition: background-color 0.3s; overflow-x: clip; max-width: 100vw; touch-action: pan-x pan-y; overscroll-behavior-y: none; -webkit-user-select: none; user-select: none; }
         
@@ -116,7 +110,6 @@
 
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: 120px; }
         
-        /* Glassmorphic Hardware GPU Isolation */
         .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note {
             transform: translateZ(0); 
             backface-visibility: hidden; 
@@ -124,7 +117,6 @@
             -webkit-mask-image: -webkit-radial-gradient(white, black);
         }
         
-        /* Low-Power Mode GPU Fallback */
         @media (prefers-reduced-transparency: reduce) {
             .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, .chat-note, [style*="backdrop-filter"] {
                 backdrop-filter: none !important;
@@ -141,7 +133,6 @@
 
         .offline-badge { position: absolute; top: -2px; right: -2px; background: var(--danger); color: white; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        /* Modal Over-Scroll Lock */
         #sideMenu { position: fixed; top: 0; left: -300px; width: 280px; height: 100dvh; background: var(--bg); z-index: 1001; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; padding: 25px 20px calc(40px + env(safe-area-inset-bottom)) 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: 10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #sideMenu.open { left: 0; }
         #menuOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(4px); }
@@ -179,7 +170,6 @@
         .date-marker::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; z-index: 2; border: 2px solid var(--bg); }
         .date-marker span { font-size: 0.65rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); padding-right: 8px; }
         
-        /* Flex-Basis Calculation Drift Locks */
         .linear-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: none; flex-shrink: 0; min-height: min-content; transform: translateZ(0); backface-visibility: hidden; }
         .item-main { flex: 1; padding-right: 10px; min-width: 0; flex-shrink: 0; min-height: min-content; }
         .item-amt { font-size: 1.05rem; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
@@ -191,7 +181,6 @@
         .swipe-content { width: 100%; flex-shrink: 0; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; min-width: 0;}
         .swipe-actions { flex-shrink: 0; scroll-snap-align: end; display: flex; align-items: center; gap: 6px; padding-left: 15px; }
 
-        /* Hardware CSS Inset Fallback */
         .input-section { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 10px 15px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.1s; }
         .input-section > * { pointer-events: auto; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
@@ -286,7 +275,6 @@
     </style>
 </head>
 <body>
-
 <div id="loading" aria-live="polite">SYNCING...</div>
 
 <div id="loginOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
@@ -300,8 +288,8 @@
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Manage Housemates</h2>
         <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <button id="addHousemateBtn" class="btn-glowing" style="margin-bottom: 15px;" onclick="triggerHaptic(); addUser()">Add New Housemate</button>
-        <button class="btn-glowing" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeManageUsers()">Close</button>
+        <button id="addHousemateBtn" class="btn-glowing interactive-btn" style="margin-bottom: 15px;" onclick="triggerHaptic(); addUser()">Add New Housemate</button>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeManageUsers()">Close</button>
     </div>
 </div>
 
@@ -309,7 +297,7 @@
     <div class="login-card" style="width:90%; max-width:340px;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
         
-                <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
             <span style="font-weight:700; font-size: 0.95rem;">Swipe to Reveal Actions</span>
             <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSwipeSetting()">
                 <input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" style="pointer-events:none;">
@@ -324,11 +312,10 @@
                 <span class="toggle-slider" style="pointer-events:none;"></span>
             </div>
         </div>
-
         
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
             <span style="font-weight:700; font-size: 0.95rem;">Trash Expiry</span>
-            <select id="trashExpirySelect" onchange="triggerHaptic(); updateTrashExpiry()" style="padding:4px; border-radius:8px; border:1px solid var(--border); background:var(--input-bg);">
+            <select id="trashExpirySelect" class="interactive-btn" onchange="triggerHaptic(); updateTrashExpiry()" style="padding:4px; border-radius:8px; border:1px solid var(--border); background:var(--input-bg);">
                 <option value="7">7 Days</option>
                 <option value="14">14 Days</option>
                 <option value="30">30 Days</option>
@@ -336,16 +323,16 @@
         </div>
         
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
-            <button id="trashBtn" class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
-            <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
+            <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
+            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
             <div style="display:flex; gap:10px;">
-                <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
-                <button class="btn-glowing" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export CSV</button>
+                <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
+                <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export CSV</button>
             </div>
-            <button class="btn-glowing" style="background:transparent; color:var(--accent); border-color:var(--accent); font-size:0.8rem;" onclick="triggerHaptic(); closeSettings(); downloadZIP();">Download All Receipts (.ZIP)</button>
+            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--accent); border-color:var(--accent); font-size:0.8rem;" onclick="triggerHaptic(); closeSettings(); downloadZIP();">Download All Receipts (.ZIP)</button>
         </div>
         
-        <button class="btn-glowing" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); closeSettings()">Done</button>
+        <button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); closeSettings()">Done</button>
     </div>
 </div>
 
@@ -354,7 +341,7 @@
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Recovery Vault</h2>
         <div id="trashExpiryText" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:15px;"></div>
         <div id="trashList" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <button class="btn-glowing" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeTrash()">Close</button>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeTrash()">Close</button>
     </div>
 </div>
 
@@ -365,8 +352,8 @@
         </div>
         <h3 id="confirmMessage" style="margin: 0 0 20px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Are you sure?</h3>
         <div style="display:flex; gap:10px;">
-            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closeConfirm()">Cancel</button>
-            <button class="btn-glowing" style="background: var(--danger); border-color: var(--danger); color: #fff;" onclick="triggerHaptic(); executeConfirm()">Confirm</button>
+            <button class="btn-glowing interactive-btn" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closeConfirm()">Cancel</button>
+            <button class="btn-glowing interactive-btn" style="background: var(--danger); border-color: var(--danger); color: #fff;" onclick="triggerHaptic(); executeConfirm()">Confirm</button>
         </div>
     </div>
 </div>
@@ -376,23 +363,23 @@
         <h3 id="promptMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;"></h3>
         <input type="text" id="promptInput" aria-label="Input field" class="chat-note wipe-trigger" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
         <div style="display:flex; gap:10px;">
-            <button class="btn-glowing" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closePrompt()">Cancel</button>
-            <button class="btn-glowing" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="triggerHaptic(); executePrompt()">OK</button>
+            <button class="btn-glowing interactive-btn" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closePrompt()">Cancel</button>
+            <button class="btn-glowing interactive-btn" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="triggerHaptic(); executePrompt()">OK</button>
         </div>
     </div>
 </div>
 
-<div id="lightboxOverlay" onclick="closeLightbox(event)">
-    <button class="lightbox-close" aria-label="Close image" onclick="closeLightbox(event)">×</button>
-    <button class="lightbox-rotate" aria-label="Rotate image" onclick="rotateLightboxImg(event)">↻</button>
-    <button id="lightboxPrev" class="lightbox-nav" style="display:none;" onclick="changeLightboxImage(event, -1)">❮</button>
-    <button id="lightboxNext" class="lightbox-nav" style="display:none;" onclick="changeLightboxImage(event, 1)">❯</button>
+<div id="lightboxOverlay" class="interactive-btn" onclick="closeLightbox(event)">
+    <button class="lightbox-close interactive-btn" aria-label="Close image" onclick="closeLightbox(event)">×</button>
+    <button class="lightbox-rotate interactive-btn" aria-label="Rotate image" onclick="rotateLightboxImg(event)">↻</button>
+    <button id="lightboxPrev" class="lightbox-nav interactive-btn" style="display:none;" onclick="changeLightboxImage(event, -1)">❮</button>
+    <button id="lightboxNext" class="lightbox-nav interactive-btn" style="display:none;" onclick="changeLightboxImage(event, 1)">❯</button>
     <div id="lightboxLoader" style="color:white; font-size:0.8rem; font-weight:800; letter-spacing:1px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">LOADING PHOTO...</div>
     <div id="lightboxPagination" style="position:absolute; bottom:25px; color:white; font-size:0.8rem; font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; display:none; pointer-events:none;">1/1</div>
     <img id="lightboxImg" src="" alt="Receipt" crossorigin="anonymous" style="display:none;" onload="document.getElementById('lightboxLoader').style.display='none'; this.style.display='block';">
 </div>
 
-<div id="menuOverlay" onclick="toggleMenu()"></div>
+<div id="menuOverlay" class="interactive-btn" onclick="toggleMenu()"></div>
 <nav id="sideMenu" aria-label="Main Menu">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
         <div>
@@ -408,14 +395,14 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     </a>
 
-    <a href="#" class="menu-link" onclick="jumpToSection(event, 'heroSection')">Dashboard</a>
-    <a href="#" class="menu-link" onclick="jumpToSection(event, 'settlementsWrapper')">Settlement Reports</a>
-    <a href="#" class="menu-link" onclick="jumpToSection(event, 'currentExpensesWrapper')">Current Expenses</a>
-    <a href="#" class="menu-link" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
-    <a href="#" class="menu-link" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
+    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'heroSection')">Dashboard</a>
+    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'settlementsWrapper')">Settlement Reports</a>
+    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'currentExpensesWrapper')">Current Expenses</a>
+    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
+    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
     <div style="flex-grow: 1;"></div>
-    <a href="#" class="menu-link" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
+    <a href="#" class="menu-link interactive-btn" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
     <a href="#" class="menu-link interactive-btn" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
 </nav>
 
@@ -440,7 +427,7 @@
     <header class="hero-section" id="heroSection">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
             <span id="heroTotalLabel" class="hero-label">Total House Bill</span>
-            <select id="currency" aria-label="Select Currency" onchange="render()">
+            <select id="currency" aria-label="Select Currency" class="interactive-btn" onchange="render()">
                 <option value="GBP">£ GBP</option>
                 <option value="PKR">Rs PKR</option>
                 <option value="USD">$ USD</option>
@@ -529,16 +516,26 @@
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
     <div id="hashtagAutocomplete"></div>
     <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <input type="text" id="groupNote" aria-label="General Note" class="chat-note" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
-        <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
-            Attach Photo(s)
-        </button>
+        <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem; flex: 1;" onclick="triggerHaptic(); document.getElementById('cameraInput').click()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> 
+                Camera
+            </button>
+            <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem; flex: 1;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
+                Gallery
+            </button>
+        </div>
     </div>
     <div class="chat-row">
         <div class="chat-input-wrapper" id="chatWrapper">
             <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Write Amount here" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
+            
             <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
+            <input type="file" id="cameraInput" aria-label="Take Photo" accept="image/*" capture="environment" style="display:none;">
+            
             <button class="chat-btn interactive-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
@@ -547,7 +544,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.9.40";
+    const APP_VERSION = "7.9.42";
     const BIN_ID = '69e2bb7736566621a8c5920c';
     const MASTER_KEY = '$2a$10$mEQevkyTBNsghmiwikEtduB64tc1Lavu6lE7Ox5oXU30dnLrOqhhu';
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
@@ -588,9 +585,7 @@
     let scale = 1;
     let startDist = 0;
 
-    // ==========================================================================
-    // v7.9.40 GOLD MASTER: HARDWARE EVENT DELEGATION & LOCKS
-    // ==========================================================================
+    // v7.9.42: GHOST CLICK ARMOR COMPLETELY REMOVED. Only keyboard pre-wipe remains.
     let lastTouchTime = 0;
     document.body.addEventListener('touchstart', (e) => {
         lastTouchTime = Date.now();
@@ -599,19 +594,6 @@
             document.activeElement.blur();
         }
     }, { passive: true, capture: true });
-
-        document.body.addEventListener('click', (e) => {
-        // Synthetic Ghost Click Annihilator (Older WebViews)
-        if (Date.now() - lastTouchTime < 400 && e.pointerType === "") {
-            // v7.9.41: Whitelist native inputs to prevent UI freezing
-            if (e.target.closest('label') || e.target.tagName === 'INPUT' || e.target.closest('.toggle-switch')) return;
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-    }, { capture: true });
-
 
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
@@ -654,7 +636,6 @@
         }
     });
 
-    // v7.9.40: Safe HTML Escaping (XSS & Single-Quote DOM Rupture Fix)
     function escapeHTML(str) {
         if (!str || typeof str !== 'string') return str;
         let clean = str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '');
@@ -682,14 +663,12 @@
         catch (e) { return defaultVal; }
     }
 
-    // v7.9.40: Database Hardware Write Protocol (UTF-16 & Quota Crash Failsafe)
     function safeSetStorage(key, val) {
         if (typeof val === 'string' && val.length > 4500000) { 
              showToast("Payload too massive for local vault. Aborting.", 4000);
              return false;
         }
         try {
-            // Hardware Write Test
             localStorage.setItem('v7_write_test', '1');
             localStorage.removeItem('v7_write_test');
             localStorage.setItem(key, val);
@@ -705,7 +684,7 @@
                         safeSetStorage(key, JSON.stringify(db));
                         showToast("Vault Full. Oldest archive pruned to save space.", 4000);
                     } else {
-                        console.error("v7.9.40: Quota limit hit. Using RAM fallback.");
+                        console.error("v7.9.42: Quota limit hit. Using RAM fallback.");
                         window.ephemeralStorage = window.ephemeralStorage || {};
                         window.ephemeralStorage[key] = val;
                         showToast("Memory Limit Reached. Running in Volatile Mode.", 4000);
@@ -739,7 +718,6 @@
         if (window.navigator && window.navigator.vibrate) navigator.vibrate(40);
     }
     
-    // v7.9.40: rAF Debounce Matrix for Animations
     function animateValue(obj, start, end, duration, prefix) {
         let startTimestamp = null;
         let animationFrameId = null;
@@ -857,21 +835,20 @@
         el.style.pointerEvents = 'auto';
         document.body.style.overflow = '';
     }
-        // v7.9.41: Explicit JS State Toggling (Bypasses Ghost Click Armor)
+    
+    // v7.9.42: Pure JS-Driven toggles (Bypassing native inputs)
     function toggleSwipeSetting() {
         swipeActionsEnabled = !swipeActionsEnabled;
         document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
         safeSetStorage('house_swipe_actions', swipeActionsEnabled);
         render();
     }
-    
     function toggleSmartRounding() {
         smartRoundingEnabled = !smartRoundingEnabled;
         document.getElementById('smartRoundingInput').checked = smartRoundingEnabled;
         safeSetStorage('house_smart_rounding', smartRoundingEnabled);
         render();
     }
-
     function updateTrashExpiry() {
         trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value);
         localStorage.setItem('house_trash_expiry', trashExpiryDays);
@@ -1055,7 +1032,6 @@
         }
     });
 
-    // v7.9.40: Centralized Delta-Time Toast Matrix
     function showToast(msg, duration = 0) {
         if(document.activeElement && document.activeElement.tagName === 'TEXTAREA') document.activeElement.blur(); 
         const loader = document.getElementById('loading');
@@ -1172,7 +1148,6 @@
             isSettling = false;
         });
     }
-    
     function toggleSection(headerEl) {
         if (isLongPress) { isLongPress = false; return; }
         const parent = headerEl.parentElement;
@@ -1217,8 +1192,8 @@
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-pill" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button>
-                    <button class="btn-pill danger" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button>
+                    <button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button>
+                    <button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button>
                 </div>
             </div>`;
         }).join('');
@@ -1378,13 +1353,40 @@
         });
     }
 
+    // v7.9.43: Bulletproof User Rendering (Corrupted Data Failsafe)
     function renderUsers() {
         const btns = document.getElementById('userButtons');
+        if (!btns) return;
         btns.innerHTML = '';
-        const usersList = (db.users && db.users.length > 0) ? db.users : defaultUsers;
+        
+        let usersList = defaultUsers;
+        if (db && Array.isArray(db.users) && db.users.length > 0) {
+            usersList = db.users;
+        }
+        
+        let validUsersFound = false;
+
         usersList.forEach(u => {
-            btns.innerHTML += `<button class="user-select-btn" onclick="triggerHaptic(); login('${escapeHTML(u)}')"><div class="user-avatar">${escapeHTML(u.charAt(0))}</div>${escapeHTML(u)}</button>`;
+            try {
+                let nameStr = "";
+                if (typeof u === 'string') nameStr = u;
+                else if (u && typeof u === 'object' && u.name) nameStr = String(u.name);
+                else if (u) nameStr = String(u);
+                
+                nameStr = nameStr.trim();
+                if (!nameStr) return; 
+                
+                validUsersFound = true;
+                btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(nameStr)}')"><div class="user-avatar">${escapeHTML(nameStr.charAt(0))}</div>${escapeHTML(nameStr)}</button>`;
+            } catch (e) {}
         });
+
+        if (!validUsersFound) {
+            db.users = [...defaultUsers];
+            defaultUsers.forEach(u => {
+                btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(u)}')"><div class="user-avatar">${escapeHTML(u.charAt(0))}</div>${escapeHTML(u)}</button>`;
+            });
+        }
     }
 
     function formatDescDisplay(desc, origSym = '') {
@@ -1588,10 +1590,8 @@
         try {
             const zip = new JSZip();
             const imgFolder = zip.folder("Receipts");
-            let fetchPromises = [];
             
             let allUrls = [];
-            
             const extractUrls = (receiptField) => {
                 if(!receiptField) return;
                 if(typeof receiptField === 'string' && receiptField.startsWith('[')) {
@@ -1622,7 +1622,7 @@
                             let filename = `receipt_${i+idx}_${Date.now()}.jpg`;
                             imgFolder.file(filename, blob);
                         }
-                    } catch(e) { console.warn("Failed fetching", url); }
+                    } catch(e) {}
                 }));
                 await new Promise(r => setTimeout(r, 50)); 
             }
@@ -1679,7 +1679,7 @@
         return true;
     }
 
-        // v7.9.40.1: Fixed Secure Fetch (Removed URL Mutation for Strict APIs)
+    // v7.9.42: Secure Fetch Wrapper without JSONBin Cache Reject
     async function secureFetch(url, options = {}, timeoutMs = 8000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -1688,7 +1688,7 @@
             const response = await fetch(url, {
                 ...options,
                 signal: controller.signal,
-                cache: 'no-store', // Bypasses carrier cache safely
+                cache: 'no-store', // Fixes JSONBin loop
                 headers: {
                     ...options.headers,
                     'Pragma': 'no-cache',
@@ -1708,7 +1708,6 @@
         }
     }
 
-    // v7.9.40.1: Smarter Payload Parsing
     async function loadData(force = false) {
         if (isSyncing) return;
         if (!force && Date.now() - lastSyncTime < 2500) return;
@@ -1738,8 +1737,6 @@
             if (!res.ok) throw new Error("HTTP_API_ERROR");
             
             const data = await res.json();
-            
-            // Handles both '{ record: {...} }' and flat '{ expenses: [...] }' responses
             const targetData = data.record ? data.record : data;
             
             if (targetData && (targetData.expenses || targetData.users)) {
@@ -1798,7 +1795,7 @@
         }
     }
 
-    
+
     function executeActionWithSave() {
         if (!checkPayloadSize()) return; 
         
@@ -1956,16 +1953,15 @@
         
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
         
-                const chkContainer = document.getElementById('cycleSplitCheckboxes');
+        // v7.9.42: Bypass Ghost Click Armor by using JS-driven DIVs instead of inputs
+        const chkContainer = document.getElementById('cycleSplitCheckboxes');
         chkContainer.innerHTML = db.users.map(u => {
             const isChecked = db.activeUsers.includes(u);
             const opac = isChecked ? '1' : '0.4';
-            // v7.9.41: Converted from <label> to <div> to bypass native checkbox freezes
-            return `<div class="interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="opacity: ${opac}; cursor: pointer; display: inline-flex; align-items: center;">
+            return `<div class="interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="opacity: ${opac}; cursor: pointer; display: inline-flex; align-items: center; margin-right: 8px; margin-bottom: 8px;">
                         <span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span>
                     </div>`;
         }).join('');
-
 
         let allValid = db.expenses || [];
         
@@ -2540,7 +2536,6 @@
         }
     }
 
-    // v7.9.40: Math Sanitization & Regex Layer
     function sanitizeAmount(inputString) {
         if (!inputString) return 0.00;
         let cleanStr = inputString.toString().replace(/[^\d.,+]/g, '');
@@ -2591,7 +2586,13 @@
         const rawInput = document.getElementById('amtInput').value;
         let safeInput = rawInput.substring(0, 500);
         const gNote = document.getElementById('groupNote').value;
-        const files = document.getElementById('receiptInput').files;
+        
+        // v7.9.42: Combine Camera and Gallery Inputs
+        const galleryFiles = document.getElementById('receiptInput').files;
+        const cameraFiles = document.getElementById('cameraInput').files;
+        let files = [];
+        if (galleryFiles && galleryFiles.length > 0) files = [...files, ...galleryFiles];
+        if (cameraFiles && cameraFiles.length > 0) files = [...files, ...cameraFiles];
         
         const cur = document.getElementById('currency').value;
         const sym = curSymbols[cur];
@@ -2708,7 +2709,11 @@
             amtInputEl.value = ""; 
             amtInputEl.style.height = "40px"; 
             document.getElementById('groupNote').value = ""; 
+            
+            // Clear dual camera buffers
             document.getElementById('receiptInput').value = "";
+            document.getElementById('cameraInput').value = "";
+            
             document.getElementById('optionsMenu').style.display = "none";
             document.getElementById('hashtagAutocomplete').style.display = "none";
             
@@ -3073,7 +3078,7 @@
         render(); 
     }
 
-    window.addEventListener('visibilitychange', () => {
+        window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             if (navigator.onLine) {
                 if (needsSync) {
