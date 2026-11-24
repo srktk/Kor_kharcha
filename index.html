@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.11.1">
+    <meta name="app-version" content="7.12.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -330,6 +330,7 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
+            <button id="restoreBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openRestore();">⏪ Restore Backup</button>
             <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
             <div style="display:flex; gap:10px;">
                 <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
@@ -350,7 +351,20 @@
     </div>
 </div>
 
-<div id="confirmOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+<div id="restoreOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="width:90%; max-width:360px;">
+        <h2 style="margin:0 0 8px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Restore Backup</h2>
+        <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:12px;">Puts the whole house data back to an earlier point. Everyone is notified, and the restore itself can be undone from this list.</div>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button id="restoreTabBackups" class="btn-pill interactive-btn" style="flex:1;" onclick="triggerHaptic(); renderRestoreList('backup')">Daily</button>
+            <button id="restoreTabVersions" class="btn-pill interactive-btn" style="flex:1;" onclick="triggerHaptic(); renderRestoreList('version')">Recent saves</button>
+        </div>
+        <div id="restoreList" style="margin-bottom: 15px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeRestore()">Close</button>
+    </div>
+</div>
+
+<div id="confirmOverlay"style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="login-card" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
         <div style="margin-bottom: 15px; display:flex; justify-content:center;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -572,7 +586,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.11.1";
+    const APP_VERSION = "7.12.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -728,6 +742,7 @@
         if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
         else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
         else if (document.getElementById('trashOverlay').style.display === 'flex') { closeTrash(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('restoreOverlay').style.display === 'flex') { closeRestore(); history.pushState(null, null, location.href); }
         else if (document.getElementById('auditOverlay').style.display === 'flex') { closeAuditLog(); history.pushState(null, null, location.href); }
         else if (document.getElementById('helpOverlay').style.display === 'flex') { closeHelp(); history.pushState(null, null, location.href); }
         else if (document.getElementById('sideMenu').classList.contains('open')) { toggleMenu(); history.pushState(null, null, location.href); }
@@ -915,6 +930,7 @@
         const roundingContainer = document.getElementById('smartRoundingContainer');
         if (currentUser === "Shahzeb") { roundingContainer.style.display = 'flex'; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; } else { roundingContainer.style.display = 'none'; }
         const trashBtn = document.getElementById('trashBtn');
+        document.getElementById('restoreBtn').style.display = currentUser === "Shahzeb" ? 'flex' : 'none';
         if (currentUser === "Shahzeb") { trashBtn.style.display = 'flex'; document.getElementById('trashExpirySelect').parentElement.style.display = 'flex'; document.getElementById('trashExpirySelect').value = trashExpiryDays.toString(); } else { trashBtn.style.display = 'none'; document.getElementById('trashExpirySelect').parentElement.style.display = 'none'; }
         document.getElementById('settingsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden'; 
     }
@@ -955,6 +971,59 @@
     }
     
     function closeTrash() { document.getElementById('trashOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+
+    // ---- Restore backup: daily snapshots (60 days) and recent saves (last 200), both kept by the worker
+    let restoreCache = { backup: null, version: null }; let restoreTab = 'backup';
+    function openRestore() {
+        closeSettings(); history.pushState(null, null, location.href);
+        restoreCache = { backup: null, version: null };
+        document.getElementById('restoreOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        renderRestoreList('backup');
+    }
+    function closeRestore() { document.getElementById('restoreOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    async function renderRestoreList(kind) {
+        restoreTab = kind; const list = document.getElementById('restoreList');
+        document.getElementById('restoreTabBackups').classList.toggle('success', kind === 'backup');
+        document.getElementById('restoreTabVersions').classList.toggle('success', kind === 'version');
+        const msg = (t) => `<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>${t}</div>`;
+        if (!restoreCache[kind]) {
+            list.innerHTML = msg('Loading...');
+            try {
+                const res = await secureFetch(`${API_URL}/${kind === 'backup' ? 'backups' : 'versions'}`, { headers: apiHeaders() }, 10000);
+                if (!res.ok) throw new Error(String(res.status));
+                restoreCache[kind] = await res.json();
+            } catch (e) { if (restoreTab === kind) list.innerHTML = msg('Could not load the list. Are you online?'); return; }
+        }
+        if (restoreTab !== kind) return;
+        const rows = (restoreCache[kind] || []).slice(0, 60);
+        if (!rows.length) { list.innerHTML = msg('Nothing saved yet.'); return; }
+        list.innerHTML = rows.map((r, i) => {
+            const id = kind === 'backup' ? r.day : r.ts;
+            const when = kind === 'backup' ? new Date(r.day + 'T03:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                                           : new Date(r.ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            const sub = (kind === 'version' && i === 0) ? 'Current data' : `${Math.max(1, Math.round(r.bytes / 1024))} KB`;
+            const btn = (kind === 'version' && i === 0) ? '' : `<button class="btn-pill success interactive-btn" onclick="triggerHaptic(); confirmRestore('${kind}', '${escapeHTML(String(id))}', '${escapeHTML(when)}')">Restore</button>`;
+            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);"><div><div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${escapeHTML(when)}</div><div style="font-size:0.65rem; color:var(--text-muted); margin-top:3px;">${sub}</div></div>${btn}</div>`;
+        }).join('');
+    }
+    function confirmRestore(kind, id, when) {
+        const pending = needsSync ? '<br><br><b style="color:var(--danger)">Changes on this phone that haven\'t synced yet will be lost.</b>' : '';
+        customConfirm(`Restore everything to <b>${when}</b>?<br><br>Anything added or changed after that will disappear for everyone.${pending}`, () => doRestore(kind, id));
+    }
+    async function doRestore(kind, id) {
+        if (isSyncing) { showToast("SYNCING - TRY AGAIN IN A MOMENT", 2500); return; } // a save landing after the restore would confuse the version
+        isSyncing = true; const loader = document.getElementById('loading'); loader.innerText = "RESTORING..."; loader.style.display = 'block';
+        try {
+            const res = await secureFetch(`${API_URL}/restore`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ kind, id: kind === 'version' ? Number(id) : id, user: currentUser }) }, 20000);
+            if (!res.ok) throw new Error(String(res.status));
+            const out = await res.json(); if (!out || !out.db) throw new Error('bad_response');
+            clearTimeout(saveTimeout); clearTimeout(saveRetryTimer);
+            db = out.db; initializeDB(); localDbLoaded = true; saveLocalBackup(); setDbVersion(out.version);
+            setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); renderUsers(); if (currentUser) render();
+            closeRestore(); showToast("BACKUP RESTORED", 3000);
+        } catch (e) { showToast("RESTORE FAILED - TRY AGAIN", 3000); }
+        finally { isSyncing = false; loader.style.display = 'none'; loader.innerText = "SYNCING"; }
+    }
     
     function restoreTrash(i) {
         if(db.trash && db.trash[i]) { let ex = db.trash.splice(i, 1)[0]; delete ex.deletedAt; if(!Array.isArray(db.expenses)) db.expenses = []; db.expenses.unshift(ex); db.expenses.sort((a,b) => b.timestamp - a.timestamp); logAudit("Restored Expense", ex.id); openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000); }
@@ -1305,23 +1374,6 @@
         } catch(e) { showToast("ZIP Compilation Failed", 3000); }
     }
 
-    function exportCSV() {
-        let csv = "HOUSE EXPENSES EXPORT\n\n"; const sym = document.getElementById('currency').value; const rate = (rates[document.getElementById('currency').value] && rates[document.getElementById('currency').value] > 0) ? rates[document.getElementById('currency').value] : 1;
-        let validExpenses = db.expenses || []; let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0); let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; if(activeCount === 0) activeCount = 1;
-        csv += `Cycle Start,${formatNiceDate(db.startDate)}\nCurrent Total,${sym}${(totalBase * rate).toFixed(2)}\nPer Head (Base),${sym}${(totalBase / activeCount * rate).toFixed(2)}\n`;
-        let momText = "N/A"; if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) { const diff = ((totalBase - db.archives[0].total) / db.archives[0].total) * 100; momText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% vs last cycle`; }
-        csv += `Trend,${momText}\n\nDate,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n`;
-        validExpenses.forEach(e => {
-            let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (db.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
-            csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Current,${receipt}\n`;
-        });
-        (db.archives || []).forEach(arc => {
-            csv += `\nARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\nDate,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n`;
-            let vArcEx = Array.isArray(arc.details) ? arc.details : [];
-            vArcEx.forEach(e => { let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (arc.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None'); let eDate = e.date || arc.start; csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`; });
-        });
-        const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.setAttribute('href', window.URL.createObjectURL(blob)); a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`); a.click(); showToast("EXPORTED CSV", 2000);
-    }
 
     function initializeDB() {
         if (!db || typeof db !== 'object') db = {};
@@ -1642,22 +1694,25 @@
         try {
             for (let item of queue) {
                 try {
-                    const base64Data = item.image.split(',')[1]; const formData = new FormData(); formData.append("key", "e1200f255e3515e499fe7215708ac0fe"); formData.append("image", base64Data);
-                    const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
-                    const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal }); clearTimeout(timeoutId);
-                    if (!res.ok) throw new Error("HTTP Error"); const json = await res.json(); if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
-                    if (json.success) {
-                        let ex = db.expenses.find(e => e.id === item.id);
-                        if (ex) {
-                            if (!ex.receipt) { ex.receipt = json.data.url; ex.receiptDelete = json.data.delete_url; }
-                            else { let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt]; let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete]; recArr.push(json.data.url); delArr.push(json.data.delete_url); ex.receipt = recArr; ex.receiptDelete = delArr; }
-                            updatedDb = true;
-                        }
-                    } else { remainingQueue.push(item); }
+                    const up = await uploadImageData(item.image);
+                    let ex = db.expenses.find(e => e.id === item.id);
+                    if (ex) {
+                        if (!ex.receipt) { ex.receipt = up.url; ex.receiptDelete = up.delete_url; }
+                        else { let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt]; let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete]; recArr.push(up.url); delArr.push(up.delete_url); ex.receipt = recArr; ex.receiptDelete = delArr; }
+                        updatedDb = true;
+                    }
                 } catch(e) { remainingQueue.push(item); }
             }
             safeSetStorage('img_queue', JSON.stringify(remainingQueue)); if (updatedDb) { render(); executeActionWithSave(); }
         } finally { isProcessingQueue = false; }
+    }
+
+    // Receipt photos go through our worker, which holds the imgbb key (it used to be visible in this page)
+    async function uploadImageData(dataUrl) {
+        const res = await secureFetch(`${API_URL}/upload`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ image: dataUrl.split(',')[1] }) }, 20000);
+        if (res.status === 401) throw new Error("AUTH"); if (!res.ok) throw new Error("HTTP Error");
+        const out = await res.json(); if (!out || !out.url) throw new Error("Malformed API Response");
+        return out;
     }
 
     async function uploadToImgBB(file) {
@@ -1666,11 +1721,8 @@
             if (file.size > 15 * 1024 * 1024) { showToast("File too large (Max 15MB).", 3000); return null; }
             const dataUrl = await compressImage(file); if (!dataUrl) { return null; }
             if (dataUrl.length > 4500000) { showToast("Image dimensions too large for safe offline storage.", 4000); return null; }
-            const base64Data = dataUrl.split(',')[1]; const formData = new FormData(); formData.append("key", "e1200f255e3515e499fe7215708ac0fe"); formData.append("image", base64Data);
-            const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
-            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData, signal: controller.signal }); clearTimeout(timeoutId);
-            if (!res.ok) throw new Error("HTTP Error"); const json = await res.json(); if (!json || !json.success || !json.data) throw new Error("Malformed API Response");
-            if (json.success) return { url: json.data.url, delete_url: json.data.delete_url }; else return { failedBase64: dataUrl }; 
+            try { const up = await uploadImageData(dataUrl); return { url: up.url, delete_url: up.delete_url }; }
+            catch (e) { return { failedBase64: dataUrl }; } // queued; retried later by processUploadQueue
         } catch (e) { return { failedBase64: await compressImage(file) }; }
     }
 
@@ -1762,22 +1814,35 @@
         editingId = id; toggleOptionsMenu(true); document.getElementById('amtInput').focus(); showToast("EDITING MODE", 0); render();
     }
 
+    // CSV cell: quote anything containing commas, quotes or line breaks (Excel/Sheets-safe), and defuse formula injection
+    function csvCell(v) {
+        let t = v == null ? '' : String(v);
+        if (/^[=@\t\r]/.test(t) || /^[+\-](?![\d.])/.test(t)) t = "'" + t;
+        return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+    }
+    function csvRow(cells) { return cells.map(csvCell).join(',') + '\n'; }
+
     function exportCSV() {
-        let csv = "HOUSE EXPENSES EXPORT\n\n"; const sym = document.getElementById('currency').value; const rate = (rates[document.getElementById('currency').value] && rates[document.getElementById('currency').value] > 0) ? rates[document.getElementById('currency').value] : 1;
+        const sym = document.getElementById('currency').value; const rate = (rates[sym] && rates[sym] > 0) ? rates[sym] : 1;
         let validExpenses = db.expenses || []; let totalBase = validExpenses.reduce((a,b)=>a+b.amount,0); let activeCount = db.activeUsers ? db.activeUsers.length : db.users.length; if(activeCount === 0) activeCount = 1;
-        csv += `Cycle Start,${formatNiceDate(db.startDate)}\n`; csv += `Current Total,${sym}${(totalBase * rate).toFixed(2)}\n`; csv += `Per Head (Base),${sym}${(totalBase / activeCount * rate).toFixed(2)}\n`;
+        const header = ['Date', 'Name', 'Amount', 'Currency', 'Description', 'Split Between', 'Status', 'Receipt URL'];
+        const expenseRow = (e, defaultDate, status) => {
+            const custom = e.involved && e.involved.length > 0 && e.involved.length < db.users.length;
+            const split = custom ? e.involved.join(' | ') : 'Active Cycle Default';
+            const receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
+            return csvRow([e.date || defaultDate, e.name, (e.amount * rate).toFixed(2), sym, (e.desc || '').replace(/\r?\n/g, ' '), split, status, receipt]);
+        };
+        let csv = "HOUSE EXPENSES EXPORT\n\n";
+        csv += csvRow(['Cycle Start', formatNiceDate(db.startDate)]) + csvRow(['Current Total', sym + (totalBase * rate).toFixed(2)]) + csvRow(['Per Head (Base)', sym + (totalBase / activeCount * rate).toFixed(2)]);
         let momText = "N/A"; if (db.archives && db.archives.length > 0 && db.archives[0].total > 0) { const diff = ((totalBase - db.archives[0].total) / db.archives[0].total) * 100; momText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% vs last cycle`; }
-        csv += `Trend,${momText}\n\n`; csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
-        validExpenses.forEach(e => {
-            let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (db.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None');
-            csv += `${e.date || db.startDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Current,${receipt}\n`;
-        });
+        csv += csvRow(['Trend', momText]) + '\n' + csvRow(header);
+        validExpenses.forEach(e => { csv += expenseRow(e, db.startDate, 'Current'); });
         (db.archives || []).forEach(arc => {
-            csv += `\nARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}\nArchive Total,${sym}${(arc.total * rate).toFixed(2)}\n`; csv += "Date,Name,Amount,Currency,Description,Split Between,Status,Receipt URL\n";
-            let vArcEx = Array.isArray(arc.details) ? arc.details : [];
-            vArcEx.forEach(e => { let cleanDesc = e.desc ? e.desc.replace(/,/g, '').replace(/\n/g, ' ') : ''; let involvedArr = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : (arc.activeUsers || db.users); let split = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? involvedArr.join(' | ') : 'Active Cycle Default'; let receipt = Array.isArray(e.receipt) ? e.receipt.join(' | ') : (e.receipt || 'None'); let eDate = e.date || arc.start; csv += `${eDate},${e.name},${(e.amount * rate).toFixed(2)},${sym},${cleanDesc},${split},Archived,${receipt}\n`; });
+            csv += '\n' + csvRow([`ARCHIVE: ${arc.tag ? arc.tag + ' ' : ''}${arc.start} to ${arc.end}`]) + csvRow(['Archive Total', sym + (arc.total * rate).toFixed(2)]) + csvRow(header);
+            (Array.isArray(arc.details) ? arc.details : []).forEach(e => { csv += expenseRow(e, arc.start, 'Archived'); });
         });
-        const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.setAttribute('href', window.URL.createObjectURL(blob)); a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`); a.click(); showToast("EXPORTED CSV", 2000);
+        // BOM so Excel reads names/descriptions with non-English characters correctly
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }); const a = document.createElement('a'); a.setAttribute('href', window.URL.createObjectURL(blob)); a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`); a.click(); showToast("EXPORTED CSV", 2000);
     }
 
     function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); canvas.width = 0; canvas = null; }; }; }); }
