@@ -199,8 +199,13 @@
         /* ---- Bottom: expense input + tab bar ---- */
         .input-section { position: fixed; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 8px 14px 10px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.15s; }
         .input-section > * { pointer-events: auto; }
-        body:has(.input-section :focus) .input-section { bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-        body:has(.input-section :focus) #tabBar { display: none; }
+        /* Only while the on-screen keyboard is really up (kb-open is set from the viewport height): closing the keyboard
+           with Back leaves the box focused, and the tab bar must come back then */
+        body.kb-open:has(.input-section :focus) .input-section { bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        body.kb-open:has(.input-section :focus) #tabBar { display: none; }
+        /* While a sheet, dialog or the menu is open the page behind must not scroll */
+        html.scroll-lock, html.scroll-lock body { overflow: hidden !important; }
+        .login-card.sheet, .sheet-body, #insightsBody, #historyList, #auditList, #searchResults { overscroll-behavior: contain; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
         .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--surface); border: 1px solid var(--border); border-radius: 26px; padding: 4px 6px 4px 10px; gap: 4px; transition: border-color 0.2s, box-shadow 0.2s; flex-grow: 1; box-shadow: var(--shadow-lg); min-width: 0; position: relative; }
         .chat-input-wrapper:focus-within { border-color: var(--accent); }
@@ -522,14 +527,14 @@
         <div class="group-label">You</div>
         <div class="group">
             <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); setPayLink();"><span class="ri-icon" data-ic="card"></span><span class="ri-label">My Payment Link<span class="ri-sub">Monzo or PayPal link for the Pay button</span></span><span class="ri-end" data-ic="chev"></span></button>
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); openNotifPrefs();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">What Notifies Me</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); openNotifPrefs();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">What Notifies Me</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
 
         <div class="group-label">House</div>
         <div class="group">
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); openManageUsers();"><span class="ri-icon" data-ic="users"></span><span class="ri-label">Manage Housemates</span><span class="ri-end" data-ic="chev"></span></button>
-            <button id="trashBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); closeSettings(); openTrash();"><span class="ri-icon" data-ic="trash"></span><span class="ri-label">Recovery Vault<span class="ri-sub">Bring back deleted expenses</span></span><span class="ri-end" data-ic="chev"></span></button>
-            <button id="restoreBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); closeSettings(); openRestore();"><span class="ri-icon" data-ic="restore"></span><span class="ri-label">Restore Backup<span class="ri-sub">Put all house data back to an earlier point</span></span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); openManageUsers();"><span class="ri-icon" data-ic="users"></span><span class="ri-label">Manage Housemates</span><span class="ri-end" data-ic="chev"></span></button>
+            <button id="trashBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); openTrash();"><span class="ri-icon" data-ic="trash"></span><span class="ri-label">Recovery Vault<span class="ri-sub">Bring back deleted expenses</span></span><span class="ri-end" data-ic="chev"></span></button>
+            <button id="restoreBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); openRestore();"><span class="ri-icon" data-ic="restore"></span><span class="ri-label">Restore Backup<span class="ri-sub">Put all house data back to an earlier point</span></span><span class="ri-end" data-ic="chev"></span></button>
         </div>
 
         <div id="healthCard" style="display:none;">
@@ -975,20 +980,100 @@
         }
     }, { passive: true, capture: true });
 
-    window.addEventListener('popstate', (e) => {
-        if (document.getElementById('historyOverlay').style.display === 'flex') { closeHistory(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('noticeOverlay').style.display === 'flex') { closeNotices(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('shoppingOverlay').style.display === 'flex') { closeShopping(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('searchOverlay').style.display === 'flex') { closeSearch(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('insightsOverlay').style.display === 'flex') { closeInsights(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('trashOverlay').style.display === 'flex') { closeTrash(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('restoreOverlay').style.display === 'flex') { closeRestore(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('auditOverlay').style.display === 'flex') { closeAuditLog(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('helpOverlay').style.display === 'flex') { closeHelp(); history.pushState(null, null, location.href); }
-        else if (document.getElementById('sideMenu').classList.contains('open')) { toggleMenu(); history.pushState(null, null, location.href); }
+    // ---- Screen navigation ----
+    // Opening a screen from another one (More menu → Insights, Settings → Trash, Search → Edit history...) hides the first
+    // and remembers it; Back (phone button / gesture) or the ✕ then returns to it, with its scroll position, instead of home.
+    // One history entry ({nav:true}) sits above the page while anything is open, so Back on the home screen leaves the app.
+    const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
+        historyOverlay: 'closeHistory', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
+        manageUsersOverlay: 'closeManageUsers', helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
+        insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog' };
+    const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
+        openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
+        openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
+        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay' };
+    const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox' };
+    let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
+    let navBusy = false, navBackPending = false, navUserBack = false, navClickAttr = '';
+    function navBack() { navUserBack = true; try { return navCloseTop(); } finally { navUserBack = false; } }
+    function navShown(id) {
+        if (id === 'menu') return document.getElementById('sideMenu').classList.contains('open');
+        const el = document.getElementById(id); return !!el && el.style.display === 'flex';
+    }
+    function navTopPage() { return Object.keys(NAV_SHEETS).find(navShown) || (navShown('menu') ? 'menu' : null); }
+    function navTop() { return Object.keys(NAV_DIALOGS).find(navShown) || navTopPage(); }
+    function navEnsureEntry() { if (!(history.state && history.state.nav)) history.pushState({ nav: true }, '', location.href); }
+    function navCloseTop() {
+        const top = navTop(); if (!top) return false;
+        if (top === 'menu') toggleMenu(); else window[NAV_DIALOGS[top] || NAV_SHEETS[top]]();
+        return true;
+    }
+    function navRestore(entry) {
+        navBusy = true;
+        try {
+            if (entry.id === 'menu') { if (!navShown('menu')) toggleMenu(); }
+            else { document.getElementById(entry.id).style.display = 'flex'; requestAnimationFrame(() => entry.scrolls.forEach(([el, y]) => { el.scrollTop = y; })); }
+        } finally { navBusy = false; }
+    }
+    function navInstall() {
+        Object.entries(NAV_OPENERS).forEach(([name, target]) => {
+            const orig = window[name]; if (typeof orig !== 'function') return;
+            window[name] = function (...args) {
+                if (navBusy) return orig.apply(this, args);
+                const from = navTopPage();
+                const scrolls = from && from !== 'menu' ? Array.from(document.getElementById(from).querySelectorAll('*')).filter(el => el.scrollTop > 0).map(el => [el, el.scrollTop]) : [];
+                navBusy = true; let result;
+                try { result = orig.apply(this, args); } finally { navBusy = false; }
+                if (from && from !== target && navShown(target)) {
+                    if (from === 'menu') { if (navShown('menu')) toggleMenu(); } else document.getElementById(from).style.display = 'none';
+                    navStack.push({ id: from, child: target, scrolls });
+                }
+                navEnsureEntry();
+                return result;
+            };
+        });
+        Object.entries(NAV_SHEETS).forEach(([id, name]) => {
+            const orig = window[name]; if (typeof orig !== 'function') return;
+            window[name] = function (...args) {
+                // Go back only when the person asked to (phone Back, ✕ / Done, navBack()); a sheet closing because an
+                // action finished (e.g. "Add as expense") lands on the home screen instead
+                const asked = navUserBack || navClickAttr.includes(name + '(');
+                const wasShown = navShown(id); const result = orig.apply(this, args);
+                if (!navBusy && wasShown && asked) { const last = navStack[navStack.length - 1]; if (last && last.child === id) { navStack.pop(); navRestore(last); } }
+                return result;
+            };
+        });
+        document.addEventListener('click', (e) => {
+            const el = e.target.closest && e.target.closest('[onclick]'); navClickAttr = el ? el.getAttribute('onclick') || '' : '';
+            setTimeout(() => { navClickAttr = ''; }, 0);
+        }, true);
+        // Whenever screens open or close: lock the page behind them, and drop the history entry once everything is closed
+        const watch = new MutationObserver(navSync);
+        [...Object.keys(NAV_SHEETS), ...Object.keys(NAV_DIALOGS), 'sideMenu', 'loginOverlay'].forEach(id => { const el = document.getElementById(id); if (el) watch.observe(el, { attributes: true, attributeFilter: ['style', 'class'] }); });
+    }
+    function navSync() {
+        const open = !!navTop();
+        document.documentElement.classList.toggle('scroll-lock', open || navShown('loginOverlay'));
+        if (!open) { navStack = []; if (history.state && history.state.nav && !navBackPending) { navBackPending = true; history.back(); } }
+    }
+    function navCloseAll() { navStack = []; let guard = 30; while (navTop() && guard--) navCloseTop(); }
+    window.addEventListener('popstate', () => {
+        if (navBackPending) { navBackPending = false; if (navTop()) navEnsureEntry(); return; }
+        if (navBack() && navTop()) navEnsureEntry();
     });
+
+    // ---- On-screen keyboard: body.kb-open while the visible viewport is clearly shorter than the full window ----
+    (function () {
+        let full = window.innerHeight;
+        const check = () => {
+            const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            full = Math.max(full, window.innerHeight, h);
+            document.body.classList.toggle('kb-open', h < full - 120);
+        };
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', check);
+        window.addEventListener('resize', check);
+        window.addEventListener('orientationchange', () => { full = 0; setTimeout(check, 400); });
+    })();
 
     window.addEventListener('pageshow', (e) => {
         if (e.persisted && !isSyncing) {
@@ -1027,7 +1112,7 @@
     // HELP GUIDE LOGIC
     function openHelp() {
         if(document.activeElement) document.activeElement.blur();
-        history.pushState(null, null, location.href); 
+        
         document.getElementById('helpOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -1041,7 +1126,7 @@
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu');
         if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href); 
+        
         
         const list = document.getElementById('auditList');
         if (!db.auditLog || db.auditLog.length === 0) { list.innerHTML = emptyState('clipboard', 'No history recorded.'); }
@@ -1059,6 +1144,8 @@
         document.body.style.overflow = '';
     }
 
+    // A value as a quoted JS string inside an onclick="..." attribute (safe for names like D'Arcy or "Big" Sam)
+    function jsArg(v) { return escapeHTML(JSON.stringify(String(v ?? ""))); }
     function escapeHTML(str) {
         if (!str || typeof str !== 'string') return str;
         return str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); 
@@ -1165,7 +1252,7 @@
     function openSettings() {
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href); 
+        
         document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
         const roundingContainer = document.getElementById('smartRoundingContainer');
         if (currentUser === "Shahzeb") { roundingContainer.style.display = 'flex'; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; } else { roundingContainer.style.display = 'none'; }
@@ -1215,13 +1302,13 @@
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'Problems (last 24 h)';
         document.getElementById('historyList').innerHTML = lastHealth.problems.map(p => `<div class="card"><div class="card-meta" style="margin:0 0 3px;"><span class="tag danger">${escapeHTML(p.kind)}</span> ${new Date(p.t).toLocaleString()}</div><div class="card-text">${escapeHTML(p.text)}</div></div>`).join('')
             + (lastHealth.problems24h > lastHealth.problems.length ? `<div class="card-meta" style="text-align:center;">Showing the latest ${lastHealth.problems.length} of ${lastHealth.problems24h}</div>` : '');
-        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex';
+        document.getElementById('historyOverlay').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
 
     function toggleSwipeSetting() { swipeActionsEnabled = !swipeActionsEnabled; document.getElementById('swipeToggleInput').checked = swipeActionsEnabled; safeSetStorage('house_swipe_actions', swipeActionsEnabled); render(); }
     function toggleSmartRounding() { smartRoundingEnabled = !smartRoundingEnabled; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; safeSetStorage('house_smart_rounding', smartRoundingEnabled); render(); }
-    function updateTrashExpiry() { trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value); localStorage.setItem('house_trash_expiry', trashExpiryDays); showToast("Trash Expiry Updated", 1500); }
+    function updateTrashExpiry() { trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value); safeSetStorage('house_trash_expiry', String(trashExpiryDays)); showToast("Trash Expiry Updated", 1500); }
 
     function handleTagInput(e) {
         const val = e.target.value; const match = val.match(/#([\w-]+)$/); const dropdown = document.getElementById('hashtagAutocomplete');
@@ -1240,7 +1327,7 @@
     function toggleHashtag(tag) { if (editingId) { showToast("Finish editing before changing tags.", 3000); return; } if (activeHashtag === tag) { activeHashtag = null; } else { activeHashtag = tag; } render(); }
 
     function openTrash() {
-        closeSettings(); history.pushState(null, null, location.href); 
+        closeSettings(); 
         const list = document.getElementById('trashList'); const sym = curSymbols[document.getElementById('currency').value]; const rate = rates[document.getElementById('currency').value];
         document.getElementById('trashExpiryText').innerText = `Items permanently deleted after ${trashExpiryDays} days.`;
         if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) { list.innerHTML = emptyState('trash', 'Nothing here. Deleted expenses wait here before they expire.'); } 
@@ -1280,7 +1367,7 @@
     function splitLabel(involved) { return (involved && involved.length > 0 && involved.length < db.users.length) ? involved.join(', ') : 'Everyone active'; }
     function editedTag(ex) {
         if (!ex.edited) return '';
-        if (Array.isArray(ex.history) && ex.history.length) return ` · <button class="link-btn interactive-btn" style="font-size:inherit;" onclick="event.stopPropagation(); triggerHaptic(); showEditHistory('${escapeHTML(ex.id)}')">(Edited · history)</button>`;
+        if (Array.isArray(ex.history) && ex.history.length) return ` · <button class="link-btn interactive-btn" style="font-size:inherit;" onclick="event.stopPropagation(); triggerHaptic(); showEditHistory(${jsArg(ex.id)})">(Edited · history)</button>`;
         return ` · <span>(Edited)</span>`;
     }
 
@@ -1294,7 +1381,7 @@
         if (!(ex.history || []).length) html += `<div class="card-meta" style="text-align:center;">No earlier versions saved (edited before history was added).</div>`;
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'Edit History';
         document.getElementById('historyList').innerHTML = html;
-        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     function closeHistory() {
         document.getElementById('historyOverlay').style.display = 'none';
@@ -1307,7 +1394,7 @@
     function openSearch() {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href);
+        
         document.getElementById('searchOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
         runSearch(); setTimeout(() => document.getElementById('searchInput').focus(), 100);
     }
@@ -1335,7 +1422,7 @@
         out.innerHTML = hits.slice(0, 100).map(({ ex, cycle, fallbackDate }) => {
             const exSym = ex.originalSym || viewMoney().sym;
             const custom = ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length;
-            const receiptStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+            const receiptStr = typeof ex.receipt === 'string' ? `${jsArg(ex.receipt)}` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
             return `<div class="card"><div style="display:flex; gap:12px; align-items:flex-start;">${avatarHTML(ex.name, 'sm')}<div style="flex:1; min-width:0;">
                 <div class="card-row" style="align-items:flex-start;"><div class="card-title">${formatDescDisplay(ex.desc, exSym) || escapeHTML(ex.name)}</div><div class="card-amt">${fmt(ex.amount)}</div></div>
                 <div class="card-meta">${escapeHTML(ex.name)} · ${formatNiceDate(ex.date || fallbackDate)} · ${cycle === 'Current cycle' ? cycle : escapeHTML(cycle)}${editedTag(ex)}</div>
@@ -1389,7 +1476,7 @@
     function openInsights() {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href); insightsCycle = 0; renderInsights();
+        insightsCycle = 0; renderInsights();
         document.getElementById('insightsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     function closeInsights() { document.getElementById('insightsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
@@ -1475,7 +1562,7 @@
     /** Shown to the person owed when the other person says they've paid. */
     function claimBanner(key, arcIdx) {
         const claim = getClaim(key, arcIdx); if (!claim) return '';
-        return `<div class="claim"><b>${escapeHTML(claim.by)}</b> says they paid <b>${viewMoney().fmt(claim.amt)}</b> <span style="color:var(--text-muted);">· ${new Date(claim.t).toLocaleDateString()}</span><div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmClaim('${escapeHTML(key)}', ${arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); rejectClaim('${escapeHTML(key)}', ${arcIdx})">Not yet</button></div></div>`;
+        return `<div class="claim"><b>${escapeHTML(claim.by)}</b> says they paid <b>${viewMoney().fmt(claim.amt)}</b> <span style="color:var(--text-muted);">· ${new Date(claim.t).toLocaleDateString()}</span><div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmClaim(${jsArg(key)}, ${arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); rejectClaim(${jsArg(key)}, ${arcIdx})">Not yet</button></div></div>`;
     }
 
     // ---- Noticeboard: db.notices = [{id, t, by, text, pinned}] ----
@@ -1486,7 +1573,7 @@
     function openNotices() {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href); cancelNoticeEdit(); renderNotices();
+        cancelNoticeEdit(); renderNotices();
         document.getElementById('noticeOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; document.body.style.overflow = ''; }
@@ -1496,7 +1583,7 @@
                 ${n.pinned ? `<div class="tag" style="margin-bottom:6px;">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</div>` : ''}
                 <div class="card-text">${linkify(n.text)}</div>
                 <div class="card-row" style="margin-top:10px;"><span style="display:flex; align-items:center; gap:8px;" class="card-meta">${avatarHTML(n.by || '?', 'sm')}${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
-                <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); toggleNoticePin('${escapeHTML(n.id)}')">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editNotice('${escapeHTML(n.id)}')">Edit</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteNotice('${escapeHTML(n.id)}')">Delete</button></span></div></div>`).join('')
+                <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); toggleNoticePin(${jsArg(n.id)})">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editNotice(${jsArg(n.id)})">Edit</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteNotice(${jsArg(n.id)})">Delete</button></span></div></div>`).join('')
             : emptyState('pin', 'No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.');
         updateNoticeCount();
     }
@@ -1529,7 +1616,7 @@
     function openShopping() {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href); renderShopping();
+        renderShopping();
         document.getElementById('shoppingOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     function closeShopping() { const i = document.getElementById('shopInput'); if (i) i.value = ''; document.getElementById('shoppingOverlay').style.display = 'none'; document.body.style.overflow = ''; }
@@ -1537,10 +1624,10 @@
         const all = db.shopping || [];
         const list = all.filter(x => !x.done).sort((a, b) => b.t - a.t).concat(all.filter(x => x.done).sort((a, b) => b.t - a.t));
         document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item card" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
-                <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem('${escapeHTML(s.id)}')" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">
+                <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">
                 <div style="flex:1; min-width:0;"><div class="shop-text card-title" style="${s.done ? 'text-decoration:line-through;' : ''}">${escapeHTML(s.text)}</div>
                 <div class="card-meta" style="margin-top:1px;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))} · ${new Date(s.t).toLocaleDateString()}</div></div>
-                <button class="sheet-close interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="width:32px; height:32px;" onclick="triggerHaptic(); removeShopItem('${escapeHTML(s.id)}')">${ico('x')}</button></div>`).join('')
+                <button class="sheet-close interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="width:32px; height:32px;" onclick="triggerHaptic(); removeShopItem(${jsArg(s.id)})">${ico('x')}</button></div>`).join('')
             : emptyState('cart', 'Nothing to buy. Add items below, separated by commas.');
         document.getElementById('shopBoughtActions').style.display = all.some(x => x.done) ? 'flex' : 'none';
         updateShopCount();
@@ -1632,7 +1719,7 @@
         window.__moveOutText = text;
         closeManageUsers(); document.getElementById('historyOverlay').querySelector('h2').innerText = `Move-out: ${user}`;
         document.getElementById('historyList').innerHTML = html;
-        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
 
     // ---- "What notifies me": db.notifPrefs[user] = { scope: 'all' | 'mine', minAmount, shopping?: false } (the worker applies it) ----
@@ -1646,7 +1733,7 @@
             + `<div class="group-label" style="margin-top:12px;">Filters</div><label class="choice" style="align-items:center;"><span class="ch-text"><b>Skip small expenses</b><small>Under this amount (0 = never skip). Payments always notify.</small></span><span style="display:flex; align-items:center; gap:4px; font-weight:700;">${escapeHTML(sym)}<input id="notifMinAmt" class="mini-input" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}"></span></label>`
             + `<label class="choice interactive-btn" style="align-items:center;"><span class="ch-text"><b>Shopping list additions</b><small>When someone adds items to the shopping list.</small></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'}></label>`
             + `<button class="btn-glowing primary interactive-btn" style="margin-top:8px;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
-        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     function saveNotifPrefs() {
         const scope = (document.querySelector('input[name="notifScope"]:checked') || {}).value === 'mine' ? 'mine' : 'all';
@@ -1656,7 +1743,7 @@
         const shopping = document.getElementById('notifShopping').checked;
         if (scope === 'all' && !minAmount && shopping) delete db.notifPrefs[currentUser];
         else { db.notifPrefs[currentUser] = { scope, minAmount }; if (!shopping) db.notifPrefs[currentUser].shopping = false; }
-        logAudit("Changed notification settings", null, true); executeActionWithSave(); closeHistory(); showToast("NOTIFICATION SETTINGS SAVED", 2000);
+        logAudit("Changed notification settings", null, true); executeActionWithSave(); navBack(); showToast("NOTIFICATION SETTINGS SAVED", 2000);
     }
 
     // ---- Home-screen widget (Android app): your overall balance, refreshed whenever the app redraws ----
@@ -1698,8 +1785,8 @@
         const claim = key ? getClaim(key, arcIdx) : null;
         if (from !== currentUser) return claim ? `<span class="tag" title="${escapeHTML(from)} says they paid">Paid?</span>` : `<span class="tag muted">Pending</span>`;
         if (claim) return `<span class="tag muted" style="white-space:normal;">Waiting for ${escapeHTML(to)} to confirm</span>`;
-        const paidBtn = key ? `<button class="btn-pill interactive-btn" aria-label="I've paid ${escapeHTML(to)}" onclick="triggerHaptic(); claimPaid('${escapeHTML(key)}', ${arcIdx}, '${escapeHTML(to)}', ${Number(remainingBase).toFixed(4)})">I've paid</button> ` : '';
-        return paidBtn + `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(to)}" onclick="triggerHaptic(); payNow('${escapeHTML(to)}', ${Number(amountLocal).toFixed(2)})">Pay</button>`;
+        const paidBtn = key ? `<button class="btn-pill interactive-btn" aria-label="I've paid ${escapeHTML(to)}" onclick="triggerHaptic(); claimPaid(${jsArg(key)}, ${arcIdx}, ${jsArg(to)}, ${Number(remainingBase).toFixed(4)})">I've paid</button> ` : '';
+        return paidBtn + `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(to)}" onclick="triggerHaptic(); payNow(${jsArg(to)}, ${Number(amountLocal).toFixed(2)})">Pay</button>`;
     }
     async function payNow(to, amountLocal) {
         const code = document.getElementById('currency').value; const amt = Number(amountLocal).toFixed(2);
@@ -1717,7 +1804,7 @@
     // ---- Restore backup: daily snapshots (60 days) and recent saves (last 200), both kept by the worker
     let restoreCache = { backup: null, version: null }; let restoreTab = 'backup';
     function openRestore() {
-        closeSettings(); history.pushState(null, null, location.href);
+        closeSettings(); 
         restoreCache = { backup: null, version: null };
         document.getElementById('restoreOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
         renderRestoreList('backup');
@@ -1744,7 +1831,7 @@
             const when = kind === 'backup' ? new Date(r.day + 'T03:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
                                            : new Date(r.ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             const sub = (kind === 'version' && i === 0) ? 'Current data' : `${Math.max(1, Math.round(r.bytes / 1024))} KB`;
-            const btn = (kind === 'version' && i === 0) ? '<span class="tag">Now</span>' : `<button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmRestore('${kind}', '${escapeHTML(String(id))}', '${escapeHTML(when)}')">Restore</button>`;
+            const btn = (kind === 'version' && i === 0) ? '<span class="tag">Now</span>' : `<button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmRestore('${kind}', '${escapeHTML(String(id))}', ${jsArg(when)})">Restore</button>`;
             return `<div class="card"><div class="card-row"><div><div class="card-title">${escapeHTML(when)}</div><div class="card-meta">${sub}</div></div>${btn}</div></div>`;
         }).join('');
     }
@@ -1815,7 +1902,7 @@
         if (backup) { 
             try { 
                 db = typeof backup === 'string' ? JSON.parse(backup) : backup; if (db.encrypted) throw new Error("Encrypted backup format found."); initializeDB(); localDbLoaded = true; renderUsers();
-                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
+                if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = currentUser; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = currentUser; render(); }
             } catch (err) { initializeDB(); }
         }
     }
@@ -1862,7 +1949,7 @@
             initializeDB(); 
             if (db.trash && Array.isArray(db.trash)) { const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000; let originalLength = db.trash.length; db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs); if (db.trash.length !== originalLength) executeActionWithSave(); }
             renderUsers(); saveLocalBackup(); 
-            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
+            if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = currentUser; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = currentUser; render(); }
             if (pushLocalChanges) { setNeedsSync(true); setTimeout(() => saveData(), 50); } else { offlineActionsCount = 0; updateOfflineBadge(); }
             processUploadQueue(); refreshWebPush(); setTimeout(maybeShowNotifCard, 2500);
         } catch (e) {
@@ -1895,7 +1982,7 @@
             // (merged + newer local changes: keep the old base so the next save merges again)
         })
         .catch((e) => { if (e.message === "AUTH") { setNeedsSync(true); forgetHouseKey(); showLock("Wrong PIN. Try again"); } else if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { if (e.message === "REJECTED") { setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); showToast("SERVER REFUSED THAT SAVE - RELOADING", 3000); setTimeout(() => loadData(true), 500); } else { setNeedsSync(true); scheduleSaveRetry(15000); } } })
-        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = 'auto'; if (editSeq !== seqAtStart) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 1500); } });
+        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = ''; if (editSeq !== seqAtStart) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 1500); } });
     }
 
     function toggleMyView() {
@@ -1919,7 +2006,7 @@
     function toggleMenu() {
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); const overlay = document.getElementById('menuOverlay'); const isOpen = menu.classList.contains('open');
-        if(!isOpen) history.pushState(null, null, location.href); menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block';
+        if(!isOpen) navEnsureEntry(); menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block';
     }
 
     let pressTimer; let isLongPress = false;
@@ -1957,9 +2044,9 @@
     function openManageUsers() {
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
-        history.pushState(null, null, location.href); 
+        
         const list = document.getElementById('manageUserList');
-        list.innerHTML = db.users.map(u => `<div class="card"><div style="display:flex; align-items:center; gap:12px;">${avatarHTML(u)}<div class="card-title" style="flex:1;">${escapeHTML(u)}${(db.activeUsers || []).includes(u) ? '' : ' <span class="tag muted">away</span>'}</div></div><div class="card-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut('${escapeHTML(u)}')">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button></div></div>`).join('');
+        list.innerHTML = db.users.map(u => `<div class="card"><div style="display:flex; align-items:center; gap:12px;">${avatarHTML(u)}<div class="card-title" style="flex:1;">${escapeHTML(u)}${(db.activeUsers || []).includes(u) ? '' : ' <span class="tag muted">away</span>'}</div></div><div class="card-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut(${jsArg(u)})">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser(${jsArg(u)})">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser(${jsArg(u)})">Remove</button></div></div>`).join('');
         const addBtn = document.getElementById('addHousemateBtn'); if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
         document.getElementById('manageUsersOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
@@ -1987,7 +2074,7 @@
             let newPaid = {}; for (let key in db.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key]; } db.paidStatus = newPaid;
             if (db.payLinks && db.payLinks[oldName]) { db.payLinks[n] = db.payLinks[oldName]; delete db.payLinks[oldName]; }
             logAudit(`Renamed ${oldName} to`, n);
-            if (currentUser === oldName) { currentUser = n; localStorage.setItem('house_user', n); document.getElementById('topUserName').innerText = escapeHTML(n); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(n); }
+            if (currentUser === oldName) { currentUser = n; localStorage.setItem('house_user', n); document.getElementById('topUserName').innerText = n; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = n; }
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
         });
     }
@@ -2018,10 +2105,10 @@
             try {
                 let nameStr = ""; if (typeof u === 'string') nameStr = u; else if (u && typeof u === 'object' && u.name) nameStr = String(u.name); else if (u) nameStr = String(u);
                 nameStr = nameStr.trim(); if (!nameStr) return; validUsersFound = true;
-                btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(nameStr)}')">${avatarHTML(nameStr)}${escapeHTML(nameStr)}</button>`;
+                btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login(${jsArg(nameStr)})">${avatarHTML(nameStr)}${escapeHTML(nameStr)}</button>`;
             } catch (e) {}
         });
-        if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login('${escapeHTML(u)}')">${avatarHTML(u)}${escapeHTML(u)}</button>`; }); }
+        if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login(${jsArg(u)})">${avatarHTML(u)}${escapeHTML(u)}</button>`; }); }
     }
 
     function formatDescDisplay(desc, origSym = '') {
@@ -2220,7 +2307,7 @@
     const AVATAR_COLOURS = ["#0d9488", "#6366f1", "#f59e0b", "#ec4899", "#0ea5e9", "#8b5cf6", "#ef4444", "#10b981", "#f97316", "#3b82f6"];
     function avatarColour(name) { let n = 0; for (const ch of String(name || "")) n = (n * 31 + ch.codePointAt(0)) >>> 0; return AVATAR_COLOURS[n % AVATAR_COLOURS.length]; }
     function avatarHTML(name, size = "") { const s = String(name || "?"); return `<span class="avatar ${size}" aria-hidden="true" style="background:${avatarColour(s)}">${escapeHTML(Array.from(s.trim())[0] || "?").toUpperCase()}</span>`; }
-    function goHome() { window.scrollTo({ top: 0, behavior: "smooth" }); }
+    function goHome() { navCloseAll(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
     function generateActionPills(ex) {
         let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
@@ -2236,7 +2323,7 @@
         const chkContainer = document.getElementById('cycleSplitCheckboxes');
         chkContainer.innerHTML = db.users.map(u => {
             const isChecked = db.activeUsers.includes(u); const opac = isChecked ? '1' : '0.4';
-            return `<button class="btn-pill interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px 4px 4px; opacity:${opac}; ${isChecked ? 'border-color:var(--accent); background:var(--accent-soft);' : ''}">${avatarHTML(u, 'sm')}${escapeHTML(u)}</button>`;
+            return `<button class="btn-pill interactive-btn" onclick="toggleActiveUser(${jsArg(u)})" style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px 4px 4px; opacity:${opac}; ${isChecked ? 'border-color:var(--accent); background:var(--accent-soft);' : ''}">${avatarHTML(u, 'sm')}${escapeHTML(u)}</button>`;
         }).join('');
 
         let allValid = db.expenses || [];
@@ -2247,7 +2334,7 @@
         
         let tagHtml = '';
         if(hashtags.size > 0) {
-            hashtags.forEach(tag => { let isActive = activeHashtag === tag; tagHtml += `<button class="name-pill interactive-btn ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag('${escapeHTML(tag)}')">${escapeHTML(tag)}</button>`; });
+            hashtags.forEach(tag => { let isActive = activeHashtag === tag; tagHtml += `<button class="name-pill interactive-btn ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag(${jsArg(tag)})">${escapeHTML(tag)}</button>`; });
         }
         document.getElementById('hashtagContainer').innerHTML = tagHtml;
 
@@ -2287,7 +2374,7 @@
                 if (exDate !== currentGroupDate) { let mt = (renderIndex === 0) ? '0px' : '20px'; listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`; currentGroupDate = exDate; }
 
                 let pillsHtml = generateActionPills(ex);
-                let receiptSafeStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+                let receiptSafeStr = typeof ex.receipt === 'string' ? `${jsArg(ex.receipt)}` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
                 let receiptHtml = ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
 
                 const amtStr = `${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
@@ -2337,7 +2424,7 @@
                 sHtmlTemp += `<div class="flow-row timeline-item" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.45 : 1}; border-bottom: none;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.02rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">`;
                 
                 if (can) {
-                    if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
+                    if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
                     sHtmlTemp += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
                 } else { sHtmlTemp += payOrPending(t.from, t.to, tr * rate, isS, t.key, -1, tr); }
                 sHtmlTemp += `</div></div></div>` + (can && !isS ? claimBanner(t.key, -1) : '');
@@ -2408,7 +2495,7 @@
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase)}</div></div></div>${canMarkGlobal ? claimBanner(key, idx) : ''}`;
+                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase)}</div></div></div>${canMarkGlobal ? claimBanner(key, idx) : ''}`;
                     }
                 });
 
@@ -2422,7 +2509,7 @@
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase)}</div></div></div>${canMark ? claimBanner(t.key, idx) : ''}`;
+                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase)}</div></div></div>${canMark ? claimBanner(t.key, idx) : ''}`;
                         }
                     });
                 }
@@ -2436,7 +2523,7 @@
                 let hasVisibleLogs = false;
                 let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
-                    hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
+                    hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `${jsArg(d.receipt)}` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
                     return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.88rem;">${displayDesc || escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div class="item-sub">${escapeHTML(d.name)}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`
                 }).join('');
 
@@ -2768,7 +2855,7 @@
     }
     
     function login(u) { 
-        currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = escapeHTML(u); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(u);
+        currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = u; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = u;
         if (!localStorage.getItem('has_seen_input')) { document.getElementById('chatWrapper').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
         render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500); runPendingQuickAdd();
     }
@@ -2796,6 +2883,7 @@
         
         fetchLiveRates(); checkForUpdates();
     };
+    navInstall(); // after every function above exists
 </script>
 </body>
 </html>
