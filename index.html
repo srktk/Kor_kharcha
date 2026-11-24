@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.21.0">
+    <meta name="app-version" content="7.22.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -32,9 +32,13 @@
             try { sessionStorage.removeItem('house_theme'); sessionStorage.removeItem('house_theme_time'); } catch (e) {} // old 10-minute override
             const mode = themeMode(); const theme = mode === 'system' ? (themeQuery.matches ? 'dark' : 'light') : mode;
             document.documentElement.setAttribute('data-theme', theme);
+            // Pure black (OLED phones): dark mode with a true black background, whenever dark mode is showing
+            let black = false; try { black = theme === 'dark' && localStorage.getItem('house_black') === '1'; } catch (e) {}
+            if (black) document.documentElement.setAttribute('data-black', ''); else document.documentElement.removeAttribute('data-black');
+            const bi = document.getElementById('blackToggleInput'); if (bi) { try { bi.checked = localStorage.getItem('house_black') === '1'; } catch (e) {} }
             try { const acc = localStorage.getItem('house_accent'); if (acc && acc !== 'teal') document.documentElement.setAttribute('data-accent', acc); else document.documentElement.removeAttribute('data-accent'); } catch (e) {}
             const metaTheme = document.querySelector('meta[name="theme-color"]');
-            if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0a0e17' : '#f2f4f7');
+            if (metaTheme) metaTheme.setAttribute('content', black ? '#000000' : theme === 'dark' ? '#0a0e17' : '#f2f4f7');
             document.querySelectorAll('[data-theme-mode]').forEach((b) => b.classList.toggle('active', b.dataset.themeMode === mode));
             const st = document.getElementById('themeState'); if (st) st.innerText = { system: 'System', light: 'Light', dark: 'Dark' }[mode];
         }
@@ -120,7 +124,10 @@
         @keyframes input-glow { 0%, 100% { box-shadow: var(--shadow); border-color: var(--border); } 50% { box-shadow: 0 0 0 4px var(--accent-glow); border-color: var(--accent); } }
         .intro-glow { animation: input-glow 2.5s ease-in-out infinite; }
         @keyframes skel-pulse { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
-        .skel-block { background: var(--border); border-radius: 8px; animation: skel-pulse 1.5s infinite ease-in-out; }
+        /* Loading placeholders: grey shapes with a soft light sweeping across them */
+        @keyframes skel-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+        .skel-block { background: linear-gradient(90deg, var(--border) 30%, color-mix(in srgb, var(--border) 35%, var(--surface)) 50%, var(--border) 70%); background-size: 400% 100%; border-radius: 8px; animation: skel-shimmer 1.4s infinite linear; }
+        @media (prefers-reduced-motion: reduce) { .skel-block { animation: skel-pulse 1.5s infinite ease-in-out; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .spin { animation: spin 1s linear infinite; }
 
@@ -160,6 +167,27 @@
         .avatar.lg { width: 48px; height: 48px; font-size: 1.1rem; }
         .avatar.xl { width: 60px; height: 60px; font-size: 1.4rem; }
         .avatar.xxl { width: 88px; height: 88px; font-size: 2rem; }
+        .avatar.xs { width: 18px; height: 18px; font-size: 0.6rem; }
+        .shop-claim { flex-shrink: 0; white-space: nowrap; }
+        .tag.shop-claim { padding: 3px 9px 3px 3px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+        .shop-item.claimed { box-shadow: inset 3px 0 0 var(--accent); }
+        .house-plan { padding: 6px 14px; }
+        .hp-row { display: flex; align-items: center; gap: 6px; padding: 9px 0; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        .hp-row:last-child { border-bottom: 0; }
+        .hp-row .pay-arrow { color: var(--text-muted); display: inline-flex; }
+        .hp-row .pay-arrow svg { width: 14px; height: 14px; }
+        .hp-row.me b { color: var(--accent-strong); }
+        .hp-amt { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+        /* Offline / waiting-to-sync bar under the top bar */
+        #offlineBar { position: fixed; z-index: 101; top: calc(max(10px, env(safe-area-inset-top)) + 58px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 32px); padding: 5px 5px 5px 12px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-lg); font-size: 0.8rem; font-weight: 600; color: var(--text-main); white-space: nowrap; animation: ob-in 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+        @keyframes ob-in { from { opacity: 0; transform: translate(-50%, -10px); } }
+        #offlineBar .ob-dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+        #offlineBar.off .ob-dot { background: var(--danger); }
+        #offlineBarText { overflow: hidden; text-overflow: ellipsis; }
+        .ob-btn { border: 0; border-radius: 15px; height: 30px; padding: 0 12px; background: var(--accent-soft); color: var(--accent-strong); font-family: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+        .notice-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+        .notice-opt { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 19px; background: var(--input-bg); font-size: 0.82rem; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+        .notice-opt select { color: var(--text-main) !important; background: transparent !important; font-weight: 700; font-size: 16px !important; padding-right: 2px; }
         .menu-avatar { position: relative; background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; }
         .menu-avatar .ma-edit { position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); border: 2px solid var(--surface); display: flex; align-items: center; justify-content: center; }
         .menu-avatar .ma-edit svg { width: 11px; height: 11px; }
@@ -252,11 +280,17 @@
            Home has a glass pill behind it, and a pressed tab shows a glass bubble under the finger. ---- */
         :root { --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.36)); --glass-rim: rgba(255, 255, 255, 0.8); --glass-hi: rgba(255, 255, 255, 0.95); --glass-lo: rgba(16, 24, 40, 0.06); --glass-shadow: 0 12px 34px rgba(16, 24, 40, 0.18), 0 2px 8px rgba(16, 24, 40, 0.06); --glass-sheen: rgba(255, 255, 255, 0.5); --glass-pill: rgba(255, 255, 255, 0.78); --glass-press: rgba(255, 255, 255, 0.6); }
         [data-theme="dark"] { --glass-bg: linear-gradient(180deg, rgba(52, 62, 82, 0.62), rgba(24, 30, 44, 0.52)); --glass-rim: rgba(255, 255, 255, 0.13); --glass-hi: rgba(255, 255, 255, 0.22); --glass-lo: rgba(0, 0, 0, 0.25); --glass-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3); --glass-sheen: rgba(255, 255, 255, 0.09); --glass-pill: rgba(255, 255, 255, 0.12); --glass-press: rgba(255, 255, 255, 0.16); }
+        /* Pure black (Settings → Display, dark mode only): true black page for OLED screens, surfaces just off black */
+        html[data-theme="dark"][data-black] { --bg: #000000; --surface: #0b0d11; --surface-2: #13161c; --input-bg: #13161c; --nav-bg: rgba(0, 0, 0, 0.86); --border: rgba(255, 255, 255, 0.09); --glass-bg: linear-gradient(180deg, rgba(38, 42, 52, 0.62), rgba(8, 10, 14, 0.62)); --shadow: none; }
         #tabGlass::before { content: ''; position: absolute; inset: 0 0 auto; height: calc(var(--tabbar-h) * 0.55); border-radius: 32px 32px 18px 18px; background: linear-gradient(180deg, var(--glass-sheen), transparent); pointer-events: none; }
         #groupNote { background: var(--glass-pill) !important; }
         .tab::after { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-press); box-shadow: inset 0 1px 0 var(--glass-hi); opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3); z-index: -1; pointer-events: none; }
         .tab:active::after { opacity: 1; transform: scale(1); transition-duration: 0.08s, 0.2s; }
-        .tab.active::before { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 4px rgba(16, 24, 40, 0.08); z-index: -1; pointer-events: none; }
+        /* One glass pill behind the current tab; it slides (stretching a little on the way) when you go to another tab:
+           Shopping / Notices while their sheet is open, More while the menu or a screen opened from it is open, else Home */
+        #tabPill { position: absolute; top: 6px; bottom: 6px; left: 0; width: 0; border-radius: 26px; background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 4px rgba(16, 24, 40, 0.08); pointer-events: none; z-index: 0; opacity: 0; transition: opacity 0.2s; }
+        #tabPill.on { opacity: 1; }
+        #tabBar > .tab, #tabBar > .tab-add { position: relative; z-index: 1; }
         @media (prefers-reduced-transparency: reduce) { #tabGlass { background: var(--surface); } }
         .tab-badge { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 0.62rem; font-weight: 800; display: none; align-items: center; justify-content: center; border: 2px solid var(--bg); }
 
@@ -303,7 +337,21 @@
         .past-link > .ic { color: var(--text-muted); }
 
         /* ---- Expense rows (tap for details) and the detail sheet ---- */
-        .ex-row { cursor: pointer; border-radius: 14px; margin: 0 -8px; padding-left: 8px !important; padding-right: 8px !important; transition: background 0.15s; }
+        .ex-row { cursor: pointer; border-radius: 14px; margin: 0 -8px; padding-left: 8px !important; padding-right: 8px !important; transition: background 0.15s, transform 0.2s; -webkit-touch-callout: none; }
+        .ex-row.pressing { transform: scale(0.97); background: var(--surface-2); transition: background 0.15s, transform 0.45s cubic-bezier(0.32, 0.72, 0, 1); }
+        /* Long-press (right-click on a computer) an expense: a small menu next to it */
+        .ctx-overlay { position: fixed; inset: 0; z-index: 1500; background: rgba(5, 10, 20, 0.3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: dim-in 0.18s ease-out; }
+        .ctx-menu { position: absolute; width: min(280px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-lg); overflow: hidden; animation: ctx-in 0.24s cubic-bezier(0.32, 0.72, 0, 1); }
+        @keyframes ctx-in { from { opacity: 0; transform: scale(0.88); } }
+        .ctx-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+        .ctx-head .ctx-t { flex: 1; min-width: 0; font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ctx-head .ctx-a { font-weight: 800; font-variant-numeric: tabular-nums; }
+        .ctx-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; background: none; border: 0; border-bottom: 1px solid var(--border); color: var(--text-main); font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: left; }
+        .ctx-item:last-child { border-bottom: 0; }
+        .ctx-item svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+        .ctx-item.danger, .ctx-item.danger svg { color: var(--danger); }
+        .ctx-item:active { background: var(--surface-2); }
+        @media (hover: hover) { .ctx-item:hover { background: var(--surface-2); } }
         .ex-row:active { background: var(--surface-2); }
         .ex-row .item-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .ex-row .item-sub svg { width: 13px; height: 13px; }
@@ -540,7 +588,9 @@
         #lightboxOverlay.zoomed .lightbox-nav, #lightboxOverlay.zoomed .lb-hint { opacity: 0; pointer-events: none; }
 
         /* ---- Loading placeholders (body.booting until the first load finishes) ---- */
-        body.booting #totalExp, body.booting #perPerson, body.booting #startDateDisplay { color: transparent !important; background: rgba(255,255,255,0.22); border-radius: 10px; animation: skel-pulse 1.5s infinite ease-in-out; }
+        body.booting #totalExp, body.booting #perPerson, body.booting #startDateDisplay { color: transparent !important; background: linear-gradient(90deg, rgba(255,255,255,0.18) 30%, rgba(255,255,255,0.36) 50%, rgba(255,255,255,0.18) 70%); background-size: 400% 100%; border-radius: 10px; animation: skel-shimmer 1.4s infinite linear; }
+        body.booting #pastLinkSub { color: transparent !important; background: linear-gradient(90deg, var(--border) 30%, color-mix(in srgb, var(--border) 35%, var(--surface)) 50%, var(--border) 70%); background-size: 400% 100%; border-radius: 6px; animation: skel-shimmer 1.4s infinite linear; }
+        body.booting #topUserName:empty::before { content: ''; display: inline-block; width: 96px; height: 18px; border-radius: 6px; background: var(--border); }
         body.booting #totalExp { width: 62%; }
         body.booting #perPerson, body.booting #startDateDisplay { display: inline-block; min-width: 76px; border-radius: 6px; }
         body.booting #monthlyTrendText { visibility: hidden; }
@@ -570,12 +620,33 @@
             .login-card.sheet::before { display: none; }
             .login-card.sheet.tall { height: calc(86dvh - var(--kb, 0px)); }
         }
+        /* ---- Wide computer screens: a third column (shopping list, notes, settle up) ---- */
+        #sideCol { display: none; }
+        @media (min-width: 1280px) {
+            .wrapper { max-width: 1440px; grid-template-columns: minmax(0, 400px) minmax(0, 1fr) minmax(0, 350px); }
+            #sideCol { display: flex; flex-direction: column; gap: 14px; grid-column: 3; grid-row: 2 / 6; align-self: start; position: sticky; top: 66px; max-height: calc(100dvh - 86px - var(--tabbar-h)); overflow-y: auto; padding: 0 16px 16px 4px; scrollbar-width: thin; }
+        }
+        .sc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; }
+        .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .sc-head h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .sc-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+        .sc-row:last-child { border-bottom: 0; }
+        .sc-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+        .sc-row .sc-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sc-note { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.86rem; line-height: 1.45; overflow-wrap: anywhere; }
+        .sc-note:last-child { border-bottom: 0; }
+        .sc-note .card-meta { margin-top: 3px; }
+        .sc-add { display: flex; gap: 6px; margin-top: 8px; }
+        .sc-add input { flex: 1; min-width: 0; height: 38px; border-radius: 12px; border: 1px solid transparent; padding: 0 12px; outline: none; }
+        .sc-add input:focus { border-color: var(--accent); }
+        .sc-total { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
     </style>
 </head>
 <body class="booting">
 <div id="ptr" aria-hidden="true"></div>
 
 <div id="loading" aria-live="polite">SYNCING...</div>
+<div id="offlineBar" role="status" aria-live="polite" style="display:none;"><span class="ob-dot"></span><span id="offlineBarText"></span><button class="ob-btn interactive-btn" onclick="triggerHaptic(); retryNow()">Retry</button></div>
 
 <div id="loginOverlay" class="dialog-overlay" style="display:none;">
     <div class="login-card dialog" style="width:calc(100% - 32px); max-width:400px;">
@@ -622,6 +693,10 @@
         <div id="noticeList" class="sheet-body"></div>
         <div class="sheet-foot" style="flex-direction:column; gap:8px;">
             <textarea id="noticeInput" aria-label="New note" class="chat-note" rows="2" maxlength="1000" placeholder="Wi-Fi password, bin day, landlord's number..." style="resize:vertical;"></textarea>
+            <div class="notice-opts">
+                <label class="notice-opt"><span>Remove after</span><select id="noticeExpiry" aria-label="Remove the note after" class="interactive-btn" onchange="this.dataset.touched = '1'"><option value="0">Never</option><option value="1">1 day</option><option value="3">3 days</option><option value="7">1 week</option><option value="30">1 month</option></select></label>
+                <label class="notice-opt interactive-btn"><input type="checkbox" id="noticePinNew" style="accent-color:var(--accent); width:18px; height:18px;"><span>Pin to top</span></label>
+            </div>
             <button id="noticeSaveBtn" class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); saveNotice()">Add Note</button>
         </div>
     </div>
@@ -646,8 +721,9 @@
     <div class="login-card sheet">
         <div class="sheet-head"><h2>How to Use</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeHelp()" data-ic="x"></button></div>
         <div class="stack">
-            <div class="card help-card"><span class="ri-icon" data-ic="plus"></span><div><div class="card-title">Add an expense</div><p>Type the amount and what it was in the box at the bottom, e.g. <b>12.50 milk and bread</b>, then tap send. The ⋮ button adds a note or a receipt photo.</p></div></div>
-            <div class="card help-card"><span class="ri-icon" data-ic="swipe"></span><div><div class="card-title">Swipe actions</div><p>Turn on "Swipe to reveal actions" in Settings, then swipe an expense sideways for Share, Edit and Delete.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="plus"></span><div><div class="card-title">Add an expense</div><p>Type the amount and what it was in the box at the bottom, e.g. <b>12.50 milk and bread</b>, then tap send. Note, Camera and Gallery under the box add a note or a receipt photo. You can also share a receipt photo or a payment message from another app straight into House Expenses.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="swipe"></span><div><div class="card-title">Hold an expense</div><p>Press and hold an expense (right-click on a computer) for Share, Add again, Edit and Delete.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="coins"></span><div><div class="card-title">Settle up</div><p>More → Settle Up shows what's open with each housemate across every cycle. Tap "Settled" when they've paid you, or "I've paid" when you've paid them.</p></div></div>
             <div class="card help-card"><span class="ri-icon" data-ic="hash"></span><div><div class="card-title">Hashtag bills</div><p>Add a tag like #groceries to an expense to keep it in its own pot. Tap the tag on the balance card to see only that bill.</p></div></div>
             <div class="card help-card"><span class="ri-icon" data-ic="users"></span><div><div class="card-title">Who's in this month</div><p>In Settlements, tap "Active housemates". Untick someone who's away and the split works out without them.</p></div></div>
             <div class="card help-card"><span class="ri-icon" data-ic="trash"></span><div><div class="card-title">Recovery Vault</div><p>Deleted something by accident? Settings → Recovery Vault brings it back until it expires.</p></div></div>
@@ -687,8 +763,8 @@
 
 <div id="debtsOverlay" class="sheet-overlay" style="display:none;">
     <div class="login-card sheet tall">
-        <div class="sheet-head"><h2>All Debts</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeDebts()" data-ic="x"></button></div>
-        <p class="sheet-sub">Everything still unpaid between you and each housemate: this cycle, hashtag bills and every past cycle, minus payments already marked.</p>
+        <div class="sheet-head"><h2>Settle Up</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeDebts()" data-ic="x"></button></div>
+        <p class="sheet-sub">Everything still open between you and each housemate (this cycle, hashtag bills and every past cycle), settled in one go.</p>
         <div id="debtsList" class="sheet-body"></div>
     </div>
 </div>
@@ -718,6 +794,10 @@
             <div class="row-item" style="cursor:default; flex-wrap:wrap;">
                 <span class="ri-icon" data-ic="moon"></span><span class="ri-label">Theme<span class="ri-sub">System follows your phone's dark mode</span></span>
                 <div class="seg" role="tablist" aria-label="Theme" style="width:100%; margin:8px 0 0;"><button data-theme-mode="system" class="interactive-btn" onclick="setThemeMode('system')">System</button><button data-theme-mode="light" class="interactive-btn" onclick="setThemeMode('light')">Light</button><button data-theme-mode="dark" class="interactive-btn" onclick="setThemeMode('dark')">Dark</button></div>
+            </div>
+            <div id="blackToggleRow" class="row-item interactive-btn" onclick="triggerHaptic(); toggleBlack()">
+                <span class="ri-icon" data-ic="moon"></span><span class="ri-label">Pure black<span class="ri-sub">True black in dark mode. Saves battery on OLED screens</span></span>
+                <span class="toggle-switch"><input type="checkbox" aria-label="Pure black" id="blackToggleInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
             </div>
             <div class="row-item" style="cursor:default;">
                 <span class="ri-icon" data-ic="palette"></span><span class="ri-label">Accent colour<span class="ri-sub">Only on this phone</span></span>
@@ -825,6 +905,8 @@
     </div>
 </div>
 
+<div id="ctxOverlay" class="ctx-overlay" style="display:none;" onclick="if (event.target === this) { triggerHaptic(); closeCtx(); }"><div id="ctxMenu" class="ctx-menu" role="menu" aria-label="Expense actions"></div></div>
+
 <div id="promptOverlay" class="sheet-overlay ask-overlay" style="display:none; z-index:10000;" onclick="if (event.target === this) { triggerHaptic(); closePrompt(); }">
     <form class="login-card sheet ask-sheet" role="dialog" aria-labelledby="promptMessage" onsubmit="event.preventDefault(); triggerHaptic(); executePrompt();">
         <h3 id="promptMessage"></h3>
@@ -889,7 +971,7 @@
 
     <div class="group-label">House</div>
     <div class="group">
-        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openDebts(); event.preventDefault();"><span class="ri-icon" data-ic="coins"></span><span class="ri-label">All Debts</span><span id="debtsState" class="ri-end"></span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openDebts(); event.preventDefault();"><span class="ri-icon" data-ic="coins"></span><span class="ri-label">Settle Up</span><span id="debtsState" class="ri-end"></span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openNotices(); event.preventDefault();"><span class="ri-icon" data-ic="pin"></span><span class="ri-label">Noticeboard</span><span id="noticeCount" class="count-badge" style="display:none;"></span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openShopping(); event.preventDefault();"><span class="ri-icon" data-ic="cart"></span><span class="ri-label">Shopping List</span><span id="shopCount" class="count-badge" style="display:none;"></span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();"><span class="ri-icon" data-ic="search"></span><span class="ri-label">Search</span></a>
@@ -989,6 +1071,9 @@
         <span id="pastLinkTag" class="tag danger" style="display:none;"></span>
         <span class="ic" data-ic="chev"></span>
     </button>
+
+    <!-- Wide computer screens (1280px+): a third column with the shopping list, notes and your settle-up total -->
+    <aside id="sideCol" aria-label="Shopping list and notes"></aside>
 </main>
 <div id="addBackdrop" onclick="triggerHaptic(); navBack()"></div>
 <div id="tabGlass" aria-hidden="true"></div>
@@ -1014,6 +1099,7 @@
     </div>
 </section>
 <nav id="tabBar" aria-label="Tabs">
+    <span id="tabPill" aria-hidden="true"></span>
     <button class="tab active interactive-btn" onclick="triggerHaptic(); goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</button>
     <button class="tab interactive-btn" onclick="triggerHaptic(); openShopping()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"></path></svg>Shopping<span id="tabShopBadge" class="tab-badge"></span></button>
     <button id="tabAddBtn" class="tab-add interactive-btn" aria-label="Add expense" onclick="triggerHaptic(); toggleAddBox()"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></button>
@@ -1057,7 +1143,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.21.0";
+    const APP_VERSION = "7.22.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1256,7 +1342,7 @@
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
         showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay' };
-    const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox' };
+    const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox', ctxOverlay: 'closeCtx' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navUserBack = false, navClickAttr = '';
     function navBack() { navUserBack = true; try { return navCloseTop(); } finally { navUserBack = false; } }
@@ -1365,7 +1451,29 @@
         // Opened again while still sliding away: back in place at once
         added.forEach(l => { const el = document.getElementById(l === 'menu' ? 'menuOverlay' : l); if (el && el.classList.contains('nav-closing')) navEndClosing(el); });
         navPrevLayers = layers;
+        tabPillSync();
     }
+    // ---- Sliding tab pill: the glass pill moves to the tab you're on (the screen at the bottom of the stack decides) ----
+    const TAB_FOR = { shoppingOverlay: 1, noticeOverlay: 3, menu: 4 }; // tab positions: Home 0, Shopping 1, + 2, Notices 3, More 4
+    function activeTabIndex() {
+        const top = navTopPage(); if (top === 'shoppingOverlay' || top === 'noticeOverlay') return TAB_FOR[top]; // also when opened from More
+        const root = navStack.length ? navStack[0].id : top; return root && TAB_FOR[root] !== undefined ? TAB_FOR[root] : 0;
+    }
+    function tabPillSync(animate = true) {
+        const bar = document.getElementById('tabBar'), pill = document.getElementById('tabPill'); if (!bar || !pill) return;
+        const tabs = bar.querySelectorAll(':scope > button'), i = activeTabIndex(), tab = tabs[i]; if (!tab) return;
+        tabs.forEach((t, k) => t.classList.toggle('active', k === i));
+        if (!tab.offsetWidth) return; // not drawn yet
+        const x = tab.offsetLeft + 2, w = tab.offsetWidth - 4, from = pill._x;
+        if (from === x && pill._w === w) return;
+        pill.style.width = w + 'px'; pill.style.transform = `translateX(${x}px)`; pill.classList.add('on');
+        if (animate && from != null && Math.abs(from - x) > 1 && !revealMotionOff()) {
+            if (pill._anim) pill._anim.cancel();
+            pill._anim = pill.animate([{ transform: `translateX(${from}px)` }, { transform: `translateX(${(from + x) / 2}px) scaleX(1.22)`, offset: 0.45 }, { transform: `translateX(${x}px)` }], { duration: 440, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+        }
+        pill._x = x; pill._w = w;
+    }
+    window.addEventListener('resize', () => tabPillSync(false));
     // ---- Closing a pop-up plays the reverse of opening: the sheet slides down (a box pops out on wide screens) while the dim
     //      fades. Its own code hides it at once as always (style.display none), so Back, taps and the screen logic never meet a
     //      half-closed pop-up; .nav-closing only keeps it drawn, untouchable, until the motion ends. ----
@@ -1553,6 +1661,25 @@
         if (offlineActionsCount > 0 && (!navigator.onLine || needsSync)) { badge.innerText = offlineActionsCount; badge.style.display = 'flex'; } 
         else { badge.style.display = 'none'; }
         const sw = document.getElementById('syncWrap'); if (sw) sw.classList.toggle('unsaved', badge.style.display === 'flex');
+        updateOfflineBar();
+    }
+    // ---- Offline bar: "You're offline · 2 changes waiting" at once when the phone has no connection; "2 changes waiting
+    //      to sync" only when saving has been stuck for a few seconds (a normal save takes under one) ----
+    let offlineBarTimer = null;
+    function updateOfflineBar() {
+        const bar = document.getElementById('offlineBar'); if (!bar) return;
+        const n = offlineActionsCount, waiting = n > 0 && needsSync, off = !navigator.onLine;
+        const show = (text) => { document.getElementById('offlineBarText').textContent = text; bar.classList.toggle('off', off); bar.style.display = 'flex'; };
+        const changes = `${n} change${n === 1 ? '' : 's'}`;
+        if (off) { clearTimeout(offlineBarTimer); offlineBarTimer = null; show(n > 0 ? `You're offline · ${changes} waiting` : "You're offline"); return; }
+        if (!waiting) { clearTimeout(offlineBarTimer); offlineBarTimer = null; bar.style.display = 'none'; return; }
+        if (bar.style.display === 'flex') { show(`${changes} waiting to sync`); return; }
+        if (!offlineBarTimer) offlineBarTimer = setTimeout(() => { offlineBarTimer = null; if (offlineActionsCount > 0 && needsSync && navigator.onLine) show(`${offlineActionsCount} change${offlineActionsCount === 1 ? '' : 's'} waiting to sync`); }, 4000);
+    }
+    function retryNow() {
+        if (!navigator.onLine) { showToast("STILL OFFLINE", 1500); return; }
+        if (needsSync) saveData(); else loadData(true);
+        processUploadQueue();
     }
 
     // Another tab of the app saved: load the server's copy, whose version number matches its contents. (Taking the other
@@ -1581,6 +1708,18 @@
         };
         if(animationFrameId) cancelAnimationFrame(animationFrameId);
         animationFrameId = obj._countUp = window.requestAnimationFrame(step);
+    }
+
+    // ---- Count-up: an amount drawn as <span data-cu="key" data-v="12.50" data-p="£"> rolls from its last value to the new
+    //      one when it changes (a payment marked, a new expense, a sync). First sight of a key just shows the number. ----
+    const countSeen = new Map();
+    function countUps(root) {
+        if (!root) return;
+        root.querySelectorAll('[data-cu]').forEach(el => {
+            const key = el.dataset.cu, v = Number(el.dataset.v); if (!isFinite(v)) return;
+            const old = countSeen.get(key); countSeen.set(key, v);
+            if (old != null && Math.abs(old - v) > 0.004 && localDbLoaded) animateValue(el, old, v, 700, el.dataset.p || '');
+        });
     }
 
     async function checkForUpdates() {
@@ -1930,7 +2069,74 @@
         const el = document.getElementById('amtInput'); if (!el) return;
         openAddBox();
     }
-    function runPendingQuickAdd() { if (pendingQuickAdd) setTimeout(openQuickAdd, 400); }
+    function runPendingQuickAdd() {
+        if (pendingQuickAdd) setTimeout(openQuickAdd, 400);
+        if (pendingShare) setTimeout(() => { if (pendingShare) receiveShare(pendingShare); }, 450);
+        if (pendingShortcut) setTimeout(() => { if (pendingShortcut) openShortcut(pendingShortcut); }, 450);
+    }
+
+    // ---- Share into the app: a receipt photo or a payment message shared from another app (Android share sheet, or the
+    //      website installed on a phone) opens the add box with the photo attached and any amount in the text filled in ----
+    let pendingShare = null;
+    function shareReady() { return !appLocked && !!currentUser && localDbLoaded && !isSyncing && document.getElementById('loginOverlay').style.display !== 'flex'; }
+    function dataUrlToFile(url, i) {
+        const m = /^data:(image\/[\w.+-]+);base64,(.*)$/.exec(String(url || '')); if (!m) return null;
+        const bin = atob(m[2]); const bytes = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+        return new File([bytes], `shared-${Date.now()}-${i}.${m[1].split('/')[1].replace('jpeg', 'jpg')}`, { type: m[1] });
+    }
+    /** data = { text, title, url, images: [data: URLs] (Android) or files: [File] (website) } */
+    function receiveShare(data) {
+        if (!data || typeof data !== 'object') return;
+        if (!shareReady()) { pendingShare = data; return; } // after unlock / picking a name / the first load
+        pendingShare = null;
+        const files = (Array.isArray(data.files) ? data.files : []).filter(f => f && /^image\//.test(f.type || ''))
+            .concat((Array.isArray(data.images) ? data.images : []).map(dataUrlToFile).filter(Boolean)).slice(0, 10);
+        const text = [data.title, data.text, data.url].filter(x => typeof x === 'string' && x.trim()).map(x => x.trim())
+            .filter((x, i, all) => all.indexOf(x) === i).join(' ').replace(/\s+/g, ' ').slice(0, 500);
+        if (!files.length && !text) return;
+        navCloseAll();
+        if (editingId) { editingId = null; render(); }
+        const amtEl = document.getElementById('amtInput'), noteEl = document.getElementById('groupNote');
+        // "You paid £12.40 at Tesco" -> 12.40 in the amount box; the whole message goes in the note
+        const m = text.match(/(?:£|\$|€|\bGBP\s?|\bRs\.?\s?|\bPKR\s?|\bAED\s?)\s?(\d{1,6}(?:[.,]\d{1,2})?)\b/i);
+        if (m && !amtEl.value.trim()) amtEl.value = m[1].replace(',', '.') + ' ';
+        if (text) noteEl.value = text.slice(0, 200);
+        if (files.length) {
+            try {
+                const input = document.getElementById('receiptInput'), dt = new DataTransfer();
+                Array.from(input.files || []).forEach(f => dt.items.add(f)); files.forEach(f => dt.items.add(f));
+                input.files = dt.files;
+            } catch (e) { console.warn('could not attach the shared photo', e); showToast("COULDN'T ADD THE SHARED PHOTO", 2500); }
+        }
+        openAddBox();
+        if (text) { showNow(document.getElementById('optionsMenu'), 'block'); setNoteChip(true); }
+        photoChipsSync(); updateAmtPreview(true);
+        showToast(files.length ? `${files.length} PHOTO${files.length === 1 ? '' : 'S'} ADDED${m ? '' : ' - TYPE THE AMOUNT'}` : m ? 'AMOUNT FILLED IN FROM THE MESSAGE' : 'MESSAGE ADDED AS THE NOTE', 2500);
+    }
+    window.receiveShare = receiveShare;
+    // The website's share target (manifest share_target): sw.js keeps the shared photos and text, then opens ?action=share
+    async function takeWebShare() {
+        try {
+            const cache = await caches.open('share-in'); const meta = await cache.match('share-in/meta'); if (!meta) return;
+            const info = await meta.json(); const files = [];
+            for (let i = 0; i < (info.count || 0); i++) { const r = await cache.match('share-in/file-' + i); if (r) { const b = await r.blob(); files.push(new File([b], (info.names && info.names[i]) || `shared-${i}.jpg`, { type: b.type || 'image/jpeg' })); } }
+            await caches.delete('share-in');
+            receiveShare({ title: info.title, text: info.text, url: info.url, files });
+        } catch (e) { console.warn('share-in failed', e); }
+    }
+
+    // ---- App-icon shortcuts and links: houseexpenses://shopping | notices | settle (Android), ?action=... (website) ----
+    let pendingShortcut = null;
+    function openShortcut(what) {
+        if (!shareReady()) { pendingShortcut = what; return; }
+        pendingShortcut = null;
+        if (what === 'add' || what === 'log') { openQuickAdd(); return; }
+        navCloseAll();
+        if (what === 'shopping' || what === 'shop') openShopping();
+        else if (what === 'notices') openNotices();
+        else if (what === 'settle') openDebts();
+    }
+    window.openShortcut = openShortcut;
 
     // ---- "I've paid" -> "Got it": the person who owes says they paid, the person owed confirms ----
     // Claims live next to paidStatus: db.payClaims[key] (current cycle, key may end in _#tag) or arc.payClaims[key].
@@ -1974,7 +2180,14 @@
     // ---- Noticeboard: db.notices = [{id, t, by, text, pinned}] ----
     let editingNoticeId = null;
     function linkify(text) { return escapeHTML(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent-strong); word-break:break-all;">$1</a>').replace(/\n/g, '<br>'); }
-    function updateNoticeCount() { const el = document.getElementById('noticeCount'); if (!el) return; const n = (db.notices || []).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabNoticeBadge', n); }
+    // A note can remove itself after a while (n.exp): hidden from then on, and dropped from the house data at the next load
+    function noticeLive(n) { return !n || !n.exp || n.exp > Date.now(); }
+    function liveNotices() { return (db.notices || []).filter(noticeLive); }
+    function expiryLabel(exp) {
+        const ms = exp - Date.now(), h = Math.round(ms / 3600000), d = Math.round(ms / 864e5);
+        return ms < 3600000 ? 'Goes within the hour' : h < 36 ? `Goes in ${h} h` : `Goes in ${d} days`;
+    }
+    function updateNoticeCount() { const el = document.getElementById('noticeCount'); if (!el) return; const n = liveNotices().length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabNoticeBadge', n); }
     function setTabBadge(id, n) { const b = document.getElementById(id); if (!b) return; b.innerText = n > 99 ? '99+' : n; b.style.display = n ? 'inline-flex' : 'none'; }
     function openNotices() {
         if (document.activeElement) document.activeElement.blur();
@@ -1984,32 +2197,45 @@
     }
     function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; }
     function renderNotices() {
-        const list = (db.notices || []).slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
-        document.getElementById('noticeList').innerHTML = list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}">
-                ${n.pinned ? `<div class="tag" style="margin-bottom:6px;">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</div>` : ''}
+        const list = liveNotices().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
+        document.getElementById('noticeList').innerHTML = !localDbLoaded ? skelCards(3) : list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}">
+                ${n.pinned || n.exp ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">${n.pinned ? `<span class="tag">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</span>` : ''}${n.exp ? `<span class="tag muted">${ico('clock').replace('<svg', '<svg width="12" height="12"')}${expiryLabel(n.exp)}</span>` : ''}</div>` : ''}
                 <div class="card-text">${linkify(n.text)}</div>
                 <div class="card-row" style="margin-top:10px;"><span style="display:flex; align-items:center; gap:8px;" class="card-meta">${avatarHTML(n.by || '?', 'sm')}${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
                 <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); toggleNoticePin(${jsArg(n.id)})">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editNotice(${jsArg(n.id)})">Edit</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteNotice(${jsArg(n.id)})">Delete</button></span></div></div>`).join('')
             : emptyState('pin', 'No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.');
         if (localDbLoaded) seenNoticeIds = new Set((db.notices || []).map(n => n.id)); // notes added after this slide in
-        updateNoticeCount();
+        updateNoticeCount(); renderSideCol();
     }
     function saveNotice() {
         const input = document.getElementById('noticeInput'); const text = (input.value || '').trim().slice(0, 1000);
         if (!text) { showToast("WRITE SOMETHING FIRST", 2000); return; }
         if (!Array.isArray(db.notices)) db.notices = [];
         const n = editingNoticeId ? db.notices.find(x => x.id === editingNoticeId) : null; // gone = deleted on another phone meanwhile: added again below
+        const sel = document.getElementById('noticeExpiry'), days = Number(sel.value) || 0, pin = document.getElementById('noticePinNew').checked;
+        const exp = days ? Date.now() + days * 864e5 : 0;
         if (n) {
-            n.text = text; n.t = Date.now(); n.by = currentUser;
+            n.text = text; n.t = Date.now(); n.by = currentUser; n.pinned = pin;
+            if (sel.dataset.touched) { if (exp) n.exp = exp; else delete n.exp; } // left alone: keeps its old "remove after" time
             logAudit(`Updated a note: ${text.slice(0, 40)}`);
         } else {
-            db.notices.unshift({ id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), by: currentUser, text, pinned: false });
+            const note = { id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), by: currentUser, text, pinned: pin };
+            if (exp) note.exp = exp;
+            db.notices.unshift(note);
             logAudit(`Added a note: ${text.slice(0, 40)}`);
         }
         cancelNoticeEdit(); renderNotices(); executeActionWithSave();
     }
-    function editNotice(id) { const n = (db.notices || []).find(x => x.id === id); if (!n) return; editingNoticeId = id; const input = document.getElementById('noticeInput'); input.value = n.text; document.getElementById('noticeSaveBtn').innerText = 'Save Note'; input.focus(); }
-    function cancelNoticeEdit() { editingNoticeId = null; const i = document.getElementById('noticeInput'); if (i) i.value = ''; const b = document.getElementById('noticeSaveBtn'); if (b) b.innerText = 'Add Note'; }
+    function editNotice(id) {
+        const n = (db.notices || []).find(x => x.id === id); if (!n) return; editingNoticeId = id; const input = document.getElementById('noticeInput'); input.value = n.text; document.getElementById('noticeSaveBtn').innerText = 'Save Note';
+        const sel = document.getElementById('noticeExpiry'); delete sel.dataset.touched;
+        if (!n.exp) sel.value = '0'; else { const left = (n.exp - Date.now()) / 864e5; sel.value = String([1, 3, 7, 30].find(d => d >= left - 0.01) || 30); }
+        document.getElementById('noticePinNew').checked = !!n.pinned; input.focus();
+    }
+    function cancelNoticeEdit() {
+        editingNoticeId = null; const i = document.getElementById('noticeInput'); if (i) i.value = ''; const b = document.getElementById('noticeSaveBtn'); if (b) b.innerText = 'Add Note';
+        const sel = document.getElementById('noticeExpiry'); if (sel) { sel.value = '0'; delete sel.dataset.touched; } const p = document.getElementById('noticePinNew'); if (p) p.checked = false;
+    }
     function toggleNoticePin(id) { const n = (db.notices || []).find(x => x.id === id); if (!n) return; n.pinned = !n.pinned; logAudit(`${n.pinned ? 'Pinned' : 'Unpinned'} a note`, null, true); renderNotices(); executeActionWithSave(); }
     function deleteNotice(id) {
         const n = (db.notices || []).find(x => x.id === id); if (!n) return;
@@ -2021,7 +2247,19 @@
     // "Add as expense" go in the activity log quietly; ticking, un-ticking and removing one item are not logged.
     const SHOP_MAX_ITEMS = 200, SHOP_MAX_LEN = 80;
     let pendingShopIds = []; // ticked items waiting for "Add as expense" to be sent
-    function updateShopCount() { const el = document.getElementById('shopCount'); if (!el) return; const n = (db.shopping || []).filter(x => !x.done).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabShopBadge', n); }
+    function updateShopCount() { const el = document.getElementById('shopCount'); if (!el) return; const n = (db.shopping || []).filter(x => !x.done).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabShopBadge', n); feedShopWidget(); }
+    // Android shopping list widget: what's still to buy, newest first, with who's getting it
+    let lastShopWidgetSig = '', lastShopWidgetT = 0;
+    function feedShopWidget() { // not "updateShopWidget": that is the name native-shim.js gives the bridge
+        if (!isNativeApp() || typeof window.updateShopWidget !== 'function' || !localDbLoaded) return;
+        try {
+            const todo = (db.shopping || []).filter(s => !s.done).sort((a, b) => b.t - a.t);
+            const items = todo.slice(0, 12).map(s => s.text + (s.claimBy ? ` (${s.claimBy === currentUser ? 'you' : s.claimBy})` : ''));
+            const sig = todo.length + '|' + items.join('|'); if (sig === lastShopWidgetSig && Date.now() - lastShopWidgetT < 60000) return;
+            lastShopWidgetSig = sig; lastShopWidgetT = Date.now();
+            window.updateShopWidget({ count: todo.length, items, t: Date.now() });
+        } catch (e) { console.warn('shopping widget update failed', e); }
+    }
     function openShopping() {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
@@ -2032,15 +2270,16 @@
     function renderShopping() {
         const all = db.shopping || [];
         const list = all.filter(x => !x.done).sort((a, b) => b.t - a.t).concat(all.filter(x => x.done).sort((a, b) => b.t - a.t));
-        document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item card${seenShopIds && !seenShopIds.has(s.id) ? ' enter' : ''}" data-sid="${escapeHTML(s.id)}" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
+        document.getElementById('shopList').innerHTML = !localDbLoaded ? skelCards(3) : list.length ? list.map(s => `<div class="shop-item card${seenShopIds && !seenShopIds.has(s.id) ? ' enter' : ''}${s.claimBy && !s.done ? ' claimed' : ''}" data-sid="${escapeHTML(s.id)}" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
                 <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">
                 <div style="flex:1; min-width:0;"><div class="shop-text card-title" style="${s.done ? 'text-decoration:line-through;' : ''}">${escapeHTML(s.text)}</div>
                 <div class="card-meta" style="margin-top:1px;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))} · ${new Date(s.t).toLocaleDateString()}</div></div>
+                ${s.done ? '' : shopClaimHTML(s)}
                 <button class="sheet-close interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="width:32px; height:32px;" onclick="triggerHaptic(); removeShopItem(${jsArg(s.id)})">${ico('x')}</button></div>`).join('')
             : emptyState('cart', 'Nothing to buy. Add items below, separated by commas.');
         document.getElementById('shopBoughtActions').style.display = all.some(x => x.done) ? 'flex' : 'none';
         if (localDbLoaded) seenShopIds = new Set(all.map(x => x.id)); // items added after this slide in
-        updateShopCount();
+        updateShopCount(); renderSideCol();
     }
     function addShopItems() {
         const input = document.getElementById('shopInput');
@@ -2055,6 +2294,19 @@
         logAudit('Added to shopping list', label, false, 'shop');
         input.value = ''; renderShopping(); executeActionWithSave();
         if (adding.length < names.length) showToast(`LIST IS FULL - ADDED ${adding.length}`, 3000);
+    }
+    // "I'll get it": someone says they'll buy an item, so nobody else buys it too (s.claimBy). Not logged, like ticking.
+    function shopClaimHTML(s) {
+        if (!s.claimBy) return `<button class="btn-pill interactive-btn shop-claim" aria-label="I'll get ${escapeHTML(s.text)}" onclick="triggerHaptic(); claimShopItem(${jsArg(s.id)})">I'll get it</button>`;
+        if (s.claimBy === currentUser) return `<button class="btn-pill primary interactive-btn shop-claim" aria-label="Stop getting ${escapeHTML(s.text)}" title="Tap if you can't get it after all" onclick="triggerHaptic(); claimShopItem(${jsArg(s.id)})">You're on it</button>`;
+        return `<span class="tag shop-claim" title="${escapeHTML(s.claimBy)} said they'll get it">${avatarHTML(s.claimBy, 'xs')}${escapeHTML(s.claimBy)}'s on it</span>`;
+    }
+    function claimShopItem(id) {
+        const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done) return;
+        if (s.claimBy && s.claimBy !== currentUser) { showToast(`${escapeHTML(s.claimBy).toUpperCase()} IS ALREADY GETTING IT`, 2000); return; }
+        if (s.claimBy === currentUser) { delete s.claimBy; delete s.claimT; } else { s.claimBy = currentUser; s.claimT = Date.now(); }
+        renderShopping(); executeActionWithSave();
+        if (s.claimBy) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
     function toggleShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
@@ -2084,15 +2336,41 @@
         showNow(document.getElementById('optionsMenu'), 'block'); setNoteChip(true); updateAmtPreview(true); openAddBox();
     }
 
+    // ---- Third column on wide computer screens: shopping list (tick, "I'll get it", quick add), notes and your settle-up total ----
+    var WIDE = window.matchMedia('(min-width: 1280px)'); // var: safe to read before this line has run
+    function renderSideCol() {
+        const col = document.getElementById('sideCol'); if (!col || !WIDE || !WIDE.matches) return;
+        if (!localDbLoaded || !currentUser) { col.innerHTML = `<div class="sc-card">${skelCards(2)}</div><div class="sc-card">${skelCards(2)}</div>`; return; }
+        const keepFocus = document.activeElement && document.activeElement.id === 'scShopInput' ? document.getElementById('scShopInput').value : null;
+        const { fmt } = viewMoney();
+        const todo = (db.shopping || []).filter(s => !s.done).sort((a, b) => b.t - a.t);
+        const shop = todo.slice(0, 10).map(s => `<div class="sc-row"><input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})"><span class="sc-text" title="${escapeHTML(s.text)}">${escapeHTML(s.text)}</span>${shopClaimHTML(s)}</div>`).join('')
+            + (todo.length > 10 ? `<div class="card-meta" style="margin-top:6px;">+ ${todo.length - 10} more</div>` : '');
+        const notes = liveNotices().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
+        const noteHtml = notes.slice(0, 4).map(n => { const txt = n.text.length > 180 ? n.text.slice(0, 178) + '…' : n.text; return `<div class="sc-note">${n.pinned ? `<span class="tag" style="margin-bottom:4px;">${ico('pin').replace('<svg', '<svg width="11" height="11"')}Pinned</span><br>` : ''}${linkify(txt)}<div class="card-meta">${escapeHTML(n.by || '')}${n.exp ? ' · ' + expiryLabel(n.exp) : ''}</div></div>`; }).join('');
+        const o = outstandingFor(currentUser), t = o.total;
+        const verdict = Math.abs(t) <= 0.01 ? 'All square' : t < 0 ? `You owe ${fmt(-t)}` : `You're owed ${fmt(t)}`;
+        col.innerHTML = `<div class="sc-card"><div class="sc-head"><h3>${ico('coins').replace('<svg', '<svg width="16" height="16"')}Settle up</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openDebts()">Open</button></div><div class="sc-total" style="color:${Math.abs(t) <= 0.01 ? 'var(--text-main)' : t < 0 ? 'var(--danger)' : 'var(--success)'};">${escapeHTML(verdict)}</div><div class="card-meta" style="margin-top:2px;">Across this cycle, hashtag bills and past cycles</div></div>`
+            + `<div class="sc-card"><div class="sc-head"><h3>${ico('cart').replace('<svg', '<svg width="16" height="16"')}Shopping list${todo.length ? ` <span class="count-badge">${todo.length}</span>` : ''}</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openShopping()">Open</button></div>${shop || '<div class="card-meta">Nothing to buy.</div>'}<form class="sc-add" onsubmit="event.preventDefault(); scAddShop()"><input id="scShopInput" aria-label="Add to the shopping list" placeholder="Add items, e.g. milk, eggs" maxlength="300" autocomplete="off"><button class="btn-pill primary interactive-btn" type="submit">Add</button></form></div>`
+            + `<div class="sc-card"><div class="sc-head"><h3>${ico('pin').replace('<svg', '<svg width="16" height="16"')}Notes${notes.length ? ` <span class="count-badge">${notes.length}</span>` : ''}</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openNotices()">Open</button></div>${noteHtml || '<div class="card-meta">No notes yet.</div>'}</div>`;
+        if (keepFocus !== null) { const i = document.getElementById('scShopInput'); i.value = keepFocus; i.focus(); }
+    }
+    function scAddShop() {
+        const i = document.getElementById('scShopInput'); if (!i || !i.value.trim()) return;
+        const main = document.getElementById('shopInput'); main.value = i.value; i.value = ''; addShopItems(); // same rules and notification as the sheet
+        const again = document.getElementById('scShopInput'); if (again) again.focus();
+    }
+    WIDE.addEventListener('change', () => { if (WIDE.matches) renderSideCol(); });
+
     // ---- Everything still unpaid that involves one person, across the current cycle, hashtag bills and all past cycles ----
     function settlementLedgers() {
         const primaryTag = (ex) => { const m = (ex.desc || '').match(/#([\w-]+)/); return m ? m[0] : null; };
         const cur = db.expenses || []; const out = [];
-        out.push({ label: 'This cycle', expenses: cur.filter(e => !primaryTag(e)), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '' });
-        [...new Set(cur.map(primaryTag).filter(Boolean))].forEach(tag => out.push({ label: `${tag} (this cycle)`, expenses: cur.filter(e => primaryTag(e) === tag), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '_' + tag }));
+        out.push({ label: 'This cycle', expenses: cur.filter(e => !primaryTag(e)), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '', holder: db });
+        [...new Set(cur.map(primaryTag).filter(Boolean))].forEach(tag => out.push({ label: `${tag} (this cycle)`, expenses: cur.filter(e => primaryTag(e) === tag), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '_' + tag, holder: db }));
         (db.archives || []).forEach(a => {
             const p = (a.start || '').split('/'); const when = p.length === 3 ? FMT_MONTH_YEAR.format(new Date(+p[2], +p[1] - 1, +p[0])) : (a.start || '');
-            out.push({ label: a.tag ? `${a.tag} (${when})` : when, expenses: Array.isArray(a.details) ? a.details : [], active: a.activeUsers || db.users, mathV: a.mathV, paid: a.paidStatus || {}, suffix: '' });
+            out.push({ label: a.tag ? `${a.tag} (${when})` : when, expenses: Array.isArray(a.details) ? a.details : [], active: a.activeUsers || db.users, mathV: a.mathV, paid: a.paidStatus || {}, suffix: '', holder: a });
         });
         return out;
     }
@@ -2375,6 +2653,7 @@
                 else { db = targetData; localDbLoaded = true; setDbVersion(res.headers.get('X-Version')); }
             } else { showToast("INITIALIZING NEW VAULT...", 3000); initializeDB(); localDbLoaded = true; pushLocalChanges = true; }
             initializeDB(); 
+            if (db.notices.some(n => !noticeLive(n))) { db.notices = db.notices.filter(noticeLive); executeActionWithSave(); } // notes past their "remove after" time
             if (db.trash && Array.isArray(db.trash)) { const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000; let originalLength = db.trash.length; db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs); if (db.trash.length !== originalLength) executeActionWithSave(); }
             renderUsers(); saveLocalBackup(); 
             if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = currentUser; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = currentUser; render(); }
@@ -2510,6 +2789,70 @@
         if (ex) document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex); else closeExpense();
     }
 
+    // ---- Long-press menu: hold an expense (right-click on a computer) for Share, Add again, Edit, Delete... ----
+    let ctxId = null;
+    function openCtx(id, row, px, py) {
+        const ex = (db.expenses || []).find(e => e.id === id); if (!ex || !currentUser) return;
+        if (document.activeElement) document.activeElement.blur();
+        ctxId = id; triggerHaptic();
+        const { sym, rate } = viewMoney(); const mine = ex.name === currentUser;
+        const receiptArg = !ex.receipt ? '' : typeof ex.receipt === 'string' ? jsArg(ex.receipt) : jsArg(JSON.stringify(ex.receipt));
+        const item = (icon, label, fn, cls = '') => `<button class="ctx-item interactive-btn ${cls}" role="menuitem" onclick="triggerHaptic(); ctxDo(${jsArg(fn)})">${ico(icon)}${label}</button>`;
+        let html = `<div class="ctx-head">${avatarHTML(ex.name, 'sm')}<span class="ctx-t">${formatDescDisplay(ex.desc, ex.originalSym || sym) || escapeHTML(ex.name)}</span><span class="ctx-a">${sym}${money2(ex.amount * rate)}</span></div>`;
+        html += item('file', 'Details', 'open') + item('share', 'Share', 'share') + item('plus', 'Add again', 'again');
+        if (receiptArg) html += `<button class="ctx-item interactive-btn" role="menuitem" onclick="triggerHaptic(); closeCtx(); viewImg(${receiptArg})">${ico('image')}Receipt</button>`;
+        if (mine) html += item('edit', 'Edit', 'edit') + item('trash', 'Delete', 'delete', 'danger');
+        const menu = document.getElementById('ctxMenu'); menu.innerHTML = html;
+        const ov = document.getElementById('ctxOverlay'); ov.style.display = 'flex';
+        // Next to the row: below it if there's room, else above; never off the screen
+        const r = row ? row.getBoundingClientRect() : { left: px || 16, right: px || 16, top: py || 100, bottom: py || 100 };
+        const mw = menu.offsetWidth, mh = menu.offsetHeight, vw = window.innerWidth, vh = window.innerHeight, pad = 12;
+        let left = px != null ? px : r.left + 8; left = Math.max(pad, Math.min(left, vw - mw - pad));
+        let top = r.bottom + 6, origin = 'top';
+        if (top + mh > vh - pad - 80) { top = r.top - mh - 6; origin = 'bottom'; }
+        top = Math.max(pad, Math.min(top, vh - mh - pad));
+        menu.style.left = left + 'px'; menu.style.top = top + 'px'; menu.style.transformOrigin = `${origin === 'top' ? 'top' : 'bottom'} left`;
+        navEnsureEntry();
+    }
+    function closeCtx() { ctxId = null; document.getElementById('ctxOverlay').style.display = 'none'; }
+    function ctxDo(what) {
+        const id = ctxId; closeCtx(); if (!id) return;
+        if (what === 'open') openExpense(id);
+        else if (what === 'share') copyExpense(id);
+        else if (what === 'edit') startExpenseEdit(id);
+        else if (what === 'delete') deleteEx(id);
+        else if (what === 'again') addAgain(id);
+    }
+    /** Add again: the add box opens with the same amount and words, ready to send as a new expense */
+    function addAgain(id) {
+        const ex = (db.expenses || []).find(e => e.id === id); if (!ex) return;
+        if (editingId) { editingId = null; render(); }
+        const desc = String(ex.desc || '').trim(); const amt = Math.round(ex.amount * 100) / 100;
+        const el = document.getElementById('amtInput'); el.value = `${amt} ${desc}`.trim(); el.style.height = '40px'; el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        openAddBox(); updateAmtPreview(true);
+        el.setSelectionRange(el.value.length, el.value.length);
+    }
+    (function () {
+        let timer = null, sx = 0, sy = 0, row = null, fired = false;
+        const cancel = () => { clearTimeout(timer); timer = null; if (row) row.classList.remove('pressing'); row = null; };
+        document.addEventListener('pointerdown', (e) => {
+            fired = false; if (e.button > 0) return;
+            const r = e.target.closest && e.target.closest('.ex-row[data-id]'); if (!r) return;
+            cancel(); row = r; sx = e.clientX; sy = e.clientY; r.classList.add('pressing');
+            timer = setTimeout(() => { timer = null; fired = true; r.classList.remove('pressing'); row = null; openCtx(r.dataset.id, r); }, 480);
+        }, { passive: true });
+        document.addEventListener('pointermove', (e) => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel(); }, { passive: true });
+        ['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, () => { if (timer) cancel(); }, { passive: true, capture: true }));
+        document.addEventListener('scroll', () => { if (timer) cancel(); }, { passive: true, capture: true });
+        // The tap that ends a long press must not also open the expense
+        document.addEventListener('click', (e) => { if (fired) { fired = false; e.stopPropagation(); e.preventDefault(); } }, true);
+        document.addEventListener('contextmenu', (e) => {
+            const r = e.target.closest && e.target.closest('.ex-row[data-id]'); if (!r) return;
+            e.preventDefault(); if (timer) cancel();
+            if (!navShown('ctxOverlay')) { fired = e.pointerType === 'touch' || e.button !== 2; openCtx(r.dataset.id, r, e.button === 2 ? e.clientX : null, e.button === 2 ? e.clientY : null); }
+        });
+    })();
+
     // ---- Past cycles sheet ----
     function openPast() {
         if (document.activeElement) document.activeElement.blur();
@@ -2526,29 +2869,106 @@
         renderDebts(); navEnsureEntry(); document.getElementById('debtsOverlay').style.display = 'flex';
     }
     function closeDebts() { document.getElementById('debtsOverlay').style.display = 'none'; }
+    // ---- Settle up (More → Settle Up): one card per housemate with everything still open between you, this cycle,
+    //      hashtag bills and every past cycle together. The person owed can settle it all in one tap; the person who owes
+    //      can pay by link and tell them "I've paid" (db.settleClaims["Debtor>Creditor"] = {by, amt, t}), which the person
+    //      owed confirms with "Got it". Settling marks every payment between the two of them as paid, in every cycle. ----
+    function settleKey(from, to) { return `${from}>${to}`; }
     function renderDebts() {
         const el = document.getElementById('debtsList'); if (!el || !currentUser) return;
-        const { fmt, sym, rate } = viewMoney(); const o = outstandingFor(currentUser);
+        if (!localDbLoaded) { el.innerHTML = skelCards(3); return; }
+        const { fmt, sym, rate } = viewMoney(); const o = outstandingFor(currentUser); const claims = db.settleClaims || {};
         const names = Object.keys(o.people).filter(n => Math.abs(o.people[n].net) > 0.01).sort((a, b) => Math.abs(o.people[b].net) - Math.abs(o.people[a].net));
         const owe = names.filter(n => o.people[n].net < 0), owed = names.filter(n => o.people[n].net > 0);
         const sum = (list) => list.reduce((a, n) => a + Math.abs(o.people[n].net), 0);
+        const cu = (key, v) => `<span data-cu="${escapeHTML(key)}" data-v="${(v * rate).toFixed(2)}" data-p="${escapeHTML(sym)}">${fmt(v)}</span>`;
         const parts = (n) => o.people[n].parts.length > 1 || o.people[n].parts[0].label !== 'This cycle'
             ? escapeHTML(o.people[n].parts.map(x => `${x.label} ${x.amt < 0 ? '−' : '+'}${fmt(Math.abs(x.amt))}`).join(' · ')) : 'This cycle';
         const card = (n) => {
             const v = Math.abs(o.people[n].net), mine = o.people[n].net < 0;
-            const actions = mine
-                ? `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(n)}" onclick="triggerHaptic(); payNow(${jsArg(n)}, ${(v * rate).toFixed(2)})">Pay</button>`
-                : `<button class="btn-pill interactive-btn" aria-label="Nudge ${escapeHTML(n)}" onclick="sendNudge(${jsArg(n)}, ${v * rate}, ${jsArg(sym)})">Nudge</button>`;
-            return mine ? payCardHTML(currentUser, n, 'owes', fmt(v), parts(n), false, actions, '', '') : payCardHTML(n, currentUser, 'owes', fmt(v), parts(n), false, actions, '', '');
+            const claim = claims[mine ? settleKey(currentUser, n) : settleKey(n, currentUser)];
+            let actions, banner = '';
+            if (mine) {
+                actions = `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(n)}" onclick="triggerHaptic(); payNow(${jsArg(n)}, ${(v * rate).toFixed(2)})">Pay</button>`
+                    + (claim ? `<span class="tag muted">Waiting for ${escapeHTML(n)}</span>` : `<button class="btn-pill interactive-btn" aria-label="Tell ${escapeHTML(n)} I've paid" onclick="triggerHaptic(); claimSettle(${jsArg(n)})">I've paid</button>`);
+            } else {
+                actions = `<button class="btn-pill interactive-btn" aria-label="Nudge ${escapeHTML(n)}" onclick="sendNudge(${jsArg(n)}, ${v * rate}, ${jsArg(sym)})">Remind</button>`
+                    + `<button class="btn-pill primary interactive-btn" aria-label="Settle up with ${escapeHTML(n)}" onclick="triggerHaptic(); settleWith(${jsArg(n)})">Settled</button>`;
+                if (claim) banner = `<div class="claim"><b>${escapeHTML(n)}</b> says they paid <b>${fmt(claim.amt)}</b> <span style="color:var(--text-muted);">· ${new Date(claim.t).toLocaleDateString()}</span><div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); settleWith(${jsArg(n)}, true)">Got it</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); rejectSettleClaim(${jsArg(n)})">Not yet</button></div></div>`;
+            }
+            return mine ? payCardHTML(currentUser, n, 'owes', cu('d:' + n, v), parts(n), false, actions, banner, '') : payCardHTML(n, currentUser, 'owes', cu('d:' + n, v), parts(n), false, actions, banner, '');
         };
         const verdict = Math.abs(o.total) <= 0.01 ? (names.length ? "Overall you're all square." : "You're all square with everyone.") : o.total < 0 ? `Overall you pay ${fmt(-o.total)}` : `Overall you get back ${fmt(o.total)}`;
-        let html = `<div class="tiles" style="margin-bottom:6px;"><div class="tile"><div class="k">You owe</div><div class="v">${fmt(sum(owe))}</div></div><div class="tile"><div class="k">Owed to you</div><div class="v">${fmt(sum(owed))}</div></div></div>`;
+        let html = `<div class="tiles" style="margin-bottom:6px;"><div class="tile"><div class="k">You owe</div><div class="v">${cu('t:owe', sum(owe))}</div></div><div class="tile"><div class="k">Owed to you</div><div class="v">${cu('t:owed', sum(owed))}</div></div></div>`;
         html += `<div class="card-meta" style="text-align:center; margin:6px 0 4px;">${escapeHTML(verdict)}</div>`;
         if (!names.length) html += emptyState('check', 'Nothing outstanding.');
         if (owe.length) html += `<div class="group-label" style="margin-top:12px;">You owe</div><div class="stack">${owe.map(card).join('')}</div>`;
-        if (owed.length) html += `<div class="group-label" style="margin-top:12px;">Owed to you</div><div class="stack">${owed.map(card).join('')}</div>`;
-        if (names.length) html += `<div class="card-meta" style="text-align:center; margin-top:12px;">To mark something as paid, use Settlements on the home screen or Past cycles.</div>`;
-        el.innerHTML = html;
+        if (owed.length) {
+            html += `<div class="group-label" style="margin-top:12px; display:flex; align-items:center; justify-content:space-between;">Owed to you${owed.length > 1 ? `<button class="btn-pill interactive-btn" style="text-transform:none; letter-spacing:0;" onclick="triggerHaptic(); remindEveryone()">Remind everyone</button>` : ''}</div><div class="stack">${owed.map(card).join('')}</div>`;
+        }
+        // The whole house: the fewest payments that would clear every debt, in every cycle
+        const plan = housePlan();
+        if (plan.length) html += `<div class="group-label" style="margin-top:16px;">Whole house · ${plan.length} payment${plan.length === 1 ? '' : 's'} clear everything</div><div class="card house-plan">${plan.map(t => `<div class="hp-row${t.from === currentUser || t.to === currentUser ? ' me' : ''}">${avatarHTML(t.from, 'xs')}<b>${escapeHTML(t.from)}</b><span class="pay-arrow">${ico('arrow')}</span>${avatarHTML(t.to, 'xs')}<b>${escapeHTML(t.to)}</b><span class="hp-amt">${fmt(t.amt)}</span></div>`).join('')}</div>`;
+        if (names.length) html += `<div class="card-meta" style="text-align:center; margin-top:12px;">"Settled" marks every payment between the two of you as paid, in every cycle. To mark just one, use Settlements or Past cycles.</div>`;
+        el.innerHTML = html; countUps(el);
+    }
+    /** Everyone's balance over everything still unpaid -> the fewest payments that clear it all (for "Whole house") */
+    function housePlan() {
+        const bal = {};
+        settlementLedgers().forEach(L => {
+            if (!L.expenses.length) return;
+            getSettlements(L.expenses, L.expenses.reduce((a, e) => a + e.amount, 0), L.active, L.mathV).forEach(t => {
+                const rem = t.amt - (L.paid[`${t.from}_${t.to}${L.suffix}`] || 0); if (rem <= 0.01) return;
+                bal[t.from] = (bal[t.from] || 0) - rem; bal[t.to] = (bal[t.to] || 0) + rem;
+            });
+        });
+        Object.keys(bal).forEach(k => { bal[k] = Math.round(bal[k] * 100) / 100; });
+        return settleBalances(bal).filter(t => t.amt > 0.01).map(t => ({ ...t, amt: Math.round(t.amt * 100) / 100 }));
+    }
+    /** The person owed (or anyone confirming a settle-up claim): mark every open payment between `n` and me as paid */
+    function settleWith(n, fromClaim = false) {
+        const { fmt } = viewMoney(); const o = outstandingFor(currentUser); const p = o.people[n];
+        if (!p || Math.abs(p.net) <= 0.01) { showToast("NOTHING OPEN WITH " + escapeHTML(n).toUpperCase(), 2000); return; }
+        const v = Math.abs(p.net), theyOwe = p.net > 0;
+        const msg = fromClaim ? `Got <b>${fmt(v)}</b> from <b>${escapeHTML(n)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">Everything between you two is marked as paid, in every cycle.</span>`
+            : `Has <b>${escapeHTML(n)}</b> paid you <b>${fmt(v)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">Marks everything between you two as paid, in every cycle (${escapeHTML(p.parts.map(x => x.label).join(', '))}).</span>`;
+        customConfirm(msg, () => {
+            let marked = 0;
+            settlementLedgers().forEach(L => {
+                if (!L.expenses.length) return;
+                getSettlements(L.expenses, L.expenses.reduce((a, e) => a + e.amount, 0), L.active, L.mathV).forEach(t => {
+                    if (!((t.from === n && t.to === currentUser) || (t.from === currentUser && t.to === n))) return;
+                    const key = `${t.from}_${t.to}${L.suffix}`; if (t.amt - (L.paid[key] || 0) <= 0.01) return;
+                    if (!L.holder.paidStatus) L.holder.paidStatus = {};
+                    L.holder.paidStatus[key] = t.amt; marked++;
+                    if (L.holder.payClaims) delete L.holder.payClaims[key];
+                });
+            });
+            if (db.settleClaims) { delete db.settleClaims[settleKey(n, currentUser)]; delete db.settleClaims[settleKey(currentUser, n)]; }
+            const [from, to] = theyOwe ? [n, currentUser] : [currentUser, n];
+            logAudit(`Settled up with ${n}: ${from} paid ${to} ${fmt(v)}`, null, false, 'pastpay'); db.auditLog[0].who = [from, to];
+            render(); executeActionWithSave(); showToast(`ALL SETTLED WITH ${escapeHTML(n).toUpperCase()}`, 2200);
+            if (!marked) console.warn('settleWith: nothing to mark');
+        });
+    }
+    /** The person who owes: tell `n` you've paid them everything; they confirm with "Got it" */
+    function claimSettle(n) {
+        const { fmt } = viewMoney(); const p = outstandingFor(currentUser).people[n]; if (!p || p.net >= -0.01) return;
+        const v = -p.net;
+        customConfirm(`Tell <b>${escapeHTML(n)}</b> you've paid them <b>${fmt(v)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get a notification and tap "Got it" to settle everything between you.</span>`, () => {
+            if (!db.settleClaims || typeof db.settleClaims !== 'object') db.settleClaims = {};
+            db.settleClaims[settleKey(currentUser, n)] = { by: currentUser, amt: Math.round(v * 100) / 100, t: Date.now() };
+            logAudit(`Says they paid ${n} ${fmt(v)} to settle up`, null, false, 'pastpay'); db.auditLog[0].who = [currentUser, n];
+            render(); executeActionWithSave(); showToast(`SENT - WAITING FOR ${escapeHTML(n).toUpperCase()}`, 2500);
+        });
+    }
+    function rejectSettleClaim(n) {
+        const c = db.settleClaims && db.settleClaims[settleKey(n, currentUser)]; if (!c) return;
+        customConfirm(`Not received ${escapeHTML(n)}'s payment yet?<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">They'll be told it hasn't arrived.</span>`, () => {
+            delete db.settleClaims[settleKey(n, currentUser)];
+            logAudit(`Hasn't received ${n}'s settle-up payment yet`, null, false, 'pastpay'); db.auditLog[0].who = [n, currentUser];
+            render(); executeActionWithSave();
+        });
     }
     function updateDebtsState() {
         const el = document.getElementById('debtsState'); if (!el || !currentUser || !localDbLoaded) return;
@@ -2580,6 +3000,11 @@
     }
 
     function setThemeMode(m) { triggerHaptic(); safeSetStorage('house_theme_mode', m); applyTheme(); }
+    function toggleBlack() {
+        let on = false; try { on = localStorage.getItem('house_black') === '1'; } catch (e) {}
+        safeSetStorage('house_black', on ? '0' : '1'); applyTheme();
+        if (!on && document.documentElement.getAttribute('data-theme') !== 'dark') showToast("PURE BLACK SHOWS WHEN DARK MODE IS ON", 2500);
+    }
     function toggleTheme() { const order = ['system', 'light', 'dark']; setThemeMode(order[(order.indexOf(themeMode()) + 1) % order.length]); } // More menu: System → Light → Dark
 
     function toggleMenu() {
@@ -2779,15 +3204,28 @@
         } catch (e) { showToast("Copy manually.", 3000); }
     }
 
-    /** Nudge: a push notification to `name` only (the worker sends kind:'nudge' entries to their "to" person). Max one per person per hour. */
+    /** Nudge: a push notification to `name` only (the worker sends kind:'nudge' entries to their "to" person). Max one per person
+     *  per hour. The message can be changed before sending. */
+    function nudgeRecent(name) { return (db.auditLog || []).find(a => a && a.kind === 'nudge' && a.by === currentUser && a.to === name && Date.now() - a.t < 3600000); }
+    function pushNudge(name, amt, msg) { logAudit(`Reminded ${name} about ${amt}`, null, false, 'nudge'); Object.assign(db.auditLog[0], { to: name, msg }); }
     function sendNudge(name, amount, sym) {
-        triggerHaptic(); const amt = `${sym}${Number(amount).toFixed(2)}`;
-        const recent = (db.auditLog || []).find(a => a && a.kind === 'nudge' && a.by === currentUser && a.to === name && Date.now() - a.t < 3600000);
+        triggerHaptic(); const amt = `${sym}${Number(amount).toFixed(2)}`, std = `Friendly reminder, you owe me ${amt}`;
+        const recent = nudgeRecent(name);
         if (recent) { showToast(`You reminded ${escapeHTML(name)} ${Math.max(1, Math.round((Date.now() - recent.t) / 60000))} min ago`, 2500); return; }
-        customConfirm(`Send <b>${escapeHTML(name)}</b> a reminder that they owe you <b>${escapeHTML(amt)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get a notification on their phone.</span>`, () => {
-            logAudit(`Reminded ${name} about ${amt}`, null, false, 'nudge');
-            Object.assign(db.auditLog[0], { to: name, msg: `Friendly reminder, you owe me ${amt}` });
+        customPrompt(`Remind <b>${escapeHTML(name)}</b> they owe you <b>${escapeHTML(amt)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get this as a notification. Change it if you like.</span>`, std, (text) => {
+            const msg = String(text || '').trim().replace(/\s+/g, ' ').slice(0, 200) || std;
+            pushNudge(name, amt, msg);
             executeActionWithSave(); showToast(`REMINDER SENT TO ${escapeHTML(name).toUpperCase()}`, 2000);
+        });
+    }
+    /** Settle up → "Remind everyone": one reminder to each person who owes you (skips anyone reminded in the last hour) */
+    function remindEveryone() {
+        const { fmt } = viewMoney(); const o = outstandingFor(currentUser);
+        const list = Object.keys(o.people).filter(n => o.people[n].net > 0.01 && !nudgeRecent(n));
+        if (!list.length) { showToast("EVERYONE WAS REMINDED IN THE LAST HOUR", 2500); return; }
+        customConfirm(`Send a reminder to ${list.map(n => `<b>${escapeHTML(n)}</b> (${fmt(o.people[n].net)})`).join(', ')}?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">Each gets a notification with what they owe you.</span>`, () => {
+            list.forEach(n => { const amt = fmt(o.people[n].net); pushNudge(n, amt, `Friendly reminder, you owe me ${amt}`); });
+            executeActionWithSave(); showToast(`REMINDED ${list.length} ${list.length === 1 ? 'PERSON' : 'PEOPLE'}`, 2000);
         });
     }
 
@@ -3009,7 +3447,10 @@
         });
         db.notices = items(db.notices); db.shopping = items(db.shopping);
         db.notices.forEach(n => { if (typeof n.text !== 'string') n.text = n.text == null ? '' : String(n.text); });
-        db.shopping.forEach(s => { if (typeof s.text !== 'string') s.text = s.text == null ? '' : String(s.text); });
+        db.shopping.forEach(s => { if (typeof s.text !== 'string') s.text = s.text == null ? '' : String(s.text); if (s.claimBy != null && (typeof s.claimBy !== 'string' || !s.claimBy)) delete s.claimBy; });
+        // Notes can expire (n.exp, a time): only a real number counts
+        db.notices.forEach(n => { if (n.exp != null) { const e = Number(n.exp); if (isFinite(e) && e > 0) n.exp = e; else delete n.exp; } });
+        if (db.settleClaims != null) { db.settleClaims = objOr(db.settleClaims); Object.keys(db.settleClaims).forEach(k => { const c = db.settleClaims[k]; if (!isObj(c) || typeof c.by !== 'string' || !isFinite(Number(c.amt))) delete db.settleClaims[k]; else c.amt = Number(c.amt); }); }
         db.archives = items(db.archives);
         db.archives.forEach(a => {
             a.details = items(a.details); tidy(a.details);
@@ -3048,6 +3489,8 @@
         const menuUser = document.getElementById('menuUserName'); if (menuUser) menuUser.innerText = name;
     }
 
+    /** Grey placeholder cards for a list that hasn't loaded yet (Shopping, Notices, Settle up opened before the first load) */
+    function skelCards(n) { return `<div class="stack">` + Array.from({ length: n }, (_, i) => `<div class="card" style="display:flex; align-items:center; gap:12px;"><div class="skel-block" style="width:32px; height:32px; border-radius:50%; flex-shrink:0;"></div><div style="flex:1;"><div class="skel-block" style="width:${[70, 55, 62][i % 3]}%; height:13px; margin-bottom:7px;"></div><div class="skel-block" style="width:30%; height:10px;"></div></div></div>`).join('') + `</div>`; }
     function renderSkeletons() {
         const list = document.getElementById('expenseList'); let html = `<div class="timeline-wrapper">`;
         for (let i = 0; i < 4; i++) { html += `<div class="linear-row"><div class="skel-block" style="width:40px; height:40px; border-radius:50%; flex-shrink:0;"></div><div style="flex:1;"><div class="skel-block" style="width:60%; height:14px; margin-bottom:8px;"></div><div class="skel-block" style="width:35%; height:11px;"></div></div><div class="skel-block" style="width:56px; height:14px;"></div></div>`; }
@@ -3300,12 +3743,14 @@
                 actions += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid(${jsArg(t.key)}, ${t.amt})">${isS ? '✓ Paid' : 'Paid'}</button>`;
             } else actions = payOrPending(t.from, t.to, tr * rate, isS, t.key, -1, tr);
             const meta = t.paid > 0.01 && !isS ? `Was ${money(t.amt * rate)} · ${money(t.paid * rate)} paid` : '';
-            return payCardHTML(t.from, t.to, 'pays', money((isS ? t.amt : tr) * rate), meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
+            const shown = Math.round((isS ? t.amt : tr) * rate * 100) / 100;
+            return payCardHTML(t.from, t.to, 'pays', `<span data-cu="s:${escapeHTML(t.key)}" data-v="${shown}" data-p="${escapeHTML(sym)}">${money(shown)}</span>`, meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
         }).join('');
         document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
+        countUps(document.getElementById('settleList'));
         document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
         renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
-        updateNoticeCount(); updateShopCount(); updateHomeWidget(); updateDebtsState();
+        updateNoticeCount(); updateShopCount(); updateHomeWidget(); updateDebtsState(); renderSideCol();
         const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '';
         const mps = document.getElementById('myPhotoState'); if (mps) mps.innerHTML = currentUser ? avatarHTML(currentUser, 'sm') : '';
     }
@@ -3850,7 +4295,8 @@
 
     window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (navigator.onLine) { if (needsSync) { saveData(); } else { loadData(false); } processUploadQueue(); } checkForUpdates(); } });
     window.addEventListener('online', () => { const jitterMs = Math.floor(Math.random() * 1400) + 100; setTimeout(() => { if (needsSync) { saveData(); } else { loadData(false); processUploadQueue(); } }, jitterMs); });
-    window.addEventListener('offline', () => { showToast("YOU ARE OFFLINE", 2000); });
+    window.addEventListener('offline', updateOfflineBar);
+    window.addEventListener('online', updateOfflineBar);
 
     window.onload = async () => {
         initializeDB(); renderUsers();
@@ -3860,7 +4306,8 @@
         // Placeholders only show on a phone that has never loaded the house before.
         if (readLocalBackup()) { loadLocalBackup(); if (localDbLoaded) document.body.classList.remove('booting'); }
         if (!db.expenses || db.expenses.length === 0) renderSkeletons(); // grey placeholders until the first load
-        
+        updateOfflineBar();
+
         await loadData(true);
         document.body.classList.remove('booting');
         
@@ -3870,6 +4317,14 @@
         if (action === 'log') {
             history.replaceState(null, '', location.pathname); // don't re-open the add box on every refresh
             setTimeout(openQuickAdd, 500);
+        } else if (action === 'shop' || action === 'notices' || action === 'settle') {
+            history.replaceState(null, '', location.pathname);
+            setTimeout(() => openShortcut(action), 500);
+        } else if (action === 'share') {
+            history.replaceState(null, '', location.pathname);
+            const text = ['title', 'text', 'url'].map(k => urlParams.get(k)).filter(Boolean);
+            if ('caches' in window) setTimeout(() => { takeWebShare().then(() => { if (!pendingShare && text.length && !document.body.classList.contains('adding')) receiveShare({ text: text.join(' ') }); }); }, 500);
+            else if (text.length) setTimeout(() => receiveShare({ text: text.join(' ') }), 500);
         } else if (action === 'vault') {
             setTimeout(() => openTrash(), 500);
         }
@@ -3952,6 +4407,7 @@
     navInstall(); // after every function above exists
     navSyncHistory(); // drop history entries left over from before a reload
     applyTheme(); // again now the Settings / menu controls exist
+    tabPillSync(false); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => tabPillSync(false));
 </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 // House Expenses service worker: offline copy of the page + web push notifications.
 // Bump CACHE_NAME together with APP_VERSION in index.html.
-const CACHE_NAME = 'house-expenses-v7.21.0';
+const CACHE_NAME = 'house-expenses-v7.22.0';
 const APP_SHELL = ['./', 'index.html', 'manifest.json', 'icon-512.png', 'fonts/inter.woff2'];
 
 self.addEventListener('install', (e) => {
@@ -11,7 +11,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+    await Promise.all(keys.map((k) => (k !== CACHE_NAME && k !== 'share-in' ? caches.delete(k) : null)));
     await self.clients.claim();
   })());
 });
@@ -19,6 +19,8 @@ self.addEventListener('activate', (e) => {
 // Only this site's own files are handled. The data API, images and CDNs always go straight to the network.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
+  // Shared into the app from another app (manifest share_target): keep the photos and text for the page, then open it
+  if (req.method === 'POST' && new URL(req.url).pathname.endsWith('/share-in')) { e.respondWith(shareIn(req)); return; }
   if (req.method !== 'GET' || req.headers.has('range')) return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
@@ -65,3 +67,18 @@ self.addEventListener('notificationclick', (e) => {
     return self.clients.openWindow(target);
   })());
 });
+
+// ---- Share target: a receipt photo or a payment message shared from another app. The page (index.html?action=share)
+//      picks them up from the 'share-in' cache and opens the add box with them. ----
+async function shareIn(req) {
+  try {
+    const form = await req.formData();
+    const files = form.getAll('photos').filter((f) => f && typeof f === 'object' && /^image\//.test(f.type || '')).slice(0, 10);
+    await caches.delete('share-in');
+    const cache = await caches.open('share-in');
+    await Promise.all(files.map((f, i) => cache.put('share-in/file-' + i, new Response(f, { headers: { 'Content-Type': f.type } }))));
+    const s = (k) => String(form.get(k) || '').slice(0, 1000);
+    await cache.put('share-in/meta', new Response(JSON.stringify({ count: files.length, names: files.map((f) => String(f.name || '').slice(0, 100)), title: s('title'), text: s('text'), url: s('url') }), { headers: { 'Content-Type': 'application/json' } }));
+  } catch (err) { /* nothing usable: just open the app */ }
+  return Response.redirect(new URL('index.html?action=share', self.registration.scope).href, 303);
+}

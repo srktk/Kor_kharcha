@@ -4,10 +4,21 @@
   "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1a2e",
+  "background_color": "#0a0e17",
   "theme_color": "#00f2fe",
   "icons": [
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
     {
@@ -15,7 +26,70 @@
       "short_name": "Add",
       "description": "Open House Expenses ready to log a new expense",
       "url": "index.html?action=log",
-      "icons": [{ "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Shopping list",
+      "short_name": "Shopping",
+      "description": "Open the shopping list",
+      "url": "index.html?action=shop",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Settle up",
+      "short_name": "Settle up",
+      "description": "What you owe and are owed",
+      "url": "index.html?action=settle",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Noticeboard",
+      "short_name": "Notices",
+      "description": "Open the house notes",
+      "url": "index.html?action=notices",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "share-in",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "photos",
+          "accept": [
+            "image/*"
+          ]
+        }
+      ]
+    }
+  }
 }
