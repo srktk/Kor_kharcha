@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.12.1">
+    <meta name="app-version" content="7.13.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -330,7 +330,8 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
-            <button id="restoreBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openRestore();">⏪ Restore Backup</button>
+            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); setPayLink();">💳 My Payment Link</button>
+            <button id="restoreBtn"class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openRestore();">⏪ Restore Backup</button>
             <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
             <div style="display:flex; gap:10px;">
                 <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
@@ -586,7 +587,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.12.1";
+    const APP_VERSION = "7.13.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -902,9 +903,10 @@
         } catch(e) {}
     }
 
-    function logAudit(actionStr, targetUser = null) {
+    function logAudit(actionStr, targetUser = null, quiet = false) {
         if(!db.auditLog) db.auditLog = [];
-        db.auditLog.unshift({ t: Date.now(), by: currentUser, act: actionStr, trg: targetUser });
+        const entry = { t: Date.now(), by: currentUser, act: actionStr, trg: targetUser }; if (quiet) entry.quiet = true; // quiet: logged, but no notification
+        db.auditLog.unshift(entry);
         if(db.auditLog.length > 200) db.auditLog.pop();
     }
 
@@ -971,6 +973,43 @@
     }
     
     function closeTrash() { document.getElementById('trashOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+
+    // ---- Payment links: each person saves their own (Monzo.me, PayPal.me, Revolut.me...); whoever owes them gets a Pay button
+    function cleanPayLink(raw) {
+        let s = String(raw || '').trim(); if (!s) return '';
+        s = s.replace(/^http:\/\//i, 'https://'); if (!/^https:\/\//i.test(s)) s = 'https://' + s; // people often paste "monzo.me/name"
+        try { const u = new URL(s); if (u.protocol !== 'https:' || !u.hostname.includes('.') || s.length > 300) return null; return u.href.replace(/\/+$/, ''); } catch (e) { return null; }
+    }
+    function setPayLink() {
+        if (!currentUser) return;
+        const cur = (db.payLinks && db.payLinks[currentUser]) || '';
+        customPrompt('Your payment link, so housemates can pay you in one tap<br><span style="font-size:0.75rem; color:var(--text-muted);">e.g. monzo.me/yourname or paypal.me/yourname. Leave empty to remove.</span>', cur, (val) => {
+            const link = cleanPayLink(val);
+            if (link === null) { showToast("THAT DOESN'T LOOK LIKE A LINK", 3000); return; }
+            if (link === cur) return;
+            if (!db.payLinks) db.payLinks = {};
+            if (link) db.payLinks[currentUser] = link; else delete db.payLinks[currentUser];
+            logAudit(link ? "Updated payment link" : "Removed payment link", null, true);
+            render(); executeActionWithSave(); showToast(link ? "PAYMENT LINK SAVED" : "PAYMENT LINK REMOVED", 2000);
+        }, "url");
+    }
+    function payOrPending(from, to, amountLocal, settled) {
+        if (settled) return `<span class="name-pill">Settled</span>`;
+        if (from !== currentUser) return `<span class="name-pill">Pending</span>`;
+        return `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(to)}" onclick="triggerHaptic(); payNow('${escapeHTML(to)}', ${Number(amountLocal).toFixed(2)})">Pay</button>`;
+    }
+    async function payNow(to, amountLocal) {
+        const code = document.getElementById('currency').value; const amt = Number(amountLocal).toFixed(2);
+        const link = db.payLinks && db.payLinks[to];
+        if (!link) { showToast(`${escapeHTML(to)} HASN'T ADDED A PAYMENT LINK YET`, 3000); return; }
+        let url = link; const host = new URL(link).hostname.replace(/^www\./, '');
+        if (host === 'monzo.me' && code === 'GBP') url = `${link}/${amt}`;          // Monzo pre-fills GBP amounts
+        else if (host === 'paypal.me') url = `${link}/${amt}${code}`;              // PayPal takes amount + currency
+        try { await navigator.clipboard.writeText(amt); } catch (e) { }
+        showToast(`AMOUNT ${amt} COPIED - OPENING ${escapeHTML(to).toUpperCase()}'S PAYMENT LINK`, 3000);
+        const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        setTimeout(() => { if (native) window.location.href = url; else window.open(url, '_blank', 'noopener'); }, 400); // app: Android opens it in Monzo/PayPal or the browser
+    }
 
     // ---- Restore backup: daily snapshots (60 days) and recent saves (last 200), both kept by the worker
     let restoreCache = { backup: null, version: null }; let restoreTab = 'backup';
@@ -1244,6 +1283,7 @@
                 let arcPaid = {}; for (let key in arc.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; arcPaid[newKey] = arc.paidStatus[key]; } arc.paidStatus = arcPaid;
             });
             let newPaid = {}; for (let key in db.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key]; } db.paidStatus = newPaid;
+            if (db.payLinks && db.payLinks[oldName]) { db.payLinks[n] = db.payLinks[oldName]; delete db.payLinks[oldName]; }
             logAudit(`Renamed ${oldName} to`, n);
             if (currentUser === oldName) { currentUser = n; localStorage.setItem('house_user', n); document.getElementById('topUserName').innerText = escapeHTML(n); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(n); }
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
@@ -1263,6 +1303,7 @@
         if (!canDelete) { showToast(`Cannot remove ${escapeHTML(name)}. Balance must be settled in all tags.`, 4000); return; }
         customConfirm(`Remove ${escapeHTML(name)} from housemates? Past expenses are kept.`, () => {
             const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1); const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
+            if (db.payLinks) delete db.payLinks[name];
             logAudit("Removed User", name); if (currentUser === name) { closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
@@ -1380,6 +1421,7 @@
         if (!db.expenses || !Array.isArray(db.expenses)) db.expenses = []; 
         if (!db.archives || !Array.isArray(db.archives)) db.archives = [];
         if (!db.paidStatus || typeof db.paidStatus !== 'object') db.paidStatus = {};
+        if (!db.payLinks || typeof db.payLinks !== 'object' || Array.isArray(db.payLinks)) db.payLinks = {};
         if (!db.startDate) { const today = new Date(); db.startDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`; }
         if (!db.users || !Array.isArray(db.users) || db.users.length === 0) db.users = [...defaultUsers];
         if (!db.activeUsers || !Array.isArray(db.activeUsers) || db.activeUsers.length === 0) db.activeUsers = [...db.users];
@@ -1561,7 +1603,7 @@
                 if (can) {
                     if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
                     sHtmlTemp += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
-                } else { sHtmlTemp += `<span class="name-pill">${isS ? 'Settled' : 'Pending'}</span>`; }
+                } else { sHtmlTemp += payOrPending(t.from, t.to, tr * rate, isS); }
                 sHtmlTemp += `</div></div></div>`;
             });
             sHtmlTemp += `</div>`;
@@ -1628,7 +1670,7 @@
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : `<span class="name-pill">Pending</span>`}</div></div></div>`;
+                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false)}</div></div></div>`;
                     }
                 });
 
@@ -1642,7 +1684,7 @@
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : `<span class="name-pill">Pending</span>`}</div></div></div>`;
+                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false)}</div></div></div>`;
                         }
                     });
                 }
