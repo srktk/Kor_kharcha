@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.12.0">
+    <meta name="app-version" content="7.12.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -586,7 +586,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.12.0";
+    const APP_VERSION = "7.12.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1710,7 +1710,9 @@
     // Receipt photos go through our worker, which holds the imgbb key (it used to be visible in this page)
     async function uploadImageData(dataUrl) {
         const res = await secureFetch(`${API_URL}/upload`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ image: dataUrl.split(',')[1] }) }, 20000);
-        if (res.status === 401) throw new Error("AUTH"); if (!res.ok) throw new Error("HTTP Error");
+        if (res.status === 401) throw new Error("AUTH");
+        if (res.status === 507) { const b = await res.json().catch(() => ({})); showToast(b.error === 'monthly_limit' ? "PHOTO LIMIT REACHED THIS MONTH" : "PHOTO STORAGE FULL - DELETE OLD RECEIPTS", 4000); throw new Error("FULL"); }
+        if (!res.ok) throw new Error("HTTP Error");
         const out = await res.json(); if (!out || !out.url) throw new Error("Malformed API Response");
         return out;
     }
