@@ -7,8 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.10.2">
+    <meta name="app-version" content="7.11.0">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="icon" type="image/png" href="icon-512.png">
     <title>House Expenses </title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -53,32 +55,13 @@
             if (!sessionStorage.getItem('house_theme')) applyTheme();
         });
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.10.2';
-                    self.addEventListener('install', e => self.skipWaiting());
-                    self.addEventListener('activate', e => {
-                        e.waitUntil(caches.keys().then(keys => Promise.all(
-                            keys.map(key => { if(key !== CACHE_NAME) return caches.delete(key); })
-                        )));
-                    });
-                    self.addEventListener('fetch', e => {
-                        if (e.request.headers.has('range')) return;
-                        if (e.request.mode === 'navigate') {
-                            e.respondWith(fetch(e.request).then(res => {
-                                return caches.open(CACHE_NAME).then(cache => {
-                                    cache.put(e.request, res.clone());
-                                    return res;
-                                });
-                            }).catch(() => caches.match(e.request)));
-                        } else {
-                            e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
-                        }
-                    });
-                `;
-                const blob = new Blob([swCode], {type: 'application/javascript'});
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+        // Service worker (sw.js): offline copy of the page + web push. Not used inside the Android app,
+        // which has its own offline files and Firebase notifications.
+        function isNativeApp() { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+        if ('serviceWorker' in navigator && !isNativeApp() && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch((e) => console.warn('service worker failed', e)); });
+            navigator.serviceWorker.addEventListener('message', (e) => {
+                if (e.data && e.data.type === 'push') { try { showToast(e.data.body || 'New change', 3000); loadData(true); } catch (err) {} }
             });
         }
     </script>
@@ -434,6 +417,7 @@
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();">📋 Audit Trail</a>
+    <a href="#" id="notifMenuLink" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); toggleNotifications(); event.preventDefault();"><span>🔔 Notifications</span><span id="notifState" style="font-weight:800; color:var(--text-muted);">Off</span></a>
     
     <div style="flex-grow: 1;"></div>
     <a href="#" class="menu-link interactive-btn" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
@@ -574,7 +558,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.10.2";
+    const APP_VERSION = "7.11.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -591,6 +575,50 @@
         const input = document.getElementById('lockInput'); input.value = ''; if (!wasOpen || msg) setTimeout(() => input.focus(), 100);
     }
     function hideLock() { appLocked = false; document.getElementById('lockOverlay').style.display = 'none'; }
+
+    // ---- Web push notifications (website only; the Android app uses Firebase through native-shim.js) ----
+    const VAPID_PUBLIC_KEY = 'BL8b50y2TjXRFARwi9tH1BeMMGX6A8NMjjwNr4RgX0riXErAyVq9md9L1zP-6oeS5s8QetzW8wjTnucwAb_Gmuw';
+    function webPushSupported() { return !isNativeApp() && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+    function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+    function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+    function vapidKeyBytes() { const s = VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); }
+    function swReady() { return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('sw_timeout')), 8000))]); }
+    function setNotifLabel(on) { const el = document.getElementById('notifState'); if (el) { el.innerText = on ? 'On' : 'Off'; el.style.color = on ? 'var(--success)' : 'var(--text-muted)'; } }
+
+    // Tell the Worker "this browser belongs to <user>" (skipped if nothing changed since the last time)
+    async function registerWebPush(sub) {
+        if (!sub || !houseKey() || !currentUser) return;
+        const token = JSON.stringify(sub); const sig = [token, currentUser, houseKey()].join('|');
+        try { if (sessionStorage.getItem('hx_wreg') === sig) return; } catch (e) {}
+        try {
+            const r = await fetch(`${API_URL}/register`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ token, user: currentUser, platform: 'web' }) });
+            if (r.ok) { try { sessionStorage.setItem('hx_wreg', sig); } catch (e) {} }
+        } catch (e) {}
+    }
+    async function refreshWebPush() {
+        if (!webPushSupported() || Notification.permission !== 'granted') { setNotifLabel(false); return; }
+        try { const reg = await swReady(); const sub = await reg.pushManager.getSubscription(); setNotifLabel(!!sub); if (sub) registerWebPush(sub); } catch (e) {}
+    }
+    async function toggleNotifications() {
+        if (!webPushSupported()) {
+            if (isIOS() && !isStandalone()) showToast("IPHONE: TAP SHARE → ADD TO HOME SCREEN, OPEN IT FROM THERE, THEN TURN THIS ON", 7000);
+            else showToast("THIS BROWSER CAN'T SHOW NOTIFICATIONS", 3000);
+            return;
+        }
+        try {
+            const reg = await swReady(); let sub = await reg.pushManager.getSubscription();
+            if (sub) { // turn off
+                fetch(`${API_URL}/unregister`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ token: JSON.stringify(sub) }) }).catch(() => {});
+                await sub.unsubscribe(); try { sessionStorage.removeItem('hx_wreg'); } catch (e) {}
+                setNotifLabel(false); showToast("NOTIFICATIONS OFF", 2000); return;
+            }
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') { showToast("NOTIFICATIONS BLOCKED - ALLOW THEM IN BROWSER SETTINGS", 4000); return; }
+            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyBytes() });
+            try { sessionStorage.removeItem('hx_wreg'); } catch (e) {}
+            await registerWebPush(sub); setNotifLabel(true); showToast("NOTIFICATIONS ON", 2000);
+        } catch (e) { console.warn('notifications failed', e); showToast("COULDN'T TURN ON NOTIFICATIONS", 3000); }
+    }
     function unlockApp() {
         const v = (document.getElementById('lockInput').value || '').trim(); if (!v) return;
         safeSetStorage('house_key', v); document.getElementById('lockMessage').innerText = "Checking...";
@@ -617,6 +645,12 @@
     let editingId = null;
     let myViewActive = false;
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
+    // Version of the server data our local copy is based on. Sent with every save so the server can merge
+    // in changes other people saved meanwhile instead of overwriting them.
+    let dbVersion = Number(localStorage.getItem('house_db_ver')) || 0;
+    let editSeq = 0; // bumps on every local change; tells a finished save whether newer changes are waiting
+    let localDbLoaded = false; // false until db holds real data (from the server or this device's backup), not the empty startup copy
+    let saveRetryTimer = null;
     let swipeActionsEnabled = localStorage.getItem('house_swipe_actions') === 'true';
     let smartRoundingEnabled = localStorage.getItem('house_smart_rounding') === 'true';
     let trashExpiryDays = parseInt(localStorage.getItem('house_trash_expiry')) || 30;
@@ -910,31 +944,24 @@
     }
 
     function setNeedsSync(val) { needsSync = val; safeSetStorage('house_needs_sync', val); }
-    function saveLocalBackup() { safeSetStorage('house_db_backup', JSON.stringify(db)); }
+    function saveLocalBackup() { if (!localDbLoaded) return; safeSetStorage('house_db_backup', JSON.stringify(db)); } // never replace a real backup with the empty startup copy
     
     function loadLocalBackup() {
         if (appLocked || !houseKey()) return;
         const backup = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup');
         if (backup) { 
             try { 
-                db = typeof backup === 'string' ? JSON.parse(backup) : backup; if (db.encrypted) throw new Error("Encrypted backup format found."); initializeDB(); renderUsers(); 
+                db = typeof backup === 'string' ? JSON.parse(backup) : backup; if (db.encrypted) throw new Error("Encrypted backup format found."); initializeDB(); localDbLoaded = true; renderUsers();
                 if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
             } catch (err) { initializeDB(); }
         }
     }
 
-    function mergeDatabases(local, remote) {
-        const merged = JSON.parse(JSON.stringify(remote));
-        const remoteIds = new Set(remote.expenses.map(e => e.id));
-        local.expenses.forEach(ex => { if (!remoteIds.has(ex.id)) merged.expenses.unshift(ex); });
-        merged.expenses.sort((a,b) => b.timestamp - a.timestamp);
-        if (local.auditLog) {
-            const remoteAuditTimes = new Set(remote.auditLog.map(a => a.t));
-            local.auditLog.forEach(a => { if(!remoteAuditTimes.has(a.t)) merged.auditLog.unshift(a); });
-            merged.auditLog.sort((a,b) => b.t - a.t); if (merged.auditLog.length > 200) merged.auditLog.length = 200;
-        }
-        return merged;
+    function setDbVersion(v) { v = Number(v) || 0; if (v) { dbVersion = v; safeSetStorage('house_db_ver', String(v)); } }
+    function readLocalBackup() {
+        try { const b = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup'); const d = typeof b === 'string' ? JSON.parse(b) : b; return d && !d.encrypted ? d : null; } catch (e) { return null; }
     }
+    function scheduleSaveRetry(ms) { clearTimeout(saveRetryTimer); saveRetryTimer = setTimeout(() => { if (needsSync) saveData(); }, ms); }
 
     async function secureFetch(url, options = {}, timeoutMs = 8000) {
         const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -958,15 +985,23 @@
             if (res.status === 429) throw new Error("429"); if (!res.ok) throw new Error("HTTP_API_ERROR");
             hideLock();
             const data = await res.json(); const targetData = data.record ? data.record : data;
+            let pushLocalChanges = false;
             if (targetData && (targetData.expenses || targetData.users)) {
-                if (targetData.encrypted) { showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000); initializeDB(); } 
-                else { if (offlineActionsCount > 0 && db.expenses) { db = mergeDatabases(db, targetData); saveData(); } else { db = targetData; } }
-            } else { showToast("INITIALIZING NEW VAULT...", 3000); initializeDB(); saveData(); }
+                if (targetData.encrypted) { showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000); initializeDB(); }
+                else if (needsSync || offlineActionsCount > 0) {
+                    // Unsaved changes on this device (maybe from before the app was closed): keep them and save;
+                    // the server merges them with everyone else's changes and sends the result back.
+                    if (!localDbLoaded) { const b = readLocalBackup(); if (b) { db = b; localDbLoaded = true; } }
+                    pushLocalChanges = true;
+                }
+                else { db = targetData; localDbLoaded = true; setDbVersion(res.headers.get('X-Version')); }
+            } else { showToast("INITIALIZING NEW VAULT...", 3000); initializeDB(); localDbLoaded = true; pushLocalChanges = true; }
             initializeDB(); 
             if (db.trash && Array.isArray(db.trash)) { const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000; let originalLength = db.trash.length; db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs); if (db.trash.length !== originalLength) executeActionWithSave(); }
             renderUsers(); saveLocalBackup(); 
             if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
-            offlineActionsCount = 0; updateOfflineBadge(); processUploadQueue();
+            if (pushLocalChanges) { setNeedsSync(true); setTimeout(() => saveData(), 50); } else { offlineActionsCount = 0; updateOfflineBadge(); }
+            processUploadQueue(); refreshWebPush();
         } catch (e) {
             if (e.message === "AUTH") { forgetHouseKey(); showLock("Wrong PIN. Try again"); }
             else if (e.message === "LOCKED") { showLock("Too many wrong PINs on this network. Try again in an hour"); }
@@ -974,17 +1009,30 @@
         } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") { document.getElementById('loading').style.display = 'none'; } isSyncing = false; }
     }
 
-    function executeActionWithSave() { if (!checkPayloadSize()) return; offlineActionsCount++; updateOfflineBadge(); saveData(); }
+    function executeActionWithSave() { if (!checkPayloadSize()) return; editSeq++; setNeedsSync(true); offlineActionsCount++; updateOfflineBadge(); saveData(); }
 
     async function saveData(retryCount = 0) {
         saveLocalBackup(); const isReallyOnline = await checkTrueNetwork(); if (!isReallyOnline) { setNeedsSync(true); return; }
         const now = Date.now(); if (now - lastApiSaveTime < 2000 && retryCount === 0) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 2000); return; } lastApiSaveTime = now;
-        if (isSyncing && retryCount === 0) return; isSyncing = true;
+        if (isSyncing && retryCount === 0) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 1500); return; } // busy: try again shortly instead of dropping the save
+        isSyncing = true;
         const syncIcon = document.getElementById('syncIconElement'); if(syncIcon) syncIcon.classList.add('spin'); document.body.style.overscrollBehavior = 'none';
-        secureFetch(`${API_URL}/db`, { method: 'PUT', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(db) })
-        .then(res => { if (res.status === 401) throw new Error("AUTH"); if (res.status === 429) throw new Error("429"); if (!res.ok) throw new Error("HTTP_API_ERROR"); setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); })
-        .catch((e) => { if (e.message === "AUTH") { setNeedsSync(true); forgetHouseKey(); showLock("Wrong PIN. Try again"); } else if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { setNeedsSync(true); } })
-        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = 'auto'; });
+        const seqAtStart = editSeq;
+        // X-Base-Version: what our copy is based on (1 = unknown, the server then keeps everything from both sides
+        // and deletes nothing; used when this copy never held the real data)
+        const baseVersion = localDbLoaded && dbVersion ? dbVersion : 1;
+        secureFetch(`${API_URL}/db`, { method: 'PUT', headers: apiHeaders({ 'Content-Type': 'application/json', 'X-Base-Version': String(baseVersion) }), body: JSON.stringify(db) })
+        .then(async res => {
+            if (res.status === 401) throw new Error("AUTH"); if (res.status === 429) throw new Error("429"); if (res.status >= 400 && res.status < 500) throw new Error("REJECTED"); if (!res.ok) throw new Error("HTTP_API_ERROR");
+            const out = await res.json().catch(() => ({})); const ver = out.version || res.headers.get('X-Version');
+            if (editSeq === seqAtStart) {
+                if (out.db && (out.db.expenses || out.db.users)) { db = out.db; initializeDB(); localDbLoaded = true; saveLocalBackup(); renderUsers(); if (currentUser) render(); } // others' changes merged in
+                setDbVersion(ver); setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge();
+            } else if (!out.db) { setDbVersion(ver); } // newer local changes are waiting; they're based on what we just saved
+            // (merged + newer local changes: keep the old base so the next save merges again)
+        })
+        .catch((e) => { if (e.message === "AUTH") { setNeedsSync(true); forgetHouseKey(); showLock("Wrong PIN. Try again"); } else if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { if (e.message === "REJECTED") { setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); showToast("SERVER REFUSED THAT SAVE - RELOADING", 3000); setTimeout(() => loadData(true), 500); } else { setNeedsSync(true); scheduleSaveRetry(15000); } } })
+        .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = 'auto'; if (editSeq !== seqAtStart) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 1500); } });
     }
 
     function toggleMyView() {
@@ -1802,7 +1850,7 @@
     function login(u) { 
         currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = escapeHTML(u); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(u);
         if (!localStorage.getItem('has_seen_input')) { document.getElementById('chatWrapper').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
-        render(); 
+        render(); refreshWebPush();
     }
 
     window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (navigator.onLine) { if (needsSync) { saveData(); } else { loadData(false); } processUploadQueue(); } checkForUpdates(); } });
@@ -1811,6 +1859,7 @@
 
     window.onload = async () => {
         initializeDB(); renderUsers();
+        if (isNativeApp()) { const nl = document.getElementById('notifMenuLink'); if (nl) nl.style.display = 'none'; } // the app has its own notifications
         document.getElementById('loading').style.display = 'block'; document.getElementById('loginOverlay').style.display = 'none';
         
         await loadData(true);
