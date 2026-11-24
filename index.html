@@ -112,6 +112,8 @@
         #topUserName.my-view::after { display: inline-block; }
         .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.15s; position: relative; font-weight: 800; font-size: 0.95rem; }
         .icon-btn:active { transform: scale(0.94); }
+        .icon-btn svg { width: 19px; height: 19px; }
+        #sideMenu > * { flex-shrink: 0; }
         .badge { background: var(--surface-2); padding: 6px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
         @media (hover: hover) { .action-icon:hover { color: var(--accent); } }
@@ -296,6 +298,103 @@
         .toggle-switch input:checked + .toggle-slider { background-color: var(--accent); }
         .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
 
+        /* ---- Shared components: sheets, cards, grouped rows ---- */
+        .ic { display: inline-flex; align-items: center; justify-content: center; }
+        .ic svg { width: 18px; height: 18px; }
+        .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .sheet-head h2 { margin: 0 !important; font-size: 1.3rem !important; text-align: left !important; }
+        .sheet-close { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--input-bg); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .sheet-close:active { transform: scale(0.94); }
+        .sheet-close svg { width: 18px; height: 18px; }
+        .sheet-sub { font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin: -6px 0 14px; }
+        .sheet-body { display: flex; flex-direction: column; gap: 8px; }
+        .login-card.sheet.tall { height: 90dvh; display: flex; flex-direction: column; }
+        .login-card.sheet.tall .sheet-body { flex: 1; min-height: 0; overflow-y: auto; }
+        .sheet-foot { display: flex; gap: 10px; margin-top: 14px; }
+        .sheet-foot > * { flex: 1; }
+        .stack { display: flex; flex-direction: column; gap: 8px; }
+        .card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; text-align: left; }
+        .card.selected { border-color: var(--accent); background: var(--accent-soft); }
+        .card-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .card-title { font-size: 0.93rem; font-weight: 600; color: var(--text-main); line-height: 1.4; word-break: break-word; overflow-wrap: anywhere; }
+        .card-text { font-size: 0.88rem; color: var(--text-main); line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
+        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+        .card-amt { font-size: 1rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-strong); white-space: nowrap; }
+        .tag.danger { background: var(--danger-soft); color: var(--danger); }
+        .tag.success { background: rgba(22, 163, 74, 0.12); color: var(--success); }
+        .tag.muted { background: var(--input-bg); color: var(--text-muted); }
+        .link-btn { background: none; border: none; padding: 0; color: var(--accent-strong); font-weight: 600; font-size: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+        .empty { text-align: center; color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; padding: 26px 12px; }
+        .empty-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .empty-icon svg { width: 22px; height: 22px; }
+        .group-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 20px 4px 8px; }
+        .group-label:first-child { margin-top: 2px; }
+        .group { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+        .row-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: none; border: none; border-bottom: 1px solid var(--border); color: var(--text-main); font-size: 0.95rem; font-weight: 500; text-align: left; cursor: pointer; min-height: 54px; text-decoration: none; font-family: inherit; }
+        .group > .row-item:last-child { border-bottom: none; }
+        .row-item:active { background: var(--input-bg); }
+        .ri-icon { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-strong); flex-shrink: 0; }
+        .ri-icon svg { width: 17px; height: 17px; }
+        .ri-label { flex: 1; min-width: 0; }
+        .ri-sub { display: block; font-size: 0.74rem; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+        .ri-end { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .ri-end svg { width: 16px; height: 16px; }
+        .row-item.danger { color: var(--danger); }
+        .row-item.danger .ri-icon { background: var(--danger-soft); color: var(--danger); }
+        .row-item select { background: var(--input-bg) !important; color: var(--text-main) !important; border-radius: 10px; padding: 6px 10px; font-size: 0.85rem !important; font-weight: 600; }
+        .seg { display: flex; gap: 4px; padding: 4px; background: var(--input-bg); border-radius: 14px; margin-bottom: 12px; }
+        .seg button { flex: 1; border: none; background: none; padding: 9px 8px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; font-family: inherit; }
+        .seg button.active { background: var(--surface); color: var(--text-main); box-shadow: var(--shadow); }
+        .choice { display: flex; gap: 12px; align-items: flex-start; padding: 13px 14px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border); cursor: pointer; text-align: left; }
+        .choice:has(input[type="radio"]:checked) { border-color: var(--accent); background: var(--accent-soft); }
+        .choice input[type="radio"], .choice input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 1px; flex-shrink: 0; }
+        .choice .ch-text { flex: 1; min-width: 0; }
+        .choice b { font-size: 0.93rem; font-weight: 600; }
+        .choice small { display: block; font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+        .mini-input { width: 88px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); font-weight: 600; }
+        .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .tile { background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; }
+        .tile .k { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+        .tile .v { font-size: 1.15rem; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+        .bar { height: 8px; border-radius: 4px; background: var(--input-bg); overflow: hidden; }
+        .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+        .bar.thin { height: 4px; margin-top: 3px; background: transparent; }
+        .bar.thin > i { background: var(--text-muted); opacity: 0.45; }
+        .cycle-bar { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; }
+        .cycle-bar.selected { background: var(--accent-soft); border-color: var(--accent); }
+        .cycle-bar .lbl { font-size: 0.74rem; font-weight: 600; color: var(--text-muted); }
+        .cycle-bar.selected .lbl { color: var(--accent-strong); }
+        .cycle-bar .amt { font-size: 0.8rem; font-weight: 700; min-width: 72px; text-align: right; font-variant-numeric: tabular-nums; }
+        .legend { display: flex; gap: 14px; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; }
+        .legend i { display: inline-block; width: 10px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+        .month-chart { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-top: 12px; }
+        .month-chart > i { flex: 1; border-radius: 4px 4px 0 0; background: var(--text-muted); opacity: 0.35; }
+        .month-chart > i.now { background: var(--accent); opacity: 1; }
+        .month-labels { display: flex; gap: 4px; font-size: 0.62rem; color: var(--text-muted); text-align: center; margin-top: 4px; }
+        .month-labels > span { flex: 1; }
+        .status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+        .health-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .health-row:last-child { border-bottom: none; }
+        .health-row .hv { font-weight: 600; text-align: right; }
+        .warn-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--danger-soft); color: var(--danger); border-radius: 16px; padding: 13px 14px; font-weight: 600; font-size: 0.88rem; cursor: pointer; margin-top: 4px; }
+        .warn-banner svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .claim { margin-top: 8px; padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); font-size: 0.82rem; line-height: 1.45; }
+        .sub-title { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 14px 0 6px; display: flex; align-items: center; gap: 6px; }
+        .sub-title.danger { color: var(--danger); }
+        .cycle-dates { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .cycle-total { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.6px; color: var(--text-main); font-variant-numeric: tabular-nums; }
+        .help-card { display: flex; gap: 12px; align-items: flex-start; }
+        .help-card .ri-icon { margin-top: 2px; }
+        .help-card p { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-top: 3px; }
+        .owner-only { display: none; }
+        .btn-glowing.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+        .btn-glowing.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn-glowing.small { padding: 11px 14px; font-size: 0.85rem; }
+        .dialog-icon { width: 52px; height: 52px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--danger-soft); color: var(--danger); margin-bottom: 14px; }
+        .dialog-icon svg { width: 24px; height: 24px; }
+        .field-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin: 0 2px 6px; text-align: left; }
         #lightboxOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10005; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); touch-action: none; overflow: hidden; }
         #lightboxImg { max-width: 95vw; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.1s ease-out; transform-origin: center center; }
         .lightbox-close, .lightbox-rotate { position: absolute; top: max(25px, env(safe-area-inset-top)); background: rgba(255,255,255,0.2); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2; }
@@ -310,231 +409,208 @@
 <div id="loading" aria-live="polite">SYNCING...</div>
 
 <div id="loginOverlay" class="dialog-overlay" style="display:none;">
-    <div class="login-card dialog" style="width:90%; max-width:340px; text-align:center;">
-        <h2 style="margin:0 0 25px 0; font-size: 1.4rem; font-weight:900; letter-spacing:-0.5px;">Select User</h2>
-        <div id="userButtons" style="display: flex; flex-direction: column;"></div>
+    <div class="login-card dialog" style="width:calc(100% - 40px); max-width:360px;">
+        <h2 style="margin:0 0 4px; font-size:1.35rem; text-align:center;">Who's using this phone?</h2>
+        <p class="sheet-sub" style="text-align:center; margin:0 0 18px;">Pick your name. You can switch later from More.</p>
+        <div id="userButtons" class="stack" style="gap:0;"></div>
     </div>
 </div>
 
 <div id="auditOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="width:90%; max-width:340px;">
-        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Audit Trail</h2>
-        <div id="auditList" style="margin-bottom: 15px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeAuditLog()">Close</button>
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Audit Trail</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeAuditLog()" data-ic="x"></button></div>
+        <p class="sheet-sub">Every change anyone made, newest first.</p>
+        <div id="auditList" class="sheet-body"></div>
     </div>
 </div>
 
 <div id="searchOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; height:85vh; display:flex; flex-direction:column;">
-        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Search All Expenses</h2>
-        <input type="search" id="searchInput" aria-label="Search expenses" class="chat-note" placeholder="Words, name, amount or #tag" style="width:100%; box-sizing:border-box; border:1px solid var(--border); margin-bottom:8px; font-size:1rem;" autocomplete="off" oninput="scheduleSearch()">
-        <div id="searchCount" style="font-size:0.7rem; color:var(--text-muted); font-weight:800; margin-bottom:8px; text-align:center;"></div>
-        <div id="searchResults" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeSearch()">Close</button>
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Search</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeSearch()" data-ic="x"></button></div>
+        <input type="search" id="searchInput" aria-label="Search expenses" class="chat-note" placeholder="Words, name, amount or #tag" style="margin-bottom:8px;" autocomplete="off" oninput="scheduleSearch()">
+        <div id="searchCount" class="card-meta" style="margin:0 2px 8px; font-weight:600;"></div>
+        <div id="searchResults" class="sheet-body"></div>
     </div>
 </div>
 
 <div id="insightsOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; max-height:85vh; display:flex; flex-direction:column;">
-        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Spending Insights</h2>
-        <div id="insightsBody" style="flex:1; min-height:0; overflow-y:auto; margin-bottom:12px;"></div>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeInsights()">Close</button>
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Spending Insights</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeInsights()" data-ic="x"></button></div>
+        <div id="insightsBody" class="sheet-body" style="display:block;"></div>
     </div>
 </div>
 
 <div id="historyOverlay" class="sheet-overlay" style="display:none; z-index:10000;">
-    <div class="login-card sheet" style="box-sizing:border-box; width:calc(100% - 32px); max-width:380px; max-height:85vh; display:flex; flex-direction:column;">
-        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Edit History</h2>
-        <div id="historyList" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeHistory()">Close</button>
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Edit History</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeHistory()" data-ic="x"></button></div>
+        <div id="historyList" class="sheet-body"></div>
     </div>
 </div>
 
 <div id="noticeOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; max-height:85vh; display:flex; flex-direction:column;">
-        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Noticeboard</h2>
-        <div id="noticeList" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
-        <textarea id="noticeInput" aria-label="New note" class="chat-note" rows="2" maxlength="1000" placeholder="Wi-Fi password, bin day, landlord's number..." style="width:100%; box-sizing:border-box; border:1px solid var(--border); margin-bottom:8px; resize:vertical; font-size:0.95rem;"></textarea>
-        <div style="display:flex; gap:10px;">
-            <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeNotices()">Close</button>
-            <button id="noticeSaveBtn" class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); saveNotice()">Add Note</button>
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Noticeboard</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeNotices()" data-ic="x"></button></div>
+        <div id="noticeList" class="sheet-body"></div>
+        <div class="sheet-foot" style="flex-direction:column; gap:8px;">
+            <textarea id="noticeInput" aria-label="New note" class="chat-note" rows="2" maxlength="1000" placeholder="Wi-Fi password, bin day, landlord's number..." style="resize:vertical;"></textarea>
+            <button id="noticeSaveBtn" class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); saveNotice()">Add Note</button>
         </div>
     </div>
 </div>
 
 <div id="shoppingOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; max-height:85vh; display:flex; flex-direction:column;">
-        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Shopping List</h2>
-        <div id="shopList" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:10px;"></div>
-        <div id="shopBoughtActions" style="display:none; gap:8px; margin-bottom:10px;">
-            <button class="btn-pill interactive-btn" style="flex:1; font-size:0.75rem; padding:8px;" onclick="triggerHaptic(); shopToExpense()">Add as expense</button>
-            <button class="btn-pill danger interactive-btn" style="flex:1; font-size:0.75rem; padding:8px;" onclick="triggerHaptic(); clearBoughtShop()">Clear bought</button>
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Shopping List</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeShopping()" data-ic="x"></button></div>
+        <div id="shopList" class="sheet-body"></div>
+        <div id="shopBoughtActions" style="display:none; gap:8px; margin-top:10px;">
+            <button class="btn-glowing small interactive-btn" style="flex:1;" onclick="triggerHaptic(); shopToExpense()">Add as expense</button>
+            <button class="btn-glowing small interactive-btn" style="flex:1; color:var(--danger);" onclick="triggerHaptic(); clearBoughtShop()">Clear bought</button>
         </div>
-        <textarea id="shopInput" aria-label="New shopping items" class="chat-note" rows="1" maxlength="1000" placeholder="milk, eggs, bread..." style="width:100%; box-sizing:border-box; border:1px solid var(--border); margin-bottom:8px; resize:vertical; font-size:0.95rem;" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addShopItems(); }"></textarea>
-        <div style="display:flex; gap:10px;">
-            <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeShopping()">Close</button>
-            <button id="shopAddBtn" class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); addShopItems()">Add</button>
+        <div class="sheet-foot">
+            <textarea id="shopInput" aria-label="New shopping items" class="chat-note" rows="1" maxlength="1000" placeholder="milk, eggs, bread..." style="resize:none; flex:1;" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addShopItems(); }"></textarea>
+            <button id="shopAddBtn" class="btn-glowing primary interactive-btn" style="flex:0 0 auto; width:auto; padding:0 22px;" onclick="triggerHaptic(); addShopItems()">Add</button>
         </div>
     </div>
 </div>
 
 <div id="helpOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="width:90%; max-width:360px; max-height: 85vh; overflow-y: auto;">
-        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center; color:var(--accent);">How to Use</h2>
-        
-        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">👉 Swipe Actions</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">Swipe any expense horizontally on the timeline to reveal quick actions.</p>
-            <div style="margin-top: 8px; display:flex; gap:5px;">
-                <span class="btn-pill" style="font-size:0.6rem;">Share</span>
-                <span class="btn-pill" style="font-size:0.6rem;">Edit</span>
-                <span class="btn-pill danger" style="font-size:0.6rem;">Delete</span>
-            </div>
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>How to Use</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeHelp()" data-ic="x"></button></div>
+        <div class="stack">
+            <div class="card help-card"><span class="ri-icon" data-ic="plus"></span><div><div class="card-title">Add an expense</div><p>Type the amount and what it was in the box at the bottom, e.g. <b>12.50 milk and bread</b>, then tap send. The ⋮ button adds a note or a receipt photo.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="swipe"></span><div><div class="card-title">Swipe actions</div><p>Turn on "Swipe to reveal actions" in Settings, then swipe an expense sideways for Share, Edit and Delete.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="hash"></span><div><div class="card-title">Hashtag bills</div><p>Add a tag like #groceries to an expense to keep it in its own pot. Tap the tag on the balance card to see only that bill.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="users"></span><div><div class="card-title">Who's in this month</div><p>In Settlements, tap "Active housemates". Untick someone who's away and the split works out without them.</p></div></div>
+            <div class="card help-card"><span class="ri-icon" data-ic="trash"></span><div><div class="card-title">Recovery Vault</div><p>Deleted something by accident? Settings → Recovery Vault brings it back until it expires.</p></div></div>
         </div>
-        
-        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">#️⃣ Hashtag Splitting</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">Add a tag (like #groceries) to your amount box. Tap the tag pill at the top of the dashboard to isolate that specific pot of money.</p>
-        </div>
-
-        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">👥 Smart Split</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">In the Settlements tab, toggle "Active Housemates". If someone is unchecked, the entire house math recalculates without them.</p>
-        </div>
-
-        <div style="margin-bottom: 15px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="font-size:0.9rem; font-weight:800; margin-bottom:5px;">🗑️ Recovery Vault</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">Deleted something by accident? Go to Settings -> Recovery Vault to restore deleted expenses before they expire.</p>
-        </div>
-
-        <button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000; margin-top: 10px;" onclick="triggerHaptic(); closeHelp()">Got It</button>
+        <div class="sheet-foot"><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeHelp()">Got It</button></div>
     </div>
 </div>
 
 <div id="manageUsersOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="width:90%; max-width:340px;">
-        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Manage Housemates</h2>
-        <div id="manageUserList" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <button id="addHousemateBtn" class="btn-glowing interactive-btn" style="margin-bottom: 15px;" onclick="triggerHaptic(); addUser()">Add New Housemate</button>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeManageUsers()">Close</button>
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Manage Housemates</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeManageUsers()" data-ic="x"></button></div>
+        <div id="manageUserList" class="stack" style="max-height:52dvh; overflow-y:auto;"></div>
+        <div class="sheet-foot"><button id="addHousemateBtn" class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); addUser()">Add New Housemate</button></div>
     </div>
 </div>
 
 <div id="settingsOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="width:90%; max-width:340px;">
-        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Settings</h2>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
-            <span style="font-weight:700; font-size: 0.95rem;">Swipe to Reveal Actions</span>
-            <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSwipeSetting()">
-                <input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" style="pointer-events:none;">
-                <span class="toggle-slider" style="pointer-events:none;"></span>
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Settings</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeSettings()" data-ic="x"></button></div>
+
+        <div class="group-label">Display</div>
+        <div class="group">
+            <div class="row-item interactive-btn" onclick="triggerHaptic(); toggleSwipeSetting()">
+                <span class="ri-icon" data-ic="swipe"></span><span class="ri-label">Swipe to reveal actions<span class="ri-sub">Hide Share, Edit and Delete behind a swipe</span></span>
+                <span class="toggle-switch"><input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
+            </div>
+            <div id="smartRoundingContainer" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); toggleSmartRounding()">
+                <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Smart rounding<span class="ri-sub">Round settle-up amounts to 10p</span></span>
+                <span class="toggle-switch"><input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
+            </div>
+            <div class="row-item" style="display:none; cursor:default;">
+                <span class="ri-icon" data-ic="clock"></span><span class="ri-label">Keep deleted items for</span>
+                <select id="trashExpirySelect" class="interactive-btn" onchange="triggerHaptic(); updateTrashExpiry()">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30">30 days</option>
+                </select>
             </div>
         </div>
-        <div id="smartRoundingContainer" style="display:none; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
-            <span style="font-weight:700; font-size: 0.95rem;">Smart Rounding (10p)</span>
-            <div class="toggle-switch interactive-btn" onclick="triggerHaptic(); toggleSmartRounding()">
-                <input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" style="pointer-events:none;">
-                <span class="toggle-slider" style="pointer-events:none;"></span>
-            </div>
+
+        <div class="group-label">You</div>
+        <div class="group">
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); setPayLink();"><span class="ri-icon" data-ic="card"></span><span class="ri-label">My Payment Link<span class="ri-sub">Monzo or PayPal link for the Pay button</span></span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); openNotifPrefs();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">What Notifies Me</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
-            <span style="font-weight:700; font-size: 0.95rem;">Trash Expiry</span>
-            <select id="trashExpirySelect" class="interactive-btn" onchange="triggerHaptic(); updateTrashExpiry()" style="padding:4px; border-radius:8px; border:1px solid var(--border); background:var(--input-bg);">
-                <option value="7">7 Days</option>
-                <option value="14">14 Days</option>
-                <option value="30">30 Days</option>
-            </select>
+
+        <div class="group-label">House</div>
+        <div class="group">
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); openManageUsers();"><span class="ri-icon" data-ic="users"></span><span class="ri-label">Manage Housemates</span><span class="ri-end" data-ic="chev"></span></button>
+            <button id="trashBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); closeSettings(); openTrash();"><span class="ri-icon" data-ic="trash"></span><span class="ri-label">Recovery Vault<span class="ri-sub">Bring back deleted expenses</span></span><span class="ri-end" data-ic="chev"></span></button>
+            <button id="restoreBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); closeSettings(); openRestore();"><span class="ri-icon" data-ic="restore"></span><span class="ri-label">Restore Backup<span class="ri-sub">Put all house data back to an earlier point</span></span><span class="ri-end" data-ic="chev"></span></button>
         </div>
-        <div id="healthCard" style="display:none; padding: 12px; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-weight:800; font-size:0.9rem;">System Health</span>
-                <button class="btn-pill interactive-btn" style="font-size:0.65rem;" onclick="triggerHaptic(); loadHealth()">Refresh</button>
-            </div>
-            <div id="healthRows" style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem;"></div>
+
+        <div id="healthCard" style="display:none;">
+            <div class="group-label" style="display:flex; justify-content:space-between; align-items:center;">System Health <button class="link-btn interactive-btn" style="text-transform:none; letter-spacing:0; font-size:0.78rem;" onclick="triggerHaptic(); loadHealth()">Refresh</button></div>
+            <div id="healthRows" class="group"></div>
         </div>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
-            <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
-            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); setPayLink();">💳 My Payment Link</button>
-            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openNotifPrefs();">🔔 What Notifies Me</button>
-            <button id="restoreBtn"class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openRestore();">⏪ Restore Backup</button>
-            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); downloadPDF();">Export PDF</button>
-                <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border); font-size:0.75rem;" onclick="triggerHaptic(); closeSettings(); exportCSV();">Export CSV</button>
-            </div>
-            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--accent); border-color:var(--accent); font-size:0.8rem;" onclick="triggerHaptic(); closeSettings(); downloadZIP();">Download All Receipts (.ZIP)</button>
+
+        <div class="group-label">Export</div>
+        <div class="group">
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); downloadPDF();"><span class="ri-icon" data-ic="file"></span><span class="ri-label">Export PDF</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); exportCSV();"><span class="ri-icon" data-ic="file"></span><span class="ri-label">Export CSV</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); downloadZIP();"><span class="ri-icon" data-ic="download"></span><span class="ri-label">Download All Receipts (.ZIP)</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
-        <button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); closeSettings()">Done</button>
+
+        <div class="sheet-foot"><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeSettings()">Done</button></div>
     </div>
 </div>
 
 <div id="trashOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="width:90%; max-width:340px;">
-        <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Recovery Vault</h2>
-        <div id="trashExpiryText" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:15px;"></div>
-        <div id="trashList" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeTrash()">Close</button>
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Recovery Vault</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeTrash()" data-ic="x"></button></div>
+        <p id="trashExpiryText" class="sheet-sub"></p>
+        <div id="trashList" class="stack" style="max-height:60dvh; overflow-y:auto;"></div>
     </div>
 </div>
 
 <div id="restoreOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet" style="width:90%; max-width:360px;">
-        <h2 style="margin:0 0 8px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Restore Backup</h2>
-        <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:12px;">Puts the whole house data back to an earlier point. Everyone is notified, and the restore itself can be undone from this list.</div>
-        <div style="display:flex; gap:8px; margin-bottom:12px;">
-            <button id="restoreTabBackups" class="btn-pill interactive-btn" style="flex:1;" onclick="triggerHaptic(); renderRestoreList('backup')">Daily</button>
-            <button id="restoreTabVersions" class="btn-pill interactive-btn" style="flex:1;" onclick="triggerHaptic(); renderRestoreList('version')">Recent saves</button>
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Restore Backup</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeRestore()" data-ic="x"></button></div>
+        <p class="sheet-sub">Puts the whole house data back to an earlier point. Everyone is notified, and the restore itself can be undone from this list.</p>
+        <div class="seg" role="tablist">
+            <button id="restoreTabBackups" class="interactive-btn" onclick="triggerHaptic(); renderRestoreList('backup')">Daily</button>
+            <button id="restoreTabVersions" class="interactive-btn" onclick="triggerHaptic(); renderRestoreList('version')">Recent saves</button>
         </div>
-        <div id="restoreList" style="margin-bottom: 15px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
-        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeRestore()">Close</button>
+        <div id="restoreList" class="stack" style="max-height:55dvh; overflow-y:auto;"></div>
     </div>
 </div>
 
 <div id="confirmOverlay" class="dialog-overlay" style="display:none; z-index:10000;">
-    <div class="login-card dialog" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
-        <div style="margin-bottom: 15px; display:flex; justify-content:center;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        </div>
-        <h3 id="confirmMessage" style="margin: 0 0 20px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;">Are you sure?</h3>
+    <div class="login-card dialog" style="width:calc(100% - 40px); max-width:340px; text-align:center;">
+        <span class="dialog-icon" data-ic="alert"></span>
+        <h3 id="confirmMessage" style="margin:0 0 20px; font-size:1.02rem; font-weight:600; color:var(--text-main); line-height:1.45;">Are you sure?</h3>
         <div style="display:flex; gap:10px;">
-            <button class="btn-glowing interactive-btn" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closeConfirm()">Cancel</button>
-            <button class="btn-glowing interactive-btn" style="background: var(--danger); border-color: var(--danger); color: #fff;" onclick="triggerHaptic(); executeConfirm()">Confirm</button>
+            <button class="btn-glowing interactive-btn" onclick="triggerHaptic(); closeConfirm()">Cancel</button>
+            <button class="btn-glowing danger interactive-btn" onclick="triggerHaptic(); executeConfirm()">Confirm</button>
         </div>
     </div>
 </div>
 
 <div id="promptOverlay" class="dialog-overlay" style="display:none; z-index:10000;">
-    <div class="login-card dialog" style="width:90%; max-width:320px; text-align:center; padding: 30px 20px;">
-        <h3 id="promptMessage" style="margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4;"></h3>
-        <input type="text" id="promptInput" aria-label="Input field" class="chat-note wipe-trigger" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.1rem; font-weight: bold;" autocomplete="off">
+    <div class="login-card dialog" style="width:calc(100% - 40px); max-width:340px; text-align:center;">
+        <h3 id="promptMessage" style="margin:0 0 16px; font-size:1.02rem; font-weight:600; color:var(--text-main); line-height:1.45;"></h3>
+        <input type="text" id="promptInput" aria-label="Input field" class="chat-note wipe-trigger" style="margin-bottom:18px; text-align:center; font-size:1.1rem; font-weight:600;" autocomplete="off">
         <div style="display:flex; gap:10px;">
-            <button class="btn-glowing interactive-btn" style="background: transparent; color: var(--text-main);" onclick="triggerHaptic(); closePrompt()">Cancel</button>
-            <button class="btn-glowing interactive-btn" style="background: var(--accent); border-color: var(--accent); color: #000;" onclick="triggerHaptic(); executePrompt()">OK</button>
+            <button class="btn-glowing interactive-btn" onclick="triggerHaptic(); closePrompt()">Cancel</button>
+            <button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); executePrompt()">OK</button>
         </div>
     </div>
 </div>
 
-<div id="notifCard" class="login-card" role="dialog" aria-label="Turn on notifications" style="display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:96px; width:calc(100% - 32px); max-width:380px; box-sizing:border-box; padding:18px 18px 16px; border-radius:24px; z-index:9000;">
+<div id="notifCard" class="login-card" role="dialog" aria-label="Turn on notifications" style="display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:96px; width:calc(100% - 32px); max-width:400px; padding:18px; border-radius:24px; z-index:9000;">
     <div style="display:flex; gap:12px; align-items:flex-start;">
-        <div style="font-size:1.6rem; line-height:1;">🔔</div>
+        <span class="ri-icon" data-ic="bell" style="width:40px; height:40px; border-radius:12px;"></span>
         <div style="flex:1;">
-            <div style="font-weight:900; font-size:1rem; margin-bottom:4px; color:var(--text-main);">Turn on notifications?</div>
-            <div id="notifCardText" style="font-size:0.85rem; color:var(--text-muted); line-height:1.4;"></div>
+            <div class="card-title" style="font-size:1rem;">Turn on notifications?</div>
+            <div id="notifCardText" class="card-meta" style="font-size:0.85rem;"></div>
         </div>
     </div>
     <div style="display:flex; gap:10px; margin-top:14px;">
-        <button id="notifCardLater" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main);" onclick="triggerHaptic(); snoozeNotifCard()">Not now</button>
-        <button id="notifCardOn" class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); notifCardTurnOn()">Turn on</button>
+        <button id="notifCardLater" class="btn-glowing small interactive-btn" onclick="triggerHaptic(); snoozeNotifCard()">Not now</button>
+        <button id="notifCardOn" class="btn-glowing small primary interactive-btn" onclick="triggerHaptic(); notifCardTurnOn()">Turn on</button>
     </div>
 </div>
 
-<div id="lockOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:15000; display:none; align-items:center; justify-content:center; overscroll-behavior: contain;">
-    <form class="login-card" style="box-sizing:border-box; width:90%; max-width:340px; text-align:center; padding: 30px 20px;" onsubmit="event.preventDefault(); unlockApp();">
+<div id="lockOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:15000; display:none; align-items:center; justify-content:center; overscroll-behavior:contain;">
+    <form class="login-card" style="width:calc(100% - 40px); max-width:360px; text-align:center; padding:32px 22px;" onsubmit="event.preventDefault(); unlockApp();">
         <img src="icon-512.png" alt="" class="lock-logo">
-        <h2 style="margin:0 0 8px 0; font-size: 1.3rem; font-weight:900; letter-spacing:-0.5px;">House Expenses</h2>
-        <p id="lockMessage" style="margin: 0 0 20px 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main); opacity: 0.8; line-height: 1.4;">Enter the house PIN</p>
-        <input type="password" id="lockInput" aria-label="House PIN" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.2rem; font-weight: bold; letter-spacing: 4px;" autocomplete="off">
-        <button type="submit" class="btn-glowing interactive-btn" style="width: 100%; background: var(--accent); border-color: var(--accent); color: #000;">Unlock</button>
+        <h2 style="margin:0 0 6px; font-size:1.4rem;">House Expenses</h2>
+        <p id="lockMessage" style="margin:0 0 20px; font-size:0.92rem; color:var(--text-muted); line-height:1.45;">Enter the house PIN</p>
+        <input type="password" id="lockInput" aria-label="House PIN" class="chat-note" inputmode="numeric" style="margin-bottom:14px; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:6px;" autocomplete="off">
+        <button type="submit" class="btn-glowing primary interactive-btn">Unlock</button>
     </form>
 </div>
 
@@ -543,43 +619,47 @@
     <button class="lightbox-rotate interactive-btn" aria-label="Rotate image" onclick="rotateLightboxImg(event)">↻</button>
     <button id="lightboxPrev" class="lightbox-nav interactive-btn" style="display:none;" onclick="changeLightboxImage(event, -1)">❮</button>
     <button id="lightboxNext" class="lightbox-nav interactive-btn" style="display:none;" onclick="changeLightboxImage(event, 1)">❯</button>
-    <div id="lightboxLoader" style="color:white; font-size:0.8rem; font-weight:800; letter-spacing:1px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">LOADING PHOTO...</div>
-    <div id="lightboxPagination" style="position:absolute; bottom:25px; color:white; font-size:0.8rem; font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; display:none; pointer-events:none;">1/1</div>
+    <div id="lightboxLoader" style="color:white; font-size:0.8rem; font-weight:700; letter-spacing:1px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">LOADING PHOTO...</div>
+    <div id="lightboxPagination" style="position:absolute; bottom:25px; color:white; font-size:0.8rem; font-weight:700; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; display:none; pointer-events:none;">1/1</div>
     <img id="lightboxImg" src="" alt="Receipt" crossorigin="anonymous" style="display:none;" onload="document.getElementById('lightboxLoader').style.display='none'; this.style.display='block';">
 </div>
 
 <div id="menuOverlay" class="interactive-btn" onclick="toggleMenu()"></div>
 <nav id="sideMenu" aria-label="Main Menu">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
-        <div>
-            <div style="display:flex; align-items:center; gap:12px;"><span id="menuAvatar"></span><div><div style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">Signed in as</div><h2 id="menuUserName" style="margin:0;"></h2></div></div>
-        </div>
-        <button class="action-icon interactive-btn" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 2px 18px;">
+        <div style="display:flex; align-items:center; gap:12px;"><span id="menuAvatar"></span><div><div class="card-meta" style="margin:0;">Signed in as</div><h2 id="menuUserName" style="margin:0;"></h2></div></div>
+        <button class="sheet-close interactive-btn" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()" data-ic="x"></button>
     </div>
-    
-    <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); background: var(--input-bg); margin-bottom: 15px;" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();">
-        <span>Toggle Theme</span>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-    </a>
 
-    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'heroSection')">Dashboard</a>
-    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'settlementsWrapper')">Settlement Reports</a>
-    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'currentExpensesWrapper')">Current Expenses</a>
-    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
-    <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
-    
-    <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); openNotices(); event.preventDefault();"><span>📌 Noticeboard</span><span id="noticeCount" class="danger-badge" style="display:none; background:var(--accent); color:#000;"></span></a>
-    <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); openShopping(); event.preventDefault();"><span>🛒 Shopping List</span><span id="shopCount" class="danger-badge" style="display:none; background:var(--accent); color:#000;"></span></a>
-    <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();">🔍 Search</a>
-    <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openInsights(); event.preventDefault();">📊 Insights</a>
-    <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();">📋 Audit Trail</a>
-    <a href="#" id="notifMenuLink" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); toggleNotifications(); event.preventDefault();"><span>🔔 Notifications</span><span id="notifState" style="font-weight:800; color:var(--text-muted);">Off</span></a>
-    
-    <div style="flex-grow: 1;"></div>
-    <a href="#" class="menu-link interactive-btn" style="text-align: center; border: 1px dashed var(--border); margin-bottom: 10px;" onclick="triggerHaptic(); openSettings(); event.preventDefault();">⚙️ Settings</a>
-    <a href="#" class="menu-link interactive-btn" style="color:var(--danger); text-align: center; border: 1px dashed rgba(239, 68, 68, 0.4);" onclick="triggerHaptic(); logout(); event.preventDefault();">Switch User</a>
+    <div class="group-label">Jump to</div>
+    <div class="group">
+        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'heroSection')"><span class="ri-icon" data-ic="home"></span><span class="ri-label">Dashboard</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'settlementsWrapper')"><span class="ri-icon" data-ic="swap"></span><span class="ri-label">Settlement Reports</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'currentExpensesWrapper')"><span class="ri-icon" data-ic="list"></span><span class="ri-label">Current Expenses</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')"><span class="ri-icon" data-ic="alert"></span><span class="ri-label">Unpaid Past Debts</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')"><span class="ri-icon" data-ic="archive"></span><span class="ri-label">History &amp; Archives</span></a>
+    </div>
+
+    <div class="group-label">House</div>
+    <div class="group">
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openNotices(); event.preventDefault();"><span class="ri-icon" data-ic="pin"></span><span class="ri-label">Noticeboard</span><span id="noticeCount" class="count-badge" style="display:none;"></span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openShopping(); event.preventDefault();"><span class="ri-icon" data-ic="cart"></span><span class="ri-label">Shopping List</span><span id="shopCount" class="count-badge" style="display:none;"></span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();"><span class="ri-icon" data-ic="search"></span><span class="ri-label">Search</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openInsights(); event.preventDefault();"><span class="ri-icon" data-ic="chart"></span><span class="ri-label">Insights</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();"><span class="ri-icon" data-ic="clipboard"></span><span class="ri-label">Audit Trail</span></a>
+    </div>
+
+    <div class="group-label">App</div>
+    <div class="group">
+        <a href="#" id="notifMenuLink" class="row-item interactive-btn" onclick="triggerHaptic(); toggleNotifications(); event.preventDefault();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">Notifications</span><span id="notifState" class="ri-end">Off</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();"><span class="ri-icon" data-ic="moon"></span><span class="ri-label">Toggle Theme</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openSettings(); event.preventDefault();"><span class="ri-icon" data-ic="gear"></span><span class="ri-label">Settings</span></a>
+    </div>
+
+    <div style="flex-grow:1; min-height:16px;"></div>
+    <div class="group">
+        <a href="#" class="row-item danger interactive-btn" onclick="triggerHaptic(); logout(); event.preventDefault();"><span class="ri-icon" data-ic="logout"></span><span class="ri-label">Switch User</span></a>
+    </div>
 </nav>
 
 <main class="wrapper">
@@ -589,18 +669,18 @@
             <button id="topUserName" aria-label="Toggle My View" class="interactive-btn" onclick="triggerHaptic(); toggleMyView()" title="Tap to see only your own expenses"></button>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
-            <button class="icon-btn interactive-btn" aria-label="Help Guide" onclick="triggerHaptic(); openHelp()">?</button>
-            <div style="position: relative;">
+            <button class="icon-btn interactive-btn" aria-label="Help Guide" onclick="triggerHaptic(); openHelp()" data-ic="help"></button>
+            <div style="position:relative;">
                 <button class="icon-btn interactive-btn" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
-                    <svg id="syncIconElement" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <svg id="syncIconElement" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                 </button>
-                <div id="offlineBadge" class="offline-badge" style="display: none;">0</div>
+                <div id="offlineBadge" class="offline-badge" style="display:none;">0</div>
             </div>
         </div>
     </nav>
 
     <header class="hero-section" id="heroSection">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
             <span id="heroTotalLabel" class="hero-label">Total House Bill</span>
             <select id="currency" aria-label="Select Currency" class="interactive-btn" onchange="render()">
                 <option value="GBP">£ GBP</option>
@@ -613,44 +693,38 @@
         <div id="totalExp" class="hero-value" aria-live="polite">0</div>
         <div class="hero-stats-grid">
             <div class="stat-block">
-                <span class="label">Per Head</span>
+                <span class="label">Per head</span>
                 <span id="perPerson" class="val">0</span>
             </div>
             <div class="stat-block interactive-btn" style="cursor:pointer;" onclick="triggerHaptic(); changeStartDate()">
-                <span class="label">Cycle Started</span>
-                <div style="display:flex; align-items:center; gap:6px;">
+                <span class="label">Cycle started</span>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
                     <span id="startDateDisplay" class="val">--/--</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
             </div>
         </div>
-        <div id="hashtagContainer" class="swipe-track" style="margin-top: 15px; gap: 8px; position: relative; z-index: 1;"></div>
-        <div id="monthlyTrendText" style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 15px; font-weight: 600;"></div>
-        <div style="margin-top: 15px;">
-            <button class="hero-end-btn interactive-btn" onclick="triggerHaptic(); endMonth()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>End month &amp; start new</button>
-        </div>
+        <div id="hashtagContainer" class="swipe-track" style="margin-top:12px; gap:8px;"></div>
+        <div id="monthlyTrendText"></div>
+        <button class="hero-end-btn interactive-btn" onclick="triggerHaptic(); endMonth()"><span class="ic" data-ic="calendar"></span>End month &amp; start new</button>
     </header>
 
     <section class="content-section" id="settlementsWrapper">
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
             <h3 class="flow-title" style="cursor:pointer;" onmousedown="startPress(event)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchstart="startPress(event)" ontouchend="cancelPress()" ontouchcancel="cancelPress()">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <button class="btn-pill primary interactive-btn" style="margin:0; padding:4px 10px;" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="btn-pill interactive-btn" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
                 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
         </div>
         <div class="collapsible-content">
-            <div style="margin-bottom: 15px;">
-                <button class="badge interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:flex; align-items:center; gap:6px; background:transparent; margin-bottom:10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Active Housemates
-                </button>
-                <div id="cycleSplitCheckboxes" style="display: none; flex-wrap: wrap; gap: 10px;"></div>
+            <div style="margin-bottom:12px;">
+                <button class="btn-pill interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); el.style.display = el.style.display === 'none' ? 'flex' : 'none';" style="display:inline-flex; align-items:center; gap:6px;"><span class="ic" data-ic="users" style="width:14px; height:14px;"></span>Active housemates</button>
+                <div id="cycleSplitCheckboxes" style="display:none; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
             </div>
             <div id="settleList"></div>
-            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none; padding-top: 5px; margin-bottom: 10px;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
-                <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 14px; text-align: center; cursor: pointer;">
-                    <span style="color:var(--danger); font-size:0.85rem; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Unpaid Past Debts <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span>
-                </div>
+            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
+                <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span>Unpaid debts from past cycles</span><span class="ic" data-ic="chev"></span></div>
             </div>
         </div>
     </section>
@@ -661,23 +735,23 @@
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
-            <div id="expenseList" style="padding-bottom: 10px;"></div>
+            <div id="expenseList"></div>
         </div>
     </section>
 
-    <section class="content-section" id="unpaidArchivesSection" style="display:none; padding-top: 15px; border-top: 1px solid var(--border);">
+    <section class="content-section" id="unpaidArchivesSection" style="display:none;">
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
             <h3 class="flow-title danger-text">Unpaid Past Debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
-            <div id="unpaidArchivesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <div id="unpaidArchivesList" class="stack"></div>
         </div>
     </section>
 
-    <section class="content-section" id="archivesWrapper" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 10px;">
+    <section class="content-section" id="archivesWrapper">
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
-            <h3 class="flow-title">History & Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
+            <h3 class="flow-title">History &amp; Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
@@ -688,29 +762,24 @@
 
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
     <div id="hashtagAutocomplete"></div>
-    <div id="optionsMenu" style="display:none; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 8px; backdrop-filter: blur(16px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom: 10px; width: 100%; border: 1px solid var(--border);" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem; flex: 1;" onclick="triggerHaptic(); document.getElementById('cameraInput').click()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> 
-                Camera
-            </button>
-            <button class="btn-glowing interactive-btn" style="padding: 10px; font-size: 0.85rem; flex: 1;" onclick="triggerHaptic(); document.getElementById('receiptInput').click()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> 
-                Gallery
-            </button>
+    <div id="optionsMenu" style="display:none; padding:14px; margin-bottom:4px;">
+        <label class="field-label" for="groupNote">Note for this expense</label>
+        <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom:10px;" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
+        <div style="display:flex; gap:10px;">
+            <button class="btn-glowing small interactive-btn" onclick="triggerHaptic(); document.getElementById('cameraInput').click()"><span class="ic" data-ic="camera"></span>Camera</button>
+            <button class="btn-glowing small interactive-btn" onclick="triggerHaptic(); document.getElementById('receiptInput').click()"><span class="ic" data-ic="image"></span>Gallery</button>
         </div>
     </div>
     <div class="chat-row">
         <div class="chat-input-wrapper" id="chatWrapper">
-            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Write Amount here" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
+            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Add expense, e.g. 12.50 milk" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
             <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
             <input type="file" id="cameraInput" aria-label="Take Photo" accept="image/*" capture="environment" style="display:none;">
-            <button class="chat-btn interactive-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="More Options">
+            <button class="chat-btn interactive-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="Note and receipt photo">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
         </div>
-        <button id="mainAddBtn" aria-label="Submit Expense" class="chat-btn primary interactive-btn" onclick="triggerHaptic(); addExpense()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        <button id="mainAddBtn" aria-label="Submit Expense" class="chat-btn primary interactive-btn" onclick="triggerHaptic(); addExpense()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
     </div>
 </section>
 <nav id="tabBar" aria-label="Tabs">
@@ -720,6 +789,40 @@
     <button class="tab interactive-btn" onclick="triggerHaptic(); toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>More</button>
 </nav>
 <script>
+
+    // ---- Line icons (24x24, stroke) used across the app: <span data-ic="name"> is filled on load, ico(name) in templates ----
+    const ICONS = {
+        x: '<path d="M18 6 6 18M6 6l12 12"/>', chev: '<path d="m9 6 6 6-6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+        home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+        swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>', list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+        alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2h.01"/>',
+        archive: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/>',
+        pin: '<path d="M12 17v5"/><path d="M9 10.8V5h6v5.8l2.4 3.2a.6.6 0 0 1-.5 1H7.1a.6.6 0 0 1-.5-1z"/><path d="M8 5h8"/>',
+        cart: '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"/>',
+        search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', chart: '<path d="M5 20V11M12 20V4M19 20v-6"/>',
+        clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/>',
+        bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+        moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+        gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+        logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+        swipe: '<path d="M4 12h15M14 7l5 5-5 5"/>', coins: '<circle cx="9" cy="9" r="6"/><path d="M15.4 9.6a6 6 0 1 1-5.8 5.8"/>',
+        trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        restore: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>', card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+        users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+        file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
+        download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>', hash: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
+        help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 16.5h.01"/>',
+        calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+        camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+        image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+        receipt: '<path d="M5 3v18l2.5-1.5L10 21l2-1.5 2 1.5 2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5z"/><path d="M9 9h6M9 13h6"/>',
+        check: '<path d="m5 12 5 5 9-10"/>', inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1z"/>',
+    };
+    function ico(name) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || "") + '</svg>'; }
+    function fillIcons(root) { (root || document).querySelectorAll("[data-ic]").forEach(el => { if (!el.firstElementChild) el.innerHTML = ico(el.dataset.ic); }); }
+    /** Friendly empty state used by lists */
+    function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
+    fillIcons();
     const APP_VERSION = "7.16.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
@@ -941,16 +1044,12 @@
         history.pushState(null, null, location.href); 
         
         const list = document.getElementById('auditList');
-        if (!db.auditLog || db.auditLog.length === 0) {
-            list.innerHTML = "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center;'>No history recorded.</div>";
-        } else {
-            list.innerHTML = db.auditLog.map(log => `
-                <div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid var(--accent); text-align: left;">
-                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${new Date(log.t).toLocaleString()}</div>
-                    <div style="font-size:0.85rem; color:var(--text-main);"><b>${escapeHTML(log.by)}</b> ${escapeHTML(log.act)}</div>
-                    ${log.trg ? `<div style="font-size:0.75rem; color:var(--accent);">Target: ${auditTargetLabel(log.trg)}</div>` : ''}
-                </div>
-            `).join('');
+        if (!db.auditLog || db.auditLog.length === 0) { list.innerHTML = emptyState('clipboard', 'No history recorded.'); }
+        else {
+            list.innerHTML = db.auditLog.map(log => `<div class="card"><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(log.by, 'sm')}<div style="min-width:0; flex:1;">
+                <div class="card-text"><b>${escapeHTML(log.by)}</b> ${escapeHTML(log.act)}</div>
+                ${log.trg ? `<div class="card-meta" style="color:var(--accent-strong);">${auditTargetLabel(log.trg)}</div>` : ''}
+                <div class="card-meta">${new Date(log.t).toLocaleString()}</div></div></div></div>`).join('');
         }
         document.getElementById('auditOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
@@ -1080,11 +1179,11 @@
     // ---- Owner-only health card (worker GET /status) ----
     function healthRow(level, label, value, onclick) {
         const dot = { ok: 'var(--success)', warn: '#f59e0b', bad: 'var(--danger)', info: 'var(--text-muted)' }[level];
-        return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; ${onclick ? 'cursor:pointer;' : ''}" ${onclick ? `class="interactive-btn" onclick="${onclick}"` : ''}><span style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:50%; background:${dot}; flex-shrink:0;"></span>${label}</span><span style="font-weight:800; text-align:right;">${value}</span></div>`;
+        return `<div class="health-row${onclick ? ' interactive-btn' : ''}" ${onclick ? `style="cursor:pointer;" onclick="${onclick}"` : ''}><span style="display:flex; align-items:center; gap:10px;"><span class="status-dot" style="background:${dot};"></span>${label}</span><span class="hv">${value}</span></div>`;
     }
-    let lastHealth = null;
+
     async function loadHealth() {
-        const rows = document.getElementById('healthRows'); rows.innerHTML = `<div style="color:var(--text-muted);">Checking...</div>`;
+        const rows = document.getElementById('healthRows'); rows.innerHTML = `<div class="health-row" style="color:var(--text-muted);">Checking...</div>`;
         try {
             const res = await secureFetch(`${API_URL}/status`, { headers: apiHeaders() }, 10000);
             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1107,15 +1206,15 @@
             const withPush = new Set((s.devices || []).map(d => d.user));
             const missing = (db.users || []).filter(u => !withPush.has(u));
             html += healthRow(missing.length ? 'warn' : 'ok', 'Notifications on', `${(db.users || []).length - missing.length} / ${(db.users || []).length}`);
-            if (missing.length) html += `<div style="font-size:0.7rem; color:var(--text-muted); padding-left:17px;">Not set up: ${escapeHTML(missing.join(', '))}</div>`;
+            if (missing.length) html += `<div class="health-row card-meta" style="margin:0;">Not set up: ${escapeHTML(missing.join(', '))}</div>`;
             rows.innerHTML = html;
         } catch (e) { rows.innerHTML = healthRow('bad', 'Server', "Couldn't check"); }
     }
     function showHealthProblems() {
         if (!lastHealth || !lastHealth.problems.length) return;
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'Problems (last 24 h)';
-        document.getElementById('historyList').innerHTML = lastHealth.problems.map(p => `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid var(--danger);"><div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${new Date(p.t).toLocaleString()} · ${escapeHTML(p.kind)}</div><div style="font-size:0.85rem; color:var(--text-main);">${escapeHTML(p.text)}</div></div>`).join('')
-            + (lastHealth.problems24h > lastHealth.problems.length ? `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center;">Showing the latest ${lastHealth.problems.length} of ${lastHealth.problems24h}</div>` : '');
+        document.getElementById('historyList').innerHTML = lastHealth.problems.map(p => `<div class="card"><div class="card-meta" style="margin:0 0 3px;"><span class="tag danger">${escapeHTML(p.kind)}</span> ${new Date(p.t).toLocaleString()}</div><div class="card-text">${escapeHTML(p.text)}</div></div>`).join('')
+            + (lastHealth.problems24h > lastHealth.problems.length ? `<div class="card-meta" style="text-align:center;">Showing the latest ${lastHealth.problems.length} of ${lastHealth.problems24h}</div>` : '');
         history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
@@ -1144,11 +1243,11 @@
         closeSettings(); history.pushState(null, null, location.href); 
         const list = document.getElementById('trashList'); const sym = curSymbols[document.getElementById('currency').value]; const rate = rates[document.getElementById('currency').value];
         document.getElementById('trashExpiryText').innerText = `Items permanently deleted after ${trashExpiryDays} days.`;
-        if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) { list.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>Vault is empty.</div>"; } 
+        if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) { list.innerHTML = emptyState('trash', 'Nothing here. Deleted expenses wait here before they expire.'); } 
         else {
             list.innerHTML = db.trash.map((ex, i) => {
                 const daysLeft = trashExpiryDays - Math.floor((Date.now() - ex.deletedAt) / (1000 * 60 * 60 * 24)); const shortDesc = ex.desc ? escapeHTML(ex.desc.split('\n')[0].substring(0, 20)) : "Expense";
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);"><div><div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${sym}${(ex.amount * rate).toFixed(2)} - ${shortDesc}</div><div style="font-size:0.65rem; color:var(--danger); margin-top:3px;">${daysLeft} days until deletion</div></div><div style="display:flex; gap:5px;"><button class="btn-pill success" onclick="triggerHaptic(); restoreTrash(${i})">Restore</button><button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i})">Delete</button></div></div>`;
+                return `<div class="card"><div class="card-row"><div style="display:flex; gap:10px; align-items:center; min-width:0;">${avatarHTML(ex.name, 'sm')}<div style="min-width:0;"><div class="card-title">${shortDesc}</div><div class="card-meta">${escapeHTML(ex.name || '')} · <span style="color:var(--danger);">${daysLeft} days until deletion</span></div></div></div><div class="card-amt">${sym}${(ex.amount * rate).toFixed(2)}</div></div><div class="card-actions"><button class="btn-pill primary" onclick="triggerHaptic(); restoreTrash(${i})">Restore</button><button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i})">Delete</button></div></div>`;
             }).join('');
         }
         document.getElementById('trashOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
@@ -1181,18 +1280,18 @@
     function splitLabel(involved) { return (involved && involved.length > 0 && involved.length < db.users.length) ? involved.join(', ') : 'Everyone active'; }
     function editedTag(ex) {
         if (!ex.edited) return '';
-        if (Array.isArray(ex.history) && ex.history.length) return `<span class="interactive-btn" role="button" style="font-size:0.65rem; color:var(--accent); font-style:italic; margin-left: 6px; text-decoration:underline; cursor:pointer;" onclick="event.stopPropagation(); triggerHaptic(); showEditHistory('${escapeHTML(ex.id)}')">(Edited · history)</span>`;
-        return `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>`;
+        if (Array.isArray(ex.history) && ex.history.length) return ` · <button class="link-btn interactive-btn" style="font-size:inherit;" onclick="event.stopPropagation(); triggerHaptic(); showEditHistory('${escapeHTML(ex.id)}')">(Edited · history)</button>`;
+        return ` · <span>(Edited)</span>`;
     }
 
     // ---- Edit history (each expense keeps its last 5 earlier versions in ex.history) ----
     function showEditHistory(id) {
         const ex = findExpenseAnywhere(id); if (!ex) return;
         const { fmt } = viewMoney(); const exSym = ex.originalSym || viewMoney().sym;
-        const card = (title, v, accent) => `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid ${accent}; text-align:left;"><div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${title}</div><div style="font-size:1rem; font-weight:900; color:var(--text-main); margin:2px 0;">${fmt(v.amount)}</div><div style="font-size:0.8rem; color:var(--text-main);">${formatDescDisplay(v.desc || '', exSym)}</div><div style="font-size:0.7rem; color:var(--accent); margin-top:2px;">Split: ${escapeHTML(splitLabel(v.involved))}</div></div>`;
+        const card = (title, v, accent) => `<div class="card${accent === 'var(--accent)' ? ' selected' : ''}"><div class="card-row"><div class="card-meta" style="margin:0;">${title}</div><div class="card-amt">${fmt(v.amount)}</div></div><div class="card-text" style="margin-top:4px;">${formatDescDisplay(v.desc || '', exSym)}</div><div class="card-meta">Split: ${escapeHTML(splitLabel(v.involved))}</div></div>`;
         let html = card('Now', ex, 'var(--accent)');
         (ex.history || []).forEach(h => { html += card(`Before the edit on ${new Date(h.t).toLocaleString()} by ${escapeHTML(h.by || 'someone')}`, h, 'var(--border)'); });
-        if (!(ex.history || []).length) html += `<div style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No earlier versions saved (edited before history was added).</div>`;
+        if (!(ex.history || []).length) html += `<div class="card-meta" style="text-align:center;">No earlier versions saved (edited before history was added).</div>`;
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'Edit History';
         document.getElementById('historyList').innerHTML = html;
         history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
@@ -1229,7 +1328,7 @@
     function runSearch() {
         const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
         const out = document.getElementById('searchResults'), countEl = document.getElementById('searchCount');
-        if (!q) { countEl.innerText = ''; out.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:20px 0;">Searches every cycle, including archives.<br>Try a word, a name, an amount like <b>12.50</b>, or a <b>#tag</b>.</div>`; return; }
+        if (!q) { countEl.innerText = ''; out.innerHTML = emptyState('search', 'Searches every cycle, including archives.<br>Try a word, a name, an amount like <b>12.50</b>, or a <b>#tag</b>.'); return; }
         const { rate, fmt } = viewMoney(); const words = q.split(/\s+/).filter(Boolean);
         const hits = allExpenseEntries().filter(e => searchMatches(e, words, rate));
         countEl.innerText = hits.length === 0 ? 'No matches' : hits.length > 100 ? `${hits.length} matches · showing the newest 100` : `${hits.length} match${hits.length === 1 ? '' : 'es'}`;
@@ -1237,12 +1336,12 @@
             const exSym = ex.originalSym || viewMoney().sym;
             const custom = ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length;
             const receiptStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
-            return `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border:1px solid var(--border); text-align:left;">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><span><span class="name-pill main" style="margin:0;">${escapeHTML(ex.name)}</span>${editedTag(ex)}</span><span style="font-weight:900; font-size:1rem; color:var(--text-main);">${fmt(ex.amount)}</span></div>
-                <div style="font-size:0.85rem; color:var(--text-main); margin:6px 0 4px;">${formatDescDisplay(ex.desc, exSym)}</div>
-                ${custom ? `<div style="font-size:0.7rem; color:var(--accent);">Split: ${escapeHTML(ex.involved.join(', '))}</div>` : ''}
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:4px;"><span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">${formatNiceDate(ex.date || fallbackDate)} · ${cycle === 'Current cycle' ? cycle : escapeHTML(cycle)}</span>${ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptStr})">Receipt</button>` : ''}</div>
-            </div>`;
+            return `<div class="card"><div style="display:flex; gap:12px; align-items:flex-start;">${avatarHTML(ex.name, 'sm')}<div style="flex:1; min-width:0;">
+                <div class="card-row" style="align-items:flex-start;"><div class="card-title">${formatDescDisplay(ex.desc, exSym) || escapeHTML(ex.name)}</div><div class="card-amt">${fmt(ex.amount)}</div></div>
+                <div class="card-meta">${escapeHTML(ex.name)} · ${formatNiceDate(ex.date || fallbackDate)} · ${cycle === 'Current cycle' ? cycle : escapeHTML(cycle)}${editedTag(ex)}</div>
+                ${custom ? `<div class="card-meta" style="color:var(--accent-strong);">Split: ${escapeHTML(ex.involved.join(', '))}</div>` : ''}
+                ${ex.receipt ? `<div class="card-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptStr})">Receipt</button></div>` : ''}
+            </div></div></div>`;
         }).join('');
     }
 
@@ -1281,12 +1380,10 @@
         if (!count && share < 0.01) return '';
         const diff = paid - share; const mmax = Math.max(...months, 0.01);
         const label = (i) => new Date(new Date(from).getFullYear(), new Date(from).getMonth() + i, 1).toLocaleString('default', { month: 'narrow' });
-        return h(`My year · ${escapeHTML(me)}`) + `<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
-                <div style="padding:10px; border-radius:12px; background:var(--input-bg);"><div style="font-size:0.65rem; color:var(--text-muted); font-weight:800;">YOU PAID</div><div style="font-size:1.1rem; font-weight:900;">${fmt(paid)}</div></div>
-                <div style="padding:10px; border-radius:12px; background:var(--input-bg);"><div style="font-size:0.65rem; color:var(--text-muted); font-weight:800;">YOUR FAIR SHARE</div><div style="font-size:1.1rem; font-weight:900;">${fmt(share)}</div></div></div>
-            <div style="font-size:0.8rem; color:var(--text-main); margin-bottom:8px;">${Math.abs(diff) < 1 ? 'You paid almost exactly your share.' : diff > 0 ? `You paid <b>${fmt(diff)}</b> more than your share (others pay you back).` : `You paid <b>${fmt(-diff)}</b> less than your share (you pay others).`} ${count} expense${count === 1 ? '' : 's'} logged${biggest ? `, biggest ${fmt(biggest.amount)}${biggest.desc ? ' · ' + escapeHTML(biggest.desc.replace(/\s+/g, ' ').slice(0, 30)) : ''}` : ''}.</div>
-            <div style="display:flex; align-items:flex-end; gap:3px; height:60px; margin-bottom:2px;">${months.map((m, i) => `<div title="${fmt(m)}" style="flex:1; height:${Math.max(m > 0 ? 4 : 1, m / mmax * 100).toFixed(1)}%; background:${i === 11 ? 'var(--accent)' : 'var(--text-muted)'}; opacity:${i === 11 ? 1 : 0.5}; border-radius:3px 3px 0 0;"></div>`).join('')}</div>
-            <div style="display:flex; gap:3px; font-size:0.6rem; color:var(--text-muted); text-align:center;">${months.map((m, i) => `<span style="flex:1;">${label(i)}</span>`).join('')}</div>`;
+        return h(`My year · ${escapeHTML(me)}`) + `<div class="tiles"><div class="tile"><div class="k">You paid</div><div class="v">${fmt(paid)}</div></div><div class="tile"><div class="k">Your fair share</div><div class="v">${fmt(share)}</div></div></div>
+            <div class="card-text" style="margin-top:10px; color:var(--text-muted); font-size:0.84rem;">${Math.abs(diff) < 1 ? 'You paid almost exactly your share.' : diff > 0 ? `You paid <b style="color:var(--text-main);">${fmt(diff)}</b> more than your share (others pay you back).` : `You paid <b style="color:var(--text-main);">${fmt(-diff)}</b> less than your share (you pay others).`} ${count} expense${count === 1 ? '' : 's'} logged${biggest ? `, biggest ${fmt(biggest.amount)}${biggest.desc ? ' · ' + escapeHTML(biggest.desc.replace(/\s+/g, ' ').slice(0, 30)) : ''}` : ''}.</div>
+            <div class="month-chart">${months.map((m, i) => `<i title="${fmt(m)}" class="${i === 11 ? 'now' : ''}" style="height:${Math.max(m > 0 ? 4 : 1, m / mmax * 100).toFixed(1)}%;"></i>`).join('')}</div>
+            <div class="month-labels">${months.map((m, i) => `<span>${label(i)}</span>`).join('')}</div>`;
     }
 
     function openInsights() {
@@ -1299,17 +1396,14 @@
     function pickInsightsCycle(i) { insightsCycle = i; renderInsights(); }
     function renderInsights() {
         const { fmt } = viewMoney(); const { cycles, tags } = insightCycles();
-        const h = (t) => `<h4 style="font-size:0.75rem; color:var(--text-muted); margin:18px 0 8px; text-transform:uppercase; letter-spacing:1px;">${t}</h4>`;
+        const h = (t) => `<div class="group-label">${t}</div>`;
         const shown = cycles.slice(0, 12); if (insightsCycle >= shown.length) insightsCycle = 0;
         const max = Math.max(...shown.map(c => c.total), 0.01);
         const pastTotals = cycles.slice(1).map(c => c.total).filter(t => t > 0);
         const avg = pastTotals.length ? pastTotals.reduce((a, b) => a + b, 0) / pastTotals.length : 0;
-        let html = myYearHtml(h, fmt) + h('Total per cycle') + `<div style="font-size:0.7rem; color:var(--text-muted); margin:-4px 0 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
-        html += shown.map((c, i) => `<div class="interactive-btn" role="button" onclick="triggerHaptic(); pickInsightsCycle(${i})" style="display:grid; grid-template-columns:48px 1fr auto; align-items:center; gap:8px; padding:5px 6px; border-radius:10px; cursor:pointer; ${i === insightsCycle ? 'background:var(--input-bg); outline:1px solid var(--accent);' : ''}">
-                <span style="font-size:0.7rem; font-weight:800; color:${i === insightsCycle ? 'var(--accent)' : 'var(--text-muted)'};">${escapeHTML(c.label)}</span>
-                <div style="height:12px; border-radius:6px; background:var(--border); overflow:hidden;"><div style="height:100%; width:${Math.max(2, c.total / max * 100).toFixed(1)}%; background:var(--accent); border-radius:6px;"></div></div>
-                <span style="font-size:0.75rem; font-weight:800; color:var(--text-main); min-width:70px; text-align:right;">${fmt(c.total)}</span></div>`).join('');
-        if (cycles.length > shown.length) html += `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center; margin-top:4px;">Showing the latest ${shown.length} of ${cycles.length} cycles</div>`;
+        let html = myYearHtml(h, fmt) + h('Total per cycle') + `<div class="card-meta" style="margin:-4px 4px 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
+        html += shown.map((c, i) => `<div class="cycle-bar interactive-btn${i === insightsCycle ? ' selected' : ''}" role="button" onclick="triggerHaptic(); pickInsightsCycle(${i})"><span class="lbl">${escapeHTML(c.label)}</span><div class="bar"><i style="width:${Math.max(2, c.total / max * 100).toFixed(1)}%;"></i></div><span class="amt">${fmt(c.total)}</span></div>`).join('');
+        if (cycles.length > shown.length) html += `<div class="card-meta" style="text-align:center;">Showing the latest ${shown.length} of ${cycles.length} cycles</div>`;
 
         const c = shown[insightsCycle];
         html += h(escapeHTML(c.long));
@@ -1322,17 +1416,16 @@
         });
         const people = Object.keys(paid).filter(u => paid[u] > 0 || share[u] > 0).sort((a, b) => paid[b] - paid[a]);
         const pmax = Math.max(...people.map(u => Math.max(paid[u], share[u])), 0.01);
-        if (!people.length) html += `<div style="font-size:0.85rem; color:var(--text-muted); text-align:center; padding:10px 0;">No expenses in this cycle yet.</div>`;
+        if (!people.length) html += emptyState('chart', 'No expenses in this cycle yet.');
         else {
-            html += `<div style="display:flex; gap:12px; font-size:0.65rem; color:var(--text-muted); margin-bottom:6px;"><span><span style="display:inline-block; width:10px; height:8px; background:var(--accent); border-radius:2px;"></span> Paid</span><span><span style="display:inline-block; width:10px; height:8px; background:var(--text-muted); opacity:0.5; border-radius:2px;"></span> Their share</span></div>`;
-            html += people.map(u => `<div style="margin-bottom:8px;"><div style="display:flex; justify-content:space-between; font-size:0.8rem;"><b>${escapeHTML(u)}</b><span>paid <b>${fmt(paid[u])}</b> · share ${fmt(share[u])}</span></div>
-                <div style="height:8px; border-radius:4px; background:var(--border); margin-top:3px; overflow:hidden;"><div style="height:100%; width:${(paid[u] / pmax * 100).toFixed(1)}%; background:var(--accent);"></div></div>
-                <div style="height:4px; border-radius:2px; margin-top:2px; overflow:hidden;"><div style="height:100%; width:${(share[u] / pmax * 100).toFixed(1)}%; background:var(--text-muted); opacity:0.5;"></div></div></div>`).join('');
+            html += `<div class="legend"><span><i style="background:var(--accent);"></i>Paid</span><span><i style="background:var(--text-muted); opacity:0.45;"></i>Their share</span></div><div class="card stack" style="gap:12px;">`;
+            html += people.map(u => `<div><div class="card-row" style="font-size:0.82rem; margin-bottom:5px;"><span style="display:flex; align-items:center; gap:8px; font-weight:600;">${avatarHTML(u, 'sm')}${escapeHTML(u)}</span><span style="color:var(--text-muted);">paid <b style="color:var(--text-main);">${fmt(paid[u])}</b> · share ${fmt(share[u])}</span></div>
+                <div class="bar"><i style="width:${(paid[u] / pmax * 100).toFixed(1)}%;"></i></div><div class="bar thin"><i style="width:${(share[u] / pmax * 100).toFixed(1)}%;"></i></div></div>`).join('') + '</div>';
             const top = c.expenses.slice().sort((a, b) => b.amount - a.amount).slice(0, 5);
-            html += h('Biggest expenses') + top.map(ex => `<div style="display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.8rem;"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(ex.name)}</b> · ${formatDescDisplay(ex.desc, ex.originalSym || viewMoney().sym)}</span><b style="flex-shrink:0;">${fmt(ex.amount)}</b></div>`).join('');
+            html += h('Biggest expenses') + '<div class="group">' + top.map(ex => `<div class="health-row"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(ex.name)}</b> · ${formatDescDisplay(ex.desc, ex.originalSym || viewMoney().sym)}</span><span class="hv">${fmt(ex.amount)}</span></div>`).join('') + '</div>';
         }
         const tagList = Object.entries(tags).sort((a, b) => b[1].total - a[1].total);
-        if (tagList.length) html += h('Hashtag bills (all time)') + tagList.map(([t, v]) => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.8rem;"><span><b style="color:var(--accent);">${escapeHTML(t)}</b> <span style="color:var(--text-muted);">· ${v.n} expense${v.n === 1 ? '' : 's'}</span></span><b>${fmt(v.total)}</b></div>`).join('');
+        if (tagList.length) html += h('Hashtag bills (all time)') + '<div class="group">' + tagList.map(([t, v]) => `<div class="health-row"><span><span class="tag">${escapeHTML(t)}</span> <span style="color:var(--text-muted);">${v.n} expense${v.n === 1 ? '' : 's'}</span></span><span class="hv">${fmt(v.total)}</span></div>`).join('') + '</div>';
         document.getElementById('insightsBody').innerHTML = html;
     }
 
@@ -1382,12 +1475,12 @@
     /** Shown to the person owed when the other person says they've paid. */
     function claimBanner(key, arcIdx) {
         const claim = getClaim(key, arcIdx); if (!claim) return '';
-        return `<div style="margin-top:6px; padding:6px 8px; border-radius:10px; background:var(--input-bg); border:1px solid var(--accent); font-size:0.75rem;"><b>${escapeHTML(claim.by)}</b> says they paid <b>${viewMoney().fmt(claim.amt)}</b> <span style="color:var(--text-muted);">· ${new Date(claim.t).toLocaleDateString()}</span><div style="display:flex; gap:6px; margin-top:6px;"><button class="btn-pill success interactive-btn" onclick="triggerHaptic(); confirmClaim('${escapeHTML(key)}', ${arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); rejectClaim('${escapeHTML(key)}', ${arcIdx})">Not yet</button></div></div>`;
+        return `<div class="claim"><b>${escapeHTML(claim.by)}</b> says they paid <b>${viewMoney().fmt(claim.amt)}</b> <span style="color:var(--text-muted);">· ${new Date(claim.t).toLocaleDateString()}</span><div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmClaim('${escapeHTML(key)}', ${arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); rejectClaim('${escapeHTML(key)}', ${arcIdx})">Not yet</button></div></div>`;
     }
 
     // ---- Noticeboard: db.notices = [{id, t, by, text, pinned}] ----
     let editingNoticeId = null;
-    function linkify(text) { return escapeHTML(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent); word-break:break-all;">$1</a>').replace(/\n/g, '<br>'); }
+    function linkify(text) { return escapeHTML(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent-strong); word-break:break-all;">$1</a>').replace(/\n/g, '<br>'); }
     function updateNoticeCount() { const el = document.getElementById('noticeCount'); if (!el) return; const n = (db.notices || []).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabNoticeBadge', n); }
     function setTabBadge(id, n) { const b = document.getElementById(id); if (!b) return; b.innerText = n > 99 ? '99+' : n; b.style.display = n ? 'inline-flex' : 'none'; }
     function openNotices() {
@@ -1399,11 +1492,12 @@
     function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; document.body.style.overflow = ''; }
     function renderNotices() {
         const list = (db.notices || []).slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
-        document.getElementById('noticeList').innerHTML = list.length ? list.map(n => `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid ${n.pinned ? 'var(--accent)' : 'var(--border)'}; text-align:left;">
-                <div style="font-size:0.9rem; color:var(--text-main); line-height:1.45;">${n.pinned ? '📌 ' : ''}${linkify(n.text)}</div>
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-top:6px;"><span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
-                <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" style="font-size:0.6rem;" onclick="triggerHaptic(); toggleNoticePin('${escapeHTML(n.id)}')">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" style="font-size:0.6rem;" onclick="triggerHaptic(); editNotice('${escapeHTML(n.id)}')">Edit</button><button class="btn-pill danger interactive-btn" style="font-size:0.6rem;" onclick="triggerHaptic(); deleteNotice('${escapeHTML(n.id)}')">Delete</button></span></div></div>`).join('')
-            : `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:15px 0;">No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.</div>`;
+        document.getElementById('noticeList').innerHTML = list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}">
+                ${n.pinned ? `<div class="tag" style="margin-bottom:6px;">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</div>` : ''}
+                <div class="card-text">${linkify(n.text)}</div>
+                <div class="card-row" style="margin-top:10px;"><span style="display:flex; align-items:center; gap:8px;" class="card-meta">${avatarHTML(n.by || '?', 'sm')}${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
+                <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); toggleNoticePin('${escapeHTML(n.id)}')">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editNotice('${escapeHTML(n.id)}')">Edit</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteNotice('${escapeHTML(n.id)}')">Delete</button></span></div></div>`).join('')
+            : emptyState('pin', 'No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.');
         updateNoticeCount();
     }
     function saveNotice() {
@@ -1442,12 +1536,12 @@
     function renderShopping() {
         const all = db.shopping || [];
         const list = all.filter(x => !x.done).sort((a, b) => b.t - a.t).concat(all.filter(x => x.done).sort((a, b) => b.t - a.t));
-        document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item" style="display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--input-bg); border-radius:12px; text-align:left; ${s.done ? 'opacity:0.55;' : ''}">
-                <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem('${escapeHTML(s.id)}')" style="width:20px; height:20px; flex-shrink:0; accent-color:var(--accent);">
-                <div style="flex:1; min-width:0;"><div class="shop-text" style="font-size:0.92rem; color:var(--text-main); font-weight:700; word-break:break-word; ${s.done ? 'text-decoration:line-through;' : ''}">${escapeHTML(s.text)}</div>
-                <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))} · ${new Date(s.t).toLocaleDateString()}</div></div>
-                <button class="btn-pill danger interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="font-size:0.7rem; padding:4px 9px;" onclick="triggerHaptic(); removeShopItem('${escapeHTML(s.id)}')">✕</button></div>`).join('')
-            : `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:15px 0;">Nothing to buy. Add items below, separated by commas.</div>`;
+        document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item card" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
+                <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem('${escapeHTML(s.id)}')" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">
+                <div style="flex:1; min-width:0;"><div class="shop-text card-title" style="${s.done ? 'text-decoration:line-through;' : ''}">${escapeHTML(s.text)}</div>
+                <div class="card-meta" style="margin-top:1px;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))} · ${new Date(s.t).toLocaleDateString()}</div></div>
+                <button class="sheet-close interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="width:32px; height:32px;" onclick="triggerHaptic(); removeShopItem('${escapeHTML(s.id)}')">${ico('x')}</button></div>`).join('')
+            : emptyState('cart', 'Nothing to buy. Add items below, separated by commas.');
         document.getElementById('shopBoughtActions').style.display = all.some(x => x.done) ? 'flex' : 'none';
         updateShopCount();
     }
@@ -1529,12 +1623,12 @@
             const line = owes ? `${user} owes ${n} ${fmt(-p.net)}` : `${n} owes ${user} ${fmt(p.net)}`;
             const parts = p.parts.map(x => `${x.label} ${x.amt < 0 ? '-' : '+'}${fmt(Math.abs(x.amt))}`).join(', ');
             text += `\n${line}\n   (${parts})`;
-            html += `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid ${owes ? 'var(--danger)' : 'var(--success)'}; text-align:left;"><div style="font-size:0.9rem; font-weight:800; color:var(--text-main);">${escapeHTML(line)}</div><div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">${escapeHTML(parts)}</div></div>`;
+            html += `<div class="card"><div class="card-row"><div class="card-title">${escapeHTML(line)}</div><span class="tag ${owes ? 'danger' : 'success'}">${owes ? 'pays' : 'gets back'}</span></div><div class="card-meta">${escapeHTML(parts)}</div></div>`;
         });
         const verdict = Math.abs(o.total) <= 0.01 ? `${user} is all square with everyone.` : o.total < 0 ? `Overall, ${user} pays ${fmt(-o.total)}.` : `Overall, ${user} gets back ${fmt(o.total)}.`;
         text += `\n\n${verdict}`;
-        html += `<div style="padding:12px; border-radius:12px; border:1px solid var(--accent); text-align:center; font-weight:900; color:var(--text-main);">${escapeHTML(verdict)}</div>`;
-        if (names.length) html += `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center;">Includes this cycle, hashtag bills and every past cycle, minus payments already marked.</div><button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); copyToClipboard(window.__moveOutText).then(() => showToast('COPIED', 1500))">Copy to Share</button>`;
+        html += `<div class="card selected" style="text-align:center;"><div class="card-title">${escapeHTML(verdict)}</div></div>`;
+        if (names.length) html += `<div class="card-meta" style="text-align:center;">Includes this cycle, hashtag bills and every past cycle, minus payments already marked.</div><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); copyToClipboard(window.__moveOutText).then(() => showToast('COPIED', 1500))">Copy to Share</button>`;
         window.__moveOutText = text;
         closeManageUsers(); document.getElementById('historyOverlay').querySelector('h2').innerText = `Move-out: ${user}`;
         document.getElementById('historyList').innerHTML = html;
@@ -1545,13 +1639,13 @@
     function openNotifPrefs() {
         if (!currentUser) return;
         const p = (db.notifPrefs && db.notifPrefs[currentUser]) || { scope: 'all', minAmount: 0 }; const { sym, rate } = viewMoney();
-        const opt = (v, title, sub) => `<label class="interactive-btn" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); cursor:pointer; text-align:left;"><input type="radio" name="notifScope" value="${v}" ${p.scope === v ? 'checked' : ''} style="margin-top:3px;"><span><b style="font-size:0.9rem;">${title}</b><br><span style="font-size:0.75rem; color:var(--text-muted);">${sub}</span></span></label>`;
+        const opt = (v, title, sub) => `<label class="choice interactive-btn"><input type="radio" name="notifScope" value="${v}" ${p.scope === v ? 'checked' : ''}><span class="ch-text"><b>${title}</b><small>${sub}</small></span></label>`;
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'What Notifies Me';
-        document.getElementById('historyList').innerHTML = opt('all', 'Everything', 'Every expense, payment and change in the house.')
+        document.getElementById('historyList').innerHTML = `<div class="group-label">Tell me about</div>` + opt('all', 'Everything', 'Every expense, payment and change in the house.')
             + opt('mine', 'Only things involving me', "Expenses you paid or are part of, payments to or from you, plus house-wide things (new cycle, housemates, notes, restores).")
-            + `<label style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); text-align:left;"><span><b style="font-size:0.9rem;">Skip small expenses</b><br><span style="font-size:0.75rem; color:var(--text-muted);">Under this amount (0 = never skip). Payments always notify.</span></span><span style="display:flex; align-items:center; gap:4px; font-weight:800;">${escapeHTML(sym)}<input id="notifMinAmt" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text-main);"></span></label>`
-            + `<label class="interactive-btn" style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); text-align:left; cursor:pointer;"><span><b style="font-size:0.9rem;">Shopping list additions</b><br><span style="font-size:0.75rem; color:var(--text-muted);">When someone adds items to the shopping list.</span></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'} style="width:20px; height:20px; accent-color:var(--accent);"></label>`
-            + `<button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
+            + `<div class="group-label" style="margin-top:12px;">Filters</div><label class="choice" style="align-items:center;"><span class="ch-text"><b>Skip small expenses</b><small>Under this amount (0 = never skip). Payments always notify.</small></span><span style="display:flex; align-items:center; gap:4px; font-weight:700;">${escapeHTML(sym)}<input id="notifMinAmt" class="mini-input" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}"></span></label>`
+            + `<label class="choice interactive-btn" style="align-items:center;"><span class="ch-text"><b>Shopping list additions</b><small>When someone adds items to the shopping list.</small></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'}></label>`
+            + `<button class="btn-glowing primary interactive-btn" style="margin-top:8px;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
         history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
     function saveNotifPrefs() {
@@ -1600,10 +1694,10 @@
         }, "url");
     }
     function payOrPending(from, to, amountLocal, settled, key = null, arcIdx = -1, remainingBase = 0) {
-        if (settled) return `<span class="name-pill">Settled</span>`;
+        if (settled) return `<span class="tag success">${ico('check').replace('<svg', '<svg width="12" height="12"')}Settled</span>`;
         const claim = key ? getClaim(key, arcIdx) : null;
-        if (from !== currentUser) return claim ? `<span class="name-pill" title="${escapeHTML(from)} says they paid">Paid?</span>` : `<span class="name-pill">Pending</span>`;
-        if (claim) return `<span class="name-pill" style="white-space:normal; text-align:center;">Waiting for ${escapeHTML(to)} to confirm</span>`;
+        if (from !== currentUser) return claim ? `<span class="tag" title="${escapeHTML(from)} says they paid">Paid?</span>` : `<span class="tag muted">Pending</span>`;
+        if (claim) return `<span class="tag muted" style="white-space:normal;">Waiting for ${escapeHTML(to)} to confirm</span>`;
         const paidBtn = key ? `<button class="btn-pill interactive-btn" aria-label="I've paid ${escapeHTML(to)}" onclick="triggerHaptic(); claimPaid('${escapeHTML(key)}', ${arcIdx}, '${escapeHTML(to)}', ${Number(remainingBase).toFixed(4)})">I've paid</button> ` : '';
         return paidBtn + `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(to)}" onclick="triggerHaptic(); payNow('${escapeHTML(to)}', ${Number(amountLocal).toFixed(2)})">Pay</button>`;
     }
@@ -1631,9 +1725,9 @@
     function closeRestore() { document.getElementById('restoreOverlay').style.display = 'none'; document.body.style.overflow = ''; }
     async function renderRestoreList(kind) {
         restoreTab = kind; const list = document.getElementById('restoreList');
-        document.getElementById('restoreTabBackups').classList.toggle('success', kind === 'backup');
-        document.getElementById('restoreTabVersions').classList.toggle('success', kind === 'version');
-        const msg = (t) => `<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>${t}</div>`;
+        document.getElementById('restoreTabBackups').classList.toggle('active', kind === 'backup');
+        document.getElementById('restoreTabVersions').classList.toggle('active', kind === 'version');
+        const msg = (t) => `<div class="empty">${t}</div>`;
         if (!restoreCache[kind]) {
             list.innerHTML = msg('Loading...');
             try {
@@ -1650,8 +1744,8 @@
             const when = kind === 'backup' ? new Date(r.day + 'T03:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
                                            : new Date(r.ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             const sub = (kind === 'version' && i === 0) ? 'Current data' : `${Math.max(1, Math.round(r.bytes / 1024))} KB`;
-            const btn = (kind === 'version' && i === 0) ? '' : `<button class="btn-pill success interactive-btn" onclick="triggerHaptic(); confirmRestore('${kind}', '${escapeHTML(String(id))}', '${escapeHTML(when)}')">Restore</button>`;
-            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);"><div><div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${escapeHTML(when)}</div><div style="font-size:0.65rem; color:var(--text-muted); margin-top:3px;">${sub}</div></div>${btn}</div>`;
+            const btn = (kind === 'version' && i === 0) ? '<span class="tag">Now</span>' : `<button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmRestore('${kind}', '${escapeHTML(String(id))}', '${escapeHTML(when)}')">Restore</button>`;
+            return `<div class="card"><div class="card-row"><div><div class="card-title">${escapeHTML(when)}</div><div class="card-meta">${sub}</div></div>${btn}</div></div>`;
         }).join('');
     }
     function confirmRestore(kind, id, when) {
@@ -1865,7 +1959,7 @@
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         history.pushState(null, null, location.href); 
         const list = document.getElementById('manageUserList');
-        list.innerHTML = db.users.map(u => { return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);"><span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span><div style="display:flex; gap:5px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut('${escapeHTML(u)}')">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button></div></div>`; }).join('');
+        list.innerHTML = db.users.map(u => `<div class="card"><div style="display:flex; align-items:center; gap:12px;">${avatarHTML(u)}<div class="card-title" style="flex:1;">${escapeHTML(u)}${(db.activeUsers || []).includes(u) ? '' : ' <span class="tag muted">away</span>'}</div></div><div class="card-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut('${escapeHTML(u)}')">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button></div></div>`).join('');
         const addBtn = document.getElementById('addHousemateBtn'); if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
         document.getElementById('manageUsersOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
@@ -2042,7 +2136,7 @@
 
     function renderSkeletons() {
         const list = document.getElementById('expenseList'); let html = `<div class="timeline-wrapper">`;
-        for(let i=0; i<4; i++) { let mt = (i === 0) ? '0px' : '20px'; html += `<div class="date-marker" style="margin-top: ${mt};"><div class="skel-block" style="width: 80px; height: 12px; margin-left: 8px;"></div></div><div class="linear-row" style="padding: 10px 0; border-bottom: none;"><div style="flex: 1;"><div class="skel-block" style="width: 50px; height: 16px; border-radius: 20px; margin-bottom: 8px;"></div><div class="skel-block" style="width: 70px; height: 20px; margin-bottom: 4px;"></div><div class="skel-block" style="width: 140px; height: 12px;"></div></div></div>`; }
+        for (let i = 0; i < 4; i++) { html += `<div class="linear-row"><div class="skel-block" style="width:40px; height:40px; border-radius:50%; flex-shrink:0;"></div><div style="flex:1;"><div class="skel-block" style="width:60%; height:14px; margin-bottom:8px;"></div><div class="skel-block" style="width:35%; height:11px;"></div></div><div class="skel-block" style="width:56px; height:14px;"></div></div>`; }
         html += `</div>`; list.innerHTML = html; document.getElementById('currentExpensesWrapper').classList.add('expanded');
     }
 
@@ -2142,7 +2236,7 @@
         const chkContainer = document.getElementById('cycleSplitCheckboxes');
         chkContainer.innerHTML = db.users.map(u => {
             const isChecked = db.activeUsers.includes(u); const opac = isChecked ? '1' : '0.4';
-            return `<div class="interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="opacity: ${opac}; cursor: pointer; display: inline-flex; align-items: center; margin-right: 8px; margin-bottom: 8px;"><span class="name-pill ${isChecked ? 'main' : ''}" style="margin:0;">${escapeHTML(u)}</span></div>`;
+            return `<button class="btn-pill interactive-btn" onclick="toggleActiveUser('${escapeHTML(u)}')" style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px 4px 4px; opacity:${opac}; ${isChecked ? 'border-color:var(--accent); background:var(--accent-soft);' : ''}">${avatarHTML(u, 'sm')}${escapeHTML(u)}</button>`;
         }).join('');
 
         let allValid = db.expenses || [];
@@ -2180,7 +2274,7 @@
         });
 
         const list = document.getElementById('expenseList');
-        if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); list.innerHTML = `<div style='color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px 0;'>No expenses found${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}.</div>`; } 
+        if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); list.innerHTML = emptyState('receipt', `No expenses yet${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}. Type an amount below to add the first one.`); } 
         else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
             let listHtml = `<div class="timeline-wrapper">`; let currentGroupDate = null;
@@ -2240,7 +2334,7 @@
                 if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
                 hasVisibleTxs = true; const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
                 
-                sHtmlTemp += `<div class="flow-row timeline-item" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.45 : 1}; border-bottom: none;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.02rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">`;
+                sHtmlTemp += `<div class="flow-row timeline-item" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.45 : 1}; border-bottom: none;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.02rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">`;
                 
                 if (can) {
                     if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
@@ -2251,7 +2345,7 @@
             sHtmlTemp += `</div>`;
             if (hasVisibleTxs) sHtml += sHtmlTemp;
         }
-        document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
+        document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
         renderArchives(sym, rate);
         updateNoticeCount(); updateShopCount(); updateHomeWidget();
         const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') : '';
@@ -2294,12 +2388,12 @@
         const arcCount = db.archives ? db.archives.length : 0; const arcBadge = document.getElementById('archivesCount');
         if(arcBadge) { arcBadge.innerText = arcCount; arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none'; }
 
-        if (!db.archives || !Array.isArray(db.archives) || db.archives.length === 0) { arcDiv.innerHTML = "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0; text-align:center;'>No archives yet.</div>"; } 
+        if (!db.archives || !Array.isArray(db.archives) || db.archives.length === 0) { arcDiv.innerHTML = emptyState('archive', 'No past cycles yet. They appear here after you end a month.'); } 
         else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
                 const pastActive = a.activeUsers || db.users; let validArcEx = Array.isArray(a.details) ? a.details : [];
                 const txs = getSettlements(validArcEx, a.total, pastActive, a.mathV); let credMap = {};
-                const displayStart = a.tag ? `<span style="color:var(--accent); font-weight:800;">${escapeHTML(a.tag)}</span> • ${formatNiceDate(a.start)}` : formatNiceDate(a.start);
+                const displayStart = a.tag ? `<span class="tag">${escapeHTML(a.tag)}</span> ${formatNiceDate(a.start)}` : formatNiceDate(a.start);
                 const displayEnd = formatNiceDate(a.end);
                 let cycleHasUnpaid = false; let cycleUnpaidHtml = "";
 
@@ -2314,11 +2408,11 @@
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase)}</div></div></div>${canMarkGlobal ? claimBanner(key, idx) : ''}`;
+                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase)}</div></div></div>${canMarkGlobal ? claimBanner(key, idx) : ''}`;
                     }
                 });
 
-                if (cycleHasUnpaid && cycleUnpaidHtml !== "") { globalUnpaidHtml += `<div class="archive-item timeline-item" style="margin-bottom: 8px;"><div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">${displayStart} &rarr; ${displayEnd}</div>${cycleUnpaidHtml}</div>`; }
+                if (cycleHasUnpaid && cycleUnpaidHtml !== "") { globalUnpaidHtml += `<div class="archive-item timeline-item" style="margin-bottom:0;"><div class="cycle-dates" style="display:flex; align-items:center; gap:6px;">${ico('calendar').replace('<svg', '<svg width="13" height="13"')}${displayStart} → ${displayEnd}</div>${cycleUnpaidHtml}</div>`; }
 
                 let archiveSettleHtml = "", hasUnpaidInArchive = false, archiveUnpaidCount = 0;
                 for (let cred in credMap) {
@@ -2328,27 +2422,27 @@
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase)}</div></div></div>${canMark ? claimBanner(t.key, idx) : ''}`;
+                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase)}</div></div></div>${canMark ? claimBanner(t.key, idx) : ''}`;
                         }
                     });
                 }
 
                 const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== ""); let adminActionHtml = "";
                 if (!isFullySettled) { adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`; } 
-                else { adminActionHtml = `<span class="name-pill success" style="margin-right:8px;">Settled</span>`; }
+                else { adminActionHtml = `<span class="tag success">Settled</span>`; }
 
-                let finalUnpaidBlock = hasUnpaidInArchive ? `<h4 style="font-size:0.75rem; color:var(--danger); margin: 10px 0 5px 0; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">Unpaid Debts<span class="danger-badge">${archiveUnpaidCount}</span></h4>${archiveSettleHtml}` : "";
+                let finalUnpaidBlock = hasUnpaidInArchive ? `<div class="sub-title danger" style="margin-top:0;">Unpaid debts <span class="danger-badge" style="margin:0;">${archiveUnpaidCount}</span></div>${archiveSettleHtml}` : "";
 
                 let hasVisibleLogs = false;
                 let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
                     hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
-                    return `<div class="flow-row timeline-item" style="padding:10px 0; border:none;"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span>${editedTag(d)}<span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div></div>${d.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}</div>`
+                    return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.88rem;">${displayDesc || escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div class="item-sub">${escapeHTML(d.name)}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`
                 }).join('');
 
                 if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
 
-                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div><div style="font-size:0.65rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${displayStart} &rarr; ${displayEnd}</div><div style="font-size:1.6rem; font-weight:900; letter-spacing:-1px; color:var(--text-main);">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div style="display:flex; gap:8px; align-items:center;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${adminActionHtml}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()">${finalUnpaidBlock}<div style="margin-top: ${hasUnpaidInArchive ? '20px' : '0'}; border-top: ${hasUnpaidInArchive ? '1px solid var(--border)' : 'none'}; padding-top: ${hasUnpaidInArchive ? '15px' : '0'};"><h4 style="font-size:0.75rem; color:var(--text-muted); margin: 0 0 5px 0; text-transform:uppercase; letter-spacing:1px;">Log History</h4><div>${logsHtml || '<div style="font-size:0.9rem; color:var(--text-muted); padding:15px 0;">No logs.</div>'}</div></div></div></div>`;
+                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div style="min-width:0;"><div class="cycle-dates">${displayStart} → ${displayEnd}</div><div class="cycle-total">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div style="display:flex; gap:8px; align-items:center;">${hasUnpaidInArchive ? `<span class="tag danger">${archiveUnpaidCount} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '')}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div class="card-actions" style="margin:0 0 14px;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${isFullySettled ? '' : adminActionHtml}</div>${finalUnpaidBlock}<div class="sub-title" style="margin-top:${hasUnpaidInArchive ? '16px' : '0'};">Expenses</div><div>${logsHtml || '<div class="card-meta">No logs.</div>'}</div></div></div>`;
             }).join('');
         }
 
