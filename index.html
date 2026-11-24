@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.18.2">
+    <meta name="app-version" content="7.18.3">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -209,8 +209,11 @@
            with Back leaves the box focused, and the tab bar must come back then */
         body.kb-open:has(.input-section :focus) .input-section { bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
         body.kb-open:has(.input-section :focus) #tabBar { display: none; }
-        /* While a sheet, dialog or the menu is open the page behind must not scroll */
-        html.scroll-lock, html.scroll-lock body { overflow: hidden !important; }
+        /* While a sheet, dialog or the menu is open the page behind must not scroll. Lock <html> only: overflow on <body> makes
+           it a scroll box, which unsticks the top bar (it jumped off the screen behind every pop-up when scrolled down).
+           lock-gutter (computers with a real scrollbar): keep the scrollbar's space, or the page jumps sideways. */
+        html.scroll-lock { overflow: hidden !important; }
+        html.scroll-lock.lock-gutter { scrollbar-gutter: stable; }
         .login-card.sheet, .sheet-body, #insightsBody, #historyList, #auditList, #searchResults { overscroll-behavior: contain; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
         .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--surface); border: 1px solid var(--border); border-radius: 26px; padding: 4px 6px 4px 10px; gap: 4px; transition: border-color 0.2s, box-shadow 0.2s; flex-grow: 1; box-shadow: var(--shadow-lg); min-width: 0; position: relative; }
@@ -1020,7 +1023,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.18.2";
+    const APP_VERSION = "7.18.3";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1294,8 +1297,10 @@
         [...Object.keys(NAV_SHEETS), ...Object.keys(NAV_DIALOGS), 'sideMenu', 'loginOverlay'].forEach(id => { const el = document.getElementById(id); if (el) watch.observe(el, { attributes: true, attributeFilter: ['style', 'class'] }); });
     }
     function navSync() {
-        const open = !!navTop();
-        document.documentElement.classList.toggle('scroll-lock', open || navShown('loginOverlay'));
+        const open = !!navTop(), lock = open || navShown('loginOverlay'), root = document.documentElement;
+        // Measured before locking (the scrollbar is still there): 0 on phones, whose scrollbars take no room
+        if (lock && !root.classList.contains('scroll-lock')) root.classList.toggle('lock-gutter', window.innerWidth - root.clientWidth > 0);
+        root.classList.toggle('scroll-lock', lock);
         if (!open) navStack = [];
         navSyncHistory();
     }
@@ -1363,11 +1368,9 @@
         if(document.activeElement) document.activeElement.blur();
         
         document.getElementById('helpOverlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
     }
     function closeHelp() {
         document.getElementById('helpOverlay').style.display = 'none';
-        document.body.style.overflow = '';
     }
 
     // AUDIT TRAIL LOGIC
@@ -1386,11 +1389,9 @@
                 <div class="card-meta">${new Date(log.t).toLocaleString()}</div></div></div></div>`).join('');
         }
         document.getElementById('auditOverlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
     }
     function closeAuditLog() { 
         document.getElementById('auditOverlay').style.display = 'none';
-        document.body.style.overflow = '';
     }
 
     // A value as a quoted JS string inside an onclick="..." attribute (safe for names like D'Arcy or "Big" Sam)
@@ -1522,7 +1523,7 @@
         document.getElementById('restoreBtn').style.display = currentUser === "Shahzeb" ? 'flex' : 'none';
         if (currentUser === "Shahzeb") { trashBtn.style.display = 'flex'; document.getElementById('trashExpirySelect').parentElement.style.display = 'flex'; document.getElementById('trashExpirySelect').value = trashExpiryDays.toString(); } else { trashBtn.style.display = 'none'; document.getElementById('trashExpirySelect').parentElement.style.display = 'none'; }
         const hc = document.getElementById('healthCard'); hc.style.display = currentUser === "Shahzeb" ? 'block' : 'none'; if (currentUser === "Shahzeb") loadHealth();
-        document.getElementById('settingsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('settingsOverlay').style.display = 'flex';
     }
 
     // ---- Owner-only health card (worker GET /status) ----
@@ -1568,7 +1569,7 @@
             + (lastHealth.problems24h > lastHealth.problems.length ? `<div class="card-meta" style="text-align:center;">Showing the latest ${lastHealth.problems.length} of ${lastHealth.problems24h}</div>` : '');
         document.getElementById('historyOverlay').style.display = 'flex';
     }
-    function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; }
 
     function toggleSwipeSetting() { swipeActionsEnabled = !swipeActionsEnabled; document.getElementById('swipeToggleInput').checked = swipeActionsEnabled; safeSetStorage('house_swipe_actions', swipeActionsEnabled); render(); }
     function toggleSmartRounding() {
@@ -1603,10 +1604,10 @@
                 return `<div class="card"><div class="card-row"><div style="display:flex; gap:10px; align-items:center; min-width:0;">${avatarHTML(ex.name, 'sm')}<div style="min-width:0;"><div class="card-title">${shortDesc}</div><div class="card-meta">${escapeHTML(ex.name || '')} · <span style="color:var(--danger);">${daysLeft} days until deletion</span></div></div></div><div class="card-amt">${sym}${(ex.amount * rate).toFixed(2)}</div></div><div class="card-actions"><button class="btn-pill primary" onclick="triggerHaptic(); restoreTrash(${i}, ${jsArg(ex.id || '')}, ${Number(ex.deletedAt) || 0})">Restore</button><button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i}, ${jsArg(ex.id || '')}, ${Number(ex.deletedAt) || 0})">Delete</button></div></div>`;
             }).join('');
         }
-        document.getElementById('trashOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('trashOverlay').style.display = 'flex';
     }
     
-    function closeTrash() { document.getElementById('trashOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeTrash() { document.getElementById('trashOverlay').style.display = 'none'; }
 
     // ---- Shared helpers for search / insights / edit history ----
     function viewMoney() {
@@ -1651,12 +1652,10 @@
         if (!(ex.history || []).length) html += `<div class="card-meta" style="text-align:center;">No earlier versions saved (edited before history was added).</div>`;
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'Edit History';
         document.getElementById('historyList').innerHTML = html;
-        document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('historyOverlay').style.display = 'flex';
     }
     function closeHistory() {
         document.getElementById('historyOverlay').style.display = 'none';
-        const stillOpen = ['searchOverlay', 'insightsOverlay', 'settingsOverlay', 'auditOverlay'].some(id => document.getElementById(id).style.display === 'flex');
-        if (!stillOpen) document.body.style.overflow = '';
     }
 
     // ---- Search across the current cycle and all archives (on the phone, no network) ----
@@ -1665,10 +1664,10 @@
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         
-        document.getElementById('searchOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('searchOverlay').style.display = 'flex';
         runSearch(); setTimeout(() => document.getElementById('searchInput').focus(), 100);
     }
-    function closeSearch() { document.getElementById('searchOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeSearch() { document.getElementById('searchOverlay').style.display = 'none'; }
     function scheduleSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 150); }
     function searchMatches(entry, words, rate) {
         const ex = entry.ex; if (!ex) return false;
@@ -1747,9 +1746,9 @@
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         insightsCycle = 0; renderInsights();
-        document.getElementById('insightsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('insightsOverlay').style.display = 'flex';
     }
-    function closeInsights() { document.getElementById('insightsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeInsights() { document.getElementById('insightsOverlay').style.display = 'none'; }
     function pickInsightsCycle(i) { insightsCycle = i; renderInsights(); }
     let insightsMode = 'month', insightsYear = null;
     function setInsightsMode(m) { triggerHaptic(); insightsMode = m; renderInsights(); document.getElementById('insightsBody').scrollTop = 0; }
@@ -1824,7 +1823,6 @@
         if (appLocked || !currentUser || loginOpen || isSyncing || !localDbLoaded) { pendingQuickAdd = true; return; } // run after first sync / unlock / user pick
         pendingQuickAdd = false;
         ['searchOverlay', 'insightsOverlay', 'historyOverlay', 'settingsOverlay', 'auditOverlay', 'trashOverlay', 'noticeOverlay', 'shoppingOverlay'].forEach(id => { const el = document.getElementById(id); if (el && el.style.display === 'flex') el.style.display = 'none'; });
-        document.body.style.overflow = '';
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         const el = document.getElementById('amtInput'); if (!el) return;
         openAddBox();
@@ -1879,9 +1877,9 @@
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         cancelNoticeEdit(); renderNotices();
-        document.getElementById('noticeOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('noticeOverlay').style.display = 'flex';
     }
-    function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; }
     function renderNotices() {
         const list = (db.notices || []).slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
         document.getElementById('noticeList').innerHTML = list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}">
@@ -1924,9 +1922,9 @@
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         renderShopping();
-        document.getElementById('shoppingOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('shoppingOverlay').style.display = 'flex';
     }
-    function closeShopping() { const i = document.getElementById('shopInput'); if (i) i.value = ''; document.getElementById('shoppingOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeShopping() { const i = document.getElementById('shopInput'); if (i) i.value = ''; document.getElementById('shoppingOverlay').style.display = 'none'; }
     function renderShopping() {
         const all = db.shopping || [];
         const list = all.filter(x => !x.done).sort((a, b) => b.t - a.t).concat(all.filter(x => x.done).sort((a, b) => b.t - a.t));
@@ -2026,7 +2024,7 @@
         window.__moveOutText = text;
         closeManageUsers(); document.getElementById('historyOverlay').querySelector('h2').innerText = `Move-out: ${user}`;
         document.getElementById('historyList').innerHTML = html;
-        document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('historyOverlay').style.display = 'flex';
     }
 
     // ---- "What notifies me": db.notifPrefs[user] = { scope: 'all' | 'mine', minAmount, shopping?: false } (the worker applies it) ----
@@ -2040,7 +2038,7 @@
             + `<div class="group-label" style="margin-top:12px;">Filters</div><label class="choice" style="align-items:center;"><span class="ch-text"><b>Skip small expenses</b><small>Under this amount (0 = never skip). Payments always notify.</small></span><span style="display:flex; align-items:center; gap:4px; font-weight:700;">${escapeHTML(sym)}<input id="notifMinAmt" class="mini-input" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}"></span></label>`
             + `<label class="choice interactive-btn" style="align-items:center;"><span class="ch-text"><b>Shopping list additions</b><small>When someone adds items to the shopping list.</small></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'}></label>`
             + `<button class="btn-glowing primary interactive-btn" style="margin-top:8px;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
-        document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('historyOverlay').style.display = 'flex';
     }
     function saveNotifPrefs() {
         const scope = (document.querySelector('input[name="notifScope"]:checked') || {}).value === 'mine' ? 'mine' : 'all';
@@ -2113,10 +2111,10 @@
     function openRestore() {
         closeSettings(); 
         restoreCache = { backup: null, version: null };
-        document.getElementById('restoreOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('restoreOverlay').style.display = 'flex';
         renderRestoreList('backup');
     }
-    function closeRestore() { document.getElementById('restoreOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeRestore() { document.getElementById('restoreOverlay').style.display = 'none'; }
     async function renderRestoreList(kind) {
         restoreTab = kind; const list = document.getElementById('restoreList');
         document.getElementById('restoreTabBackups').classList.toggle('active', kind === 'backup');
@@ -2479,10 +2477,10 @@
         const list = document.getElementById('manageUserList');
         list.innerHTML = db.users.map(u => `<div class="card"><div style="display:flex; align-items:center; gap:12px;">${avatarHTML(u)}<div class="card-title" style="flex:1;">${escapeHTML(u)}${(db.activeUsers || []).includes(u) ? '' : ' <span class="tag muted">away</span>'}</div></div><div class="card-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut(${jsArg(u)})">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser(${jsArg(u)})">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser(${jsArg(u)})">Remove</button></div></div>`).join('');
         const addBtn = document.getElementById('addHousemateBtn'); if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
-        document.getElementById('manageUsersOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        document.getElementById('manageUsersOverlay').style.display = 'flex';
     }
 
-    function closeManageUsers() { document.getElementById('manageUsersOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeManageUsers() { document.getElementById('manageUsersOverlay').style.display = 'none'; }
 
     function addUser() {
         if (currentUser !== 'Shahzeb') { showToast("Only Shahzeb can add housemates.", 3000); return; }
@@ -2681,7 +2679,7 @@
         currentLightboxImages = (Array.isArray(urls) ? urls : [urls]).map(u => sanitizeURL(typeof u === 'string' ? u.trim() : null)).filter(u => u !== null);
         if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
         currentLightboxIndex = 0; lightboxRotation = 0; lbReset(); updateLightboxDOM();
-        const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; lbBind();
+        const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; lbBind();
     }
 
     function updateLightboxDOM() {
@@ -2692,7 +2690,7 @@
 
     function changeLightboxImage(e, dir) { if (e) e.stopPropagation(); if (currentLightboxImages.length < 2) return; triggerHaptic(); currentLightboxIndex += dir; if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1; if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0; lightboxRotation = 0; lbReset(); updateLightboxDOM(); }
     function rotateLightboxImg(e) { e.stopPropagation(); triggerHaptic(); lightboxRotation += 90; lbApply(true); }
-    function closeLightbox(e) { if(e) e.stopPropagation(); triggerHaptic(); document.getElementById('lightboxOverlay').style.display = 'none'; document.getElementById('lightboxImg').src = ''; document.body.style.overflow = ''; currentLightboxImages = []; lightboxRotation = 0; lbReset(); }
+    function closeLightbox(e) { if(e) e.stopPropagation(); triggerHaptic(); document.getElementById('lightboxOverlay').style.display = 'none'; document.getElementById('lightboxImg').src = ''; currentLightboxImages = []; lightboxRotation = 0; lbReset(); }
 
     // Photo viewer gestures (pointer events, so fingers and a mouse both work): pinch / wheel / double-tap to zoom,
     // drag a zoomed photo around, swipe sideways for the next photo, swipe down to close
