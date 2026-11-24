@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- Security policy: even if some text slipped through unescaped, the page can only talk to its own server and load
+         scripts from here and cdnjs, so nothing can be sent to another site. ('unsafe-inline' is needed by the inline
+         onclick handlers.) Add any new outside address here or it will be blocked. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://house-expenses.srktk00.workers.dev; font-src 'self' data:; connect-src 'self' data: blob: https://house-expenses.srktk00.workers.dev https://open.er-api.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.17.0">
+    <meta name="app-version" content="7.17.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
     <title>House Expenses </title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- integrity = the exact file (checked against cdnjs's published hashes, Nov 2026): a changed copy is refused, not run -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <script>
         const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -42,7 +47,7 @@
         if ('serviceWorker' in navigator && !isNativeApp() && (location.protocol === 'https:' || location.hostname === 'localhost')) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch((e) => console.warn('service worker failed', e)); });
             navigator.serviceWorker.addEventListener('message', (e) => {
-                if (e.data && e.data.type === 'push') { try { showToast(e.data.body || 'New change', 3000); loadData(true); } catch (err) {} }
+                if (e.data && e.data.type === 'push') { try { showToast(escapeHTML(String(e.data.body || 'New change')), 3000); loadData(true); } catch (err) {} }
             });
         }
     </script>
@@ -688,7 +693,7 @@
                 </select>
             </div>
             <div id="smartRoundingContainer" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); toggleSmartRounding()">
-                <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Smart rounding<span class="ri-sub">Round settle-up amounts to 10p</span></span>
+                <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Smart rounding<span class="ri-sub">Round settle-up amounts to 10p, for the whole house</span></span>
                 <span class="toggle-switch"><input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
             </div>
             <div class="row-item" style="display:none; cursor:default;">
@@ -1012,7 +1017,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.17.0";
+    const APP_VERSION = "7.17.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1149,7 +1154,10 @@
     let localDbLoaded = false; // false until db holds real data (from the server or this device's backup), not the empty startup copy
     let saveRetryTimer = null;
     let swipeActionsEnabled = localStorage.getItem('house_swipe_actions') === 'true';
-    let smartRoundingEnabled = localStorage.getItem('house_smart_rounding') === 'true';
+    // Smart rounding changes the settle-up amounts themselves, so it is one setting for the whole house (db.smartRounding).
+    // It used to be per phone, which made the owner's phone show different amounts (and "3p still owed") from everyone else's.
+    function smartRounding() { return !!(db && db.smartRounding); }
+    try { localStorage.removeItem('house_smart_rounding'); } catch (e) {}
     let trashExpiryDays = parseInt(localStorage.getItem('house_trash_expiry')) || 30;
     let toastTimeout;
     let confirmAction = null;
@@ -1353,15 +1361,21 @@
     }
 
     // A value as a quoted JS string inside an onclick="..." attribute (safe for names like D'Arcy or "Big" Sam)
+    // Past cycles are addressed by position in db.archives; a sync (someone ending the month) can shift positions while a
+    // question box is open, so actions that wait for an answer find their cycle again by its dates first.
+    function arcSig(a) { return a ? `${a.start}|${a.end}|${a.tag || ''}` : ''; }
+    function arcRefind(idx) { const sig = arcSig((db.archives || [])[idx]); return () => (db.archives || []).findIndex(a => arcSig(a) === sig); }
     function jsArg(v) { return escapeHTML(JSON.stringify(String(v ?? ""))); }
     function escapeHTML(str) {
-        if (!str || typeof str !== 'string') return str;
+        if (str === null || str === undefined || typeof str === 'number' || typeof str === 'boolean' || str === '') return str;
+        if (typeof str !== 'string') str = String(str); // arrays/objects from tampered data must not reach the page unescaped
         return str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); 
     }
     
     function sanitizeName(str) {
         if (!str) return "";
-        return str.replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '').replace(/['"<>\\\/&]/g, '').trim();
+        // "_" and "#" are left out: payment records are keyed "From_To" / "From_To_#tag", so they would split names wrongly
+        return String(str).replace(/[\x00-\x1F\x7F\u200B-\u200D\uFEFF]/g, '').replace(/['"<>\\\/&_#`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30);
     }
     
     function sanitizeURL(url) {
@@ -1465,7 +1479,7 @@
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         
         const roundingContainer = document.getElementById('smartRoundingContainer');
-        if (currentUser === "Shahzeb") { roundingContainer.style.display = 'flex'; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; } else { roundingContainer.style.display = 'none'; }
+        if (currentUser === "Shahzeb") { roundingContainer.style.display = 'flex'; document.getElementById('smartRoundingInput').checked = smartRounding(); } else { roundingContainer.style.display = 'none'; }
         const trashBtn = document.getElementById('trashBtn');
         document.getElementById('restoreBtn').style.display = currentUser === "Shahzeb" ? 'flex' : 'none';
         if (currentUser === "Shahzeb") { trashBtn.style.display = 'flex'; document.getElementById('trashExpirySelect').parentElement.style.display = 'flex'; document.getElementById('trashExpirySelect').value = trashExpiryDays.toString(); } else { trashBtn.style.display = 'none'; document.getElementById('trashExpirySelect').parentElement.style.display = 'none'; }
@@ -1479,6 +1493,7 @@
         return `<div class="health-row${onclick ? ' interactive-btn' : ''}" ${onclick ? `style="cursor:pointer;" onclick="${onclick}"` : ''}><span style="display:flex; align-items:center; gap:10px;"><span class="status-dot" style="background:${dot};"></span>${label}</span><span class="hv">${value}</span></div>`;
     }
 
+    let lastHealth = null; // the last /status answer (for "View" problems)
     async function loadHealth() {
         const rows = document.getElementById('healthRows'); rows.innerHTML = `<div class="health-row" style="color:var(--text-muted);">Checking...</div>`;
         try {
@@ -1518,7 +1533,11 @@
     function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
 
     function toggleSwipeSetting() { swipeActionsEnabled = !swipeActionsEnabled; document.getElementById('swipeToggleInput').checked = swipeActionsEnabled; safeSetStorage('house_swipe_actions', swipeActionsEnabled); render(); }
-    function toggleSmartRounding() { smartRoundingEnabled = !smartRoundingEnabled; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; safeSetStorage('house_smart_rounding', smartRoundingEnabled); render(); }
+    function toggleSmartRounding() {
+        if (smartRounding()) delete db.smartRounding; else db.smartRounding = true;
+        document.getElementById('smartRoundingInput').checked = smartRounding();
+        logAudit(smartRounding() ? "Turned on smart rounding (settle-ups to 10p)" : "Turned off smart rounding"); render(); executeActionWithSave();
+    }
     function updateTrashExpiry() { trashExpiryDays = parseInt(document.getElementById('trashExpirySelect').value); safeSetStorage('house_trash_expiry', String(trashExpiryDays)); showToast("Trash Expiry Updated", 1500); }
 
     function handleTagInput(e) {
@@ -1528,7 +1547,7 @@
             (db.expenses||[]).forEach(ex => { let tMatch = (ex.desc || "").match(/#([\w-]+)/g); if(tMatch) tMatch.forEach(t => allTags.add(t)); });
             (db.archives||[]).forEach(arc => { if(arc.tag) allTags.add(arc.tag); (arc.details||[]).forEach(ex => { let tMatch = (ex.desc || "").match(/#([\w-]+)/g); if(tMatch) tMatch.forEach(t => allTags.add(t)); }); });
             let suggestions = Array.from(allTags).filter(t => t.toLowerCase().startsWith(currentTyping.toLowerCase()) && t !== currentTyping);
-            if (suggestions.length > 0) { dropdown.innerHTML = suggestions.map(t => `<div class="autocomplete-item" onclick="applyTag('${t}', '${e.target.id}')">${t}</div>`).join(''); dropdown.style.display = 'flex'; } else { dropdown.style.display = 'none'; }
+            if (suggestions.length > 0) { dropdown.innerHTML = suggestions.map(t => `<div class="autocomplete-item" onclick="applyTag(${jsArg(t)}, ${jsArg(e.target.id)})">${escapeHTML(t)}</div>`).join(''); dropdown.style.display = 'flex'; } else { dropdown.style.display = 'none'; }
             let lastEx = (db.expenses||[]).find(ex => (ex.desc||"").includes(currentTyping));
             if (lastEx && lastEx.involved && lastEx.involved.length > 0) { db.activeUsers = [...lastEx.involved]; render(); }
         } else { dropdown.style.display = 'none'; }
@@ -1633,7 +1652,7 @@
         out.innerHTML = hits.slice(0, 100).map(({ ex, cycle, fallbackDate }) => {
             const exSym = ex.originalSym || viewMoney().sym;
             const custom = ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length;
-            const receiptStr = typeof ex.receipt === 'string' ? `${jsArg(ex.receipt)}` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+            const receiptStr = typeof ex.receipt === 'string' ? `${jsArg(ex.receipt)}` : jsArg(JSON.stringify(ex.receipt));
             return `<div class="card"><div style="display:flex; gap:12px; align-items:flex-start;">${avatarHTML(ex.name, 'sm')}<div style="flex:1; min-width:0;">
                 <div class="card-row" style="align-items:flex-start;"><div class="card-title">${formatDescDisplay(ex.desc, exSym) || escapeHTML(ex.name)}</div><div class="card-amt">${fmt(ex.amount)}</div></div>
                 <div class="card-meta">${escapeHTML(ex.name)} · ${formatNiceDate(ex.date || fallbackDate)} · ${cycle === 'Current cycle' ? cycle : escapeHTML(cycle)}${editedTag(ex)}</div>
@@ -1781,8 +1800,9 @@
     }
     function getClaim(key, arcIdx) { const c = claimStore(arcIdx, false); return c && c[key] ? c[key] : null; }
     function claimPaid(key, arcIdx, to, remainingBase) {
-        const { fmt } = viewMoney();
+        const { fmt } = viewMoney(); const refind = arcIdx >= 0 ? arcRefind(arcIdx) : () => -1;
         customConfirm(`Tell ${escapeHTML(to)} you've paid them <b>${fmt(remainingBase)}</b>?<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">They'll get a notification to confirm it.</span>`, () => {
+            if (arcIdx >= 0) { arcIdx = refind(); if (arcIdx < 0) { showToast("That cycle changed - try again", 2500); return; } }
             claimStore(arcIdx, true)[key] = { by: currentUser, amt: Math.round(remainingBase * 100) / 100, t: Date.now() };
             logAudit(`Said they paid ${to} ${fmt(remainingBase)}`, key); render(); executeActionWithSave(); showToast(`SENT - WAITING FOR ${escapeHTML(to).toUpperCase()}`, 2500);
         });
@@ -1796,8 +1816,11 @@
     }
     function rejectClaim(key, arcIdx) {
         const claim = getClaim(key, arcIdx); if (!claim) return;
+        const refind = arcIdx >= 0 ? arcRefind(arcIdx) : () => -1;
         customConfirm(`Not received ${escapeHTML(claim.by)}'s payment yet?<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">They'll be told it hasn't arrived.</span>`, () => {
-            delete claimStore(arcIdx, false)[key];
+            if (arcIdx >= 0) { arcIdx = refind(); if (arcIdx < 0) return; }
+            const store = claimStore(arcIdx, false); if (!store || !store[key]) return;
+            delete store[key];
             logAudit(`Hasn't received ${claim.by}'s payment yet`, key); render(); executeActionWithSave();
         });
     }
@@ -2032,7 +2055,7 @@
     }
     async function payNow(to, amountLocal) {
         const code = document.getElementById('currency').value; const amt = Number(amountLocal).toFixed(2);
-        const link = db.payLinks && db.payLinks[to];
+        const link = cleanPayLink(db.payLinks && db.payLinks[to]); // re-check: the shared data could hold anything (e.g. javascript: links)
         if (!link) { showToast(`${escapeHTML(to)} HASN'T ADDED A PAYMENT LINK YET`, 3000); return; }
         let url = link; const host = new URL(link).hostname.replace(/^www\./, '');
         if (host === 'monzo.me' && code === 'GBP') url = `${link}/${amt}`;          // Monzo pre-fills GBP amounts
@@ -2073,7 +2096,7 @@
             const when = kind === 'backup' ? new Date(r.day + 'T03:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
                                            : new Date(r.ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             const sub = (kind === 'version' && i === 0) ? 'Current data' : `${Math.max(1, Math.round(r.bytes / 1024))} KB`;
-            const btn = (kind === 'version' && i === 0) ? '<span class="tag">Now</span>' : `<button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmRestore('${kind}', '${escapeHTML(String(id))}', ${jsArg(when)})">Restore</button>`;
+            const btn = (kind === 'version' && i === 0) ? '<span class="tag">Now</span>' : `<button class="btn-pill primary interactive-btn" onclick="triggerHaptic(); confirmRestore(${jsArg(kind)}, ${jsArg(String(id))}, ${jsArg(when)})">Restore</button>`;
             return `<div class="card"><div class="card-row"><div><div class="card-title">${escapeHTML(when)}</div><div class="card-meta">${sub}</div></div>${btn}</div></div>`;
         }).join('');
     }
@@ -2093,18 +2116,25 @@
             setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); renderUsers(); if (currentUser) render();
             closeRestore(); showToast("BACKUP RESTORED", 3000);
         } catch (e) { showToast("RESTORE FAILED - TRY AGAIN", 3000); }
-        finally { isSyncing = false; loader.style.display = 'none'; loader.innerText = "SYNCING"; }
+        finally { isSyncing = false; loader.style.display = 'none'; loader.innerText = "SYNCING..."; }
     }
     
     function restoreTrash(i) {
         if(db.trash && db.trash[i]) { let ex = db.trash.splice(i, 1)[0]; delete ex.deletedAt; if(!Array.isArray(db.expenses)) db.expenses = []; db.expenses.unshift(ex); db.expenses.sort((a,b) => b.timestamp - a.timestamp); logAudit("Restored Expense", ex.id); openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000); }
     }
     
+    /** Delete an expense's receipt photos from storage. Only our own server's delete links are ever called:
+        the links come from the shared data, and a tampered one could point anywhere. */
+    function deleteReceiptPhotos(ex) {
+        const dels = ex ? [].concat(ex.receiptDelete || []) : [];
+        dels.forEach(u => { if (typeof u === 'string' && u.startsWith(API_URL + '/r/') && /\/delete\/[0-9a-f-]{36}$/.test(u)) fetch(u, { mode: 'no-cors' }).catch(() => {}); });
+    }
     function permDeleteTrash(i) {
         if(db.trash && db.trash[i]) {
+            const target = db.trash[i]; const same = (x) => x && x.id === target.id && x.deletedAt === target.deletedAt;
             customConfirm("Permanently delete this expense?", () => {
-                if(!db.trash[i]) return; let ex = db.trash[i]; let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []);
-                delUrls.forEach(u => { if (u) fetch(u, { mode: 'no-cors' }).catch(() => {}); }); db.trash.splice(i, 1); logAudit("Permanently Deleted", ex.id); openTrash(); executeActionWithSave(); showToast("Deleted Permanently", 2000);
+                i = db.trash.findIndex(same); if (i < 0) { showToast("The vault changed - nothing deleted", 2500); return; } let ex = db.trash[i];
+                deleteReceiptPhotos(ex); db.trash.splice(i, 1); logAudit("Permanently Deleted", ex.id); openTrash(); executeActionWithSave(); showToast("Deleted Permanently", 2000);
             });
         }
     }
@@ -2204,7 +2234,9 @@
     function executeActionWithSave() { if (!checkPayloadSize()) return; editSeq++; setNeedsSync(true); offlineActionsCount++; updateOfflineBadge(); saveData(); }
 
     async function saveData(retryCount = 0) {
-        saveLocalBackup(); const isReallyOnline = await checkTrueNetwork(); if (!isReallyOnline) { setNeedsSync(true); return; }
+        // No outside "are we online" ping (it used the exchange-rate site: if that was down, nothing saved at all).
+        // A failed save below is kept and retried every 15 s; the 'online' event retries too.
+        saveLocalBackup(); if (!navigator.onLine) { setNeedsSync(true); return; }
         const now = Date.now(); if (now - lastApiSaveTime < 2000 && retryCount === 0) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 2000); return; } lastApiSaveTime = now;
         if (isSyncing && retryCount === 0) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 1500); return; } // busy: try again shortly instead of dropping the save
         isSyncing = true;
@@ -2254,14 +2286,14 @@
         const amt = sym + (ex.amount * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const when = ex.timestamp ? new Date(ex.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const receipts = ex.receipt ? (Array.isArray(ex.receipt) ? ex.receipt.length : 1) : 0;
-        const receiptArg = typeof ex.receipt === 'string' ? jsArg(ex.receipt) : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+        const receiptArg = typeof ex.receipt === 'string' ? jsArg(ex.receipt) : jsArg(JSON.stringify(ex.receipt));
         let html = `<div class="ex-hero">${avatarHTML(ex.name, 'lg')}<div class="ex-amt">${amt}</div><div class="ex-desc">${formatDescDisplay(ex.desc, exSym) || escapeHTML(ex.name)}</div><div class="card-meta" style="margin:0;">Paid by <b>${escapeHTML(ex.name)}</b> · ${formatNiceDate(ex.date || db.startDate)}${when ? ' · ' + when : ''}</div></div>`;
         html += `<div class="group">`;
         html += `<div class="row-item" style="cursor:default;"><span class="ri-icon" data-ic="users">${ico('users')}</span><span class="ri-label">Split<span class="ri-sub">${escapeHTML(splitLabel(ex.involved))}</span></span></div>`;
         if (receipts) html += `<div class="row-item interactive-btn" role="button" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptArg})"><span class="ri-icon">${ico('image')}</span><span class="ri-label">Receipt${receipts > 1 ? 's' : ''}<span class="ri-sub">${receipts} photo${receipts > 1 ? 's' : ''}</span></span><span class="ic">${ico('chev')}</span></div>`;
-        if (ex.edited) html += `<div class="row-item interactive-btn" role="button" onclick="triggerHaptic(); showEditHistory('${ex.id}')"><span class="ri-icon">${ico('clock')}</span><span class="ri-label">Edited<span class="ri-sub">${Array.isArray(ex.history) && ex.history.length ? 'See earlier versions' : 'No earlier versions saved'}</span></span><span class="ic">${ico('chev')}</span></div>`;
-        html += `</div><div class="ex-actions"><button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">${ico('share')}Share</button>`;
-        if (ex.name === currentUser) html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); startExpenseEdit('${ex.id}')">${ico('edit')}Edit</button><button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">${ico('trash')}Delete</button>`;
+        if (ex.edited) html += `<div class="row-item interactive-btn" role="button" onclick="triggerHaptic(); showEditHistory(${jsArg(ex.id)})"><span class="ri-icon">${ico('clock')}</span><span class="ri-label">Edited<span class="ri-sub">${Array.isArray(ex.history) && ex.history.length ? 'See earlier versions' : 'No earlier versions saved'}</span></span><span class="ic">${ico('chev')}</span></div>`;
+        html += `</div><div class="ex-actions"><button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense(${jsArg(ex.id)})">${ico('share')}Share</button>`;
+        if (ex.name === currentUser) html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); startExpenseEdit(${jsArg(ex.id)})">${ico('edit')}Edit</button><button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx(${jsArg(ex.id)})">${ico('trash')}Delete</button>`;
         return html + '</div>';
     }
     function openExpense(id) {
@@ -2405,7 +2437,7 @@
     }
 
     function editUser(oldName) {
-        customPrompt(`Rename ${oldName} to:`, oldName, (newName) => {
+        customPrompt(`Rename ${escapeHTML(oldName)} to:`, oldName, (newName) => {
             const n = sanitizeName(newName); if (!n || n === oldName) return; const nLower = n.toLowerCase(); if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("Name already exists.", 3000); return; }
             db.users[db.users.indexOf(oldName)] = n; if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
             db.expenses.forEach(ex => { if (ex.name === oldName) ex.name = n; if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; });
@@ -2417,6 +2449,18 @@
             let newPaid = {}; for (let key in db.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key]; } db.paidStatus = newPaid;
             if (db.payLinks && db.payLinks[oldName]) { db.payLinks[n] = db.payLinks[oldName]; delete db.payLinks[oldName]; }
             if (db.avatars && db.avatars[oldName]) { db.avatars[n] = db.avatars[oldName]; delete db.avatars[oldName]; }
+            if (db.notifPrefs && db.notifPrefs[oldName]) { db.notifPrefs[n] = db.notifPrefs[oldName]; delete db.notifPrefs[oldName]; }
+            (db.trash || []).forEach(ex => { if (ex.name === oldName) ex.name = n; if (Array.isArray(ex.involved) && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; });
+            // "I've paid" claims: keys are "From_To[_#tag]", and each claim records who made it
+            const renameClaims = (claims) => {
+                if (!claims || typeof claims !== 'object') return claims; const out = {};
+                for (const k in claims) {
+                    const p = k.split('_'); if (p[0] === oldName) p[0] = n; if (p[1] === oldName) p[1] = n;
+                    const c = claims[k]; if (c && c.by === oldName) c.by = n; out[p.join('_')] = c;
+                }
+                return out;
+            };
+            db.payClaims = renameClaims(db.payClaims); db.archives.forEach(arc => { if (arc.payClaims) arc.payClaims = renameClaims(arc.payClaims); });
             logAudit(`Renamed ${oldName} to`, n);
             if (currentUser === oldName) { currentUser = n; localStorage.setItem('house_user', n); document.getElementById('topUserName').innerText = n; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = n; }
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
@@ -2472,7 +2516,7 @@
     
     function formatNiceDate(dateStr) {
         if (!dateStr || dateStr === "Unknown Date") return "Unknown Date";
-        const parts = dateStr.split('/'); if (parts.length !== 3) return dateStr;
+        dateStr = String(dateStr); const parts = dateStr.split('/'); if (parts.length !== 3) return escapeHTML(dateStr);
         const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
         const dateObj = new Date(y, m, d); if (isNaN(dateObj.getTime())) return escapeHTML(dateStr);
         const day = dateObj.getDate(), month = dateObj.toLocaleString('default', { month: 'short' }), year = dateObj.getFullYear();
@@ -2490,11 +2534,11 @@
     function sendNudge(name, amount, sym) {
         triggerHaptic(); const amt = `${sym}${Number(amount).toFixed(2)}`;
         const recent = (db.auditLog || []).find(a => a && a.kind === 'nudge' && a.by === currentUser && a.to === name && Date.now() - a.t < 3600000);
-        if (recent) { showToast(`You reminded ${name} ${Math.max(1, Math.round((Date.now() - recent.t) / 60000))} min ago`, 2500); return; }
+        if (recent) { showToast(`You reminded ${escapeHTML(name)} ${Math.max(1, Math.round((Date.now() - recent.t) / 60000))} min ago`, 2500); return; }
         customConfirm(`Send <b>${escapeHTML(name)}</b> a reminder that they owe you <b>${escapeHTML(amt)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get a notification on their phone.</span>`, () => {
             logAudit(`Reminded ${name} about ${amt}`, null, false, 'nudge');
             Object.assign(db.auditLog[0], { to: name, msg: `Friendly reminder, you owe me ${amt}` });
-            executeActionWithSave(); showToast(`REMINDER SENT TO ${name.toUpperCase()}`, 2000);
+            executeActionWithSave(); showToast(`REMINDER SENT TO ${escapeHTML(name).toUpperCase()}`, 2000);
         });
     }
 
@@ -2523,7 +2567,7 @@
         document.getElementById('inboxList').innerHTML = list.length ? list.map(a => {
             const ex = typeof a.trg === 'string' ? (db.expenses || []).find(e => e.id === a.trg) : null;
             const nudge = a.kind === 'nudge';
-            return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${ex ? ' tappable interactive-btn' : ''}" ${ex ? `role="button" onclick="triggerHaptic(); openExpense('${ex.id}')"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
+            return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${ex ? ' tappable interactive-btn' : ''}" ${ex ? `role="button" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
                 <div class="card-text">${nudge ? `<span class="tag danger">Reminder</span> <b>${escapeHTML(a.by)}</b>: ${escapeHTML(a.msg || a.act)}` : `<b>${escapeHTML(a.by)}</b> ${escapeHTML(a.act)}`}</div>
                 ${a.trg && !nudge ? `<div class="card-meta" style="color:var(--accent-strong);">${auditTargetLabel(a.trg)}</div>` : ''}
                 <div class="card-meta">${timeAgo(a.t)}</div></div></div></div>`;
@@ -2658,6 +2702,40 @@
         if (db.activeUsers.length === 0) db.activeUsers = [...db.users];
         if (!db.trash || !Array.isArray(db.trash)) db.trash = [];
         if (!db.auditLog || !Array.isArray(db.auditLog)) db.auditLog = [];
+        // The data comes from everyone's phones (and old app versions): make every list and item the right shape before any
+        // maths or drawing, so one odd entry can't crash a screen. (Found by the scrambled-data stress test, tests/fuzz.spec.mjs.)
+        const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+        const objOr = (x) => isObj(x) ? x : {};
+        const items = (x) => Array.isArray(x) ? x.filter(isObj) : [];
+        const names = (x) => Array.isArray(x) ? x.filter(u => typeof u === 'string' && u.trim()) : [];
+        const tidy = (list) => list.forEach(ex => {
+            const a = Number(ex.amount); ex.amount = isFinite(a) ? a : 0;
+            if (ex.desc != null && typeof ex.desc !== 'string') ex.desc = String(ex.desc);
+            if (ex.name != null && typeof ex.name !== 'string') ex.name = String(ex.name);
+            if (ex.involved != null) ex.involved = names(ex.involved);
+            if (ex.timestamp != null && !isFinite(Number(ex.timestamp))) ex.timestamp = 0;
+            if (ex.history != null) ex.history = items(ex.history);
+        });
+        db.users = names(db.users); if (!db.users.length) db.users = [...defaultUsers];
+        db.activeUsers = names(db.activeUsers).filter(u => db.users.includes(u)); if (!db.activeUsers.length) db.activeUsers = [...db.users];
+        db.expenses = items(db.expenses); db.trash = items(db.trash); db.auditLog = items(db.auditLog);
+        db.notices = items(db.notices); db.shopping = items(db.shopping);
+        db.notices.forEach(n => { if (typeof n.text !== 'string') n.text = n.text == null ? '' : String(n.text); });
+        db.shopping.forEach(s => { if (typeof s.text !== 'string') s.text = s.text == null ? '' : String(s.text); });
+        db.archives = items(db.archives);
+        db.archives.forEach(a => {
+            a.details = items(a.details); tidy(a.details);
+            a.paidStatus = objOr(a.paidStatus); if (a.payClaims != null) a.payClaims = objOr(a.payClaims);
+            const t = Number(a.total); a.total = isFinite(t) ? t : a.details.reduce((s, e) => s + e.amount, 0);
+            if (a.activeUsers != null) { a.activeUsers = names(a.activeUsers); if (!a.activeUsers.length) delete a.activeUsers; }
+            if (a.tag != null && typeof a.tag !== 'string') a.tag = null;
+            if (typeof a.start !== 'string') a.start = a.start == null ? '' : String(a.start);
+            if (typeof a.end !== 'string') a.end = a.end == null ? '' : String(a.end);
+        });
+        tidy(db.expenses); tidy(db.trash);
+        db.paidStatus = objOr(db.paidStatus); if (db.payClaims != null) db.payClaims = objOr(db.payClaims);
+        if (db.notifPrefs != null) db.notifPrefs = objOr(db.notifPrefs);
+        if (typeof db.startDate !== 'string') db.startDate = String(db.startDate);
     }
 
     function renderSkeletons() {
@@ -2685,7 +2763,7 @@
                 const share = e.amount / Math.max(involved.length, 1);
                 involved.forEach(u => { balances[u] = (balances[u] || 0) - share; });
             });
-            const unit = smartRoundingEnabled ? 10 : 1; // in pennies
+            const unit = smartRounding() ? 10 : 1; // in pennies
             const keys = Object.keys(balances);
             const scaled = keys.map(k => Math.round(balances[k] * 100 * 1e6) / 1e6 / unit); // trim float noise
             const floors = scaled.map(Math.floor);
@@ -2701,7 +2779,7 @@
             let activeCount = Math.max(involved.length, 1); let perHead = Math.round((e.amount / activeCount) * 100) / 100;
             involved.forEach(u => { if (balances[u] === undefined) balances[u] = 0; balances[u] = Math.round((balances[u] - perHead) * 100) / 100; });
         });
-        if (smartRoundingEnabled) {
+        if (smartRounding()) {
             let sum = 0; let keys = Object.keys(balances);
             for (let i=0; i<keys.length; i++) { balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10; sum += balances[keys[i]]; }
             if (Math.abs(sum) > 0.001 && keys.length > 0) { balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100; }
@@ -2804,8 +2882,8 @@
     function goHome() { navCloseAll(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
     function generateActionPills(ex) {
-        let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
-        if (ex.name === currentUser) { html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); startExpenseEdit('${ex.id}')">Edit</button> <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`; }
+        let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense(${jsArg(ex.id)})">Share</button>`;
+        if (ex.name === currentUser) { html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); startExpenseEdit(${jsArg(ex.id)})">Edit</button> <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx(${jsArg(ex.id)})">Delete</button>`; }
         return html;
     }
 
@@ -2872,7 +2950,7 @@
                 const flags = (ex.receipt ? `<span title="Has receipt">${ico('image')}</span>` : '') + (ex.edited ? '<span>· Edited</span>' : '');
                 const rowInfo = `<div class="item-top"><div class="item-title">${displayDesc || escapeHTML(ex.name)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${escapeHTML(ex.name)}${flags}</div>${splitNote}`;
                 const isNew = seenExpenseIds && !seenExpenseIds.has(ex.id);
-                listHtml += `<div class="linear-row timeline-item ex-row interactive-btn${isNew ? ' enter' : ''}" role="button" tabindex="0" data-id="${escapeHTML(ex.id)}" onclick="triggerHaptic(); openExpense('${ex.id}')">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}</div></div>`;
+                listHtml += `<div class="linear-row timeline-item ex-row interactive-btn${isNew ? ' enter' : ''}" role="button" tabindex="0" data-id="${escapeHTML(ex.id)}" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}</div></div>`;
             });
             list.innerHTML = listHtml + `</div>`;
         }
@@ -2908,8 +2986,8 @@
             const tr = t.amt - t.paid, isS = tr <= 0.01, can = currentUser === t.to;
             let actions = '';
             if (can) {
-                if (!isS) actions += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${tr * rate}, '${sym}')">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
-                actions += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓ Paid' : 'Paid'}</button>`;
+                if (!isS) actions += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${tr * rate}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment(${jsArg(t.key)}, ${tr * rate}, ${rate})">Partial</button>`;
+                actions += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid(${jsArg(t.key)}, ${t.amt})">${isS ? '✓ Paid' : 'Paid'}</button>`;
             } else actions = payOrPending(t.from, t.to, tr * rate, isS, t.key, -1, tr);
             const meta = t.paid > 0.01 && !isS ? `Was ${money(t.amt * rate)} · ${money(t.paid * rate)} paid` : '';
             return payCardHTML(t.from, t.to, 'pays', money((isS ? t.amt : tr) * rate), meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
@@ -2951,8 +3029,10 @@
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
+        const refind = arcRefind(arcIdx);
         customPrompt(`Log Archive Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
             if (val === null || val.trim() === "") return; let amtLocal = parseFloat(val.replace(/,/g, '.')); if (isNaN(amtLocal) || amtLocal < 0) return;
+            arcIdx = refind(); if (arcIdx < 0) { showToast("That cycle changed - try again", 2500); return; }
             if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
             if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } else { if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0; db.archives[arcIdx].paidStatus[key] += (amtLocal / rate); }
             logAudit("Partial Archive Payment Logged", key); render(); executeActionWithSave();
@@ -2985,7 +3065,7 @@
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
                         const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        const acts = canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, '${sym}')">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase);
+                        const acts = canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(key)}, ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase);
                         cycleUnpaidHtml += payCardHTML(t.from, t.to, 'owes', money(remLocal), amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(pdLocal)} paid` : '', false, acts, canMarkGlobal ? claimBanner(key, idx) : '', key);
                     }
                 });
@@ -3001,7 +3081,7 @@
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
                             const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            const acts = canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, '${sym}')">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase);
+                            const acts = canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(t.key)}, ${remainingLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(t.key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase);
                             archiveSettleHtml += payCardHTML(t.from, t.to, 'owes', money(remainingLocal), t.amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(paidLocal)} paid` : '', false, acts, canMark ? claimBanner(t.key, idx) : '', t.key);
                         }
                     });
@@ -3016,7 +3096,7 @@
                 let hasVisibleLogs = false;
                 let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
-                    hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `${jsArg(d.receipt)}` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
+                    hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `${jsArg(d.receipt)}` : jsArg(JSON.stringify(d.receipt));
                     return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.88rem;">${displayDesc || escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div class="item-sub">${escapeHTML(d.name)}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`
                 }).join('');
 
@@ -3053,20 +3133,29 @@
     async function processUploadQueue() {
         if (isProcessingQueue) return;
         let queue = safeJSONParse(localStorage.getItem('img_queue'), []); if (!Array.isArray(queue) || queue.length === 0 || !navigator.onLine) return;
-        isProcessingQueue = true; let updatedDb = false; let remainingQueue = [];
+        isProcessingQueue = true; let updatedDb = false;
+        const sig = (it) => `${it && it.id}|${it && it.image ? it.image.length + '|' + it.image.slice(-40) : ''}`;
+        const done = new Set(); // items handled now (uploaded, or refused for good); everything else stays queued
+        // The expense may have moved on since the photo was queued: archived by End month, or in the Recovery Vault
+        const findExpense = (id) => (db.expenses || []).find(e => e.id === id) || (db.trash || []).find(e => e.id === id)
+            || (db.archives || []).reduce((hit, a) => hit || (Array.isArray(a.details) ? a.details.find(e => e.id === id) : null), null);
         try {
             for (let item of queue) {
                 try {
                     const up = await uploadImageData(item.image);
-                    let ex = db.expenses.find(e => e.id === item.id);
+                    done.add(sig(item));
+                    let ex = findExpense(item.id);
                     if (ex) {
                         if (!ex.receipt) { ex.receipt = up.url; ex.receiptDelete = up.delete_url; }
                         else { let recArr = Array.isArray(ex.receipt) ? ex.receipt : [ex.receipt]; let delArr = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : [ex.receiptDelete]; recArr.push(up.url); delArr.push(up.delete_url); ex.receipt = recArr; ex.receiptDelete = delArr; }
                         updatedDb = true;
                     }
-                } catch(e) { remainingQueue.push(item); }
+                } catch(e) { if (e.message === "BAD_IMAGE") done.add(sig(item)); /* the server will never take it: stop retrying */ }
             }
-            safeSetStorage('img_queue', JSON.stringify(remainingQueue)); if (updatedDb) { render(); executeActionWithSave(); }
+            // Re-read the queue: photos added while these uploads ran must not be overwritten
+            const now = safeJSONParse(localStorage.getItem('img_queue'), []);
+            safeSetStorage('img_queue', JSON.stringify((Array.isArray(now) ? now : []).filter(it => !done.has(sig(it)))));
+            if (updatedDb) { render(); executeActionWithSave(); }
         } finally { isProcessingQueue = false; }
     }
 
@@ -3075,6 +3164,7 @@
         const res = await secureFetch(`${API_URL}/upload`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ image: dataUrl.split(',')[1] }) }, 20000);
         if (res.status === 401) throw new Error("AUTH");
         if (res.status === 507) { const b = await res.json().catch(() => ({})); showToast(b.error === 'monthly_limit' ? "PHOTO LIMIT REACHED THIS MONTH" : "PHOTO STORAGE FULL - DELETE OLD RECEIPTS", 4000); throw new Error("FULL"); }
+        if (res.status === 400 || res.status === 413) throw new Error("BAD_IMAGE"); // not a usable photo, or too big: retrying won't help
         if (!res.ok) throw new Error("HTTP Error");
         const out = await res.json(); if (!out || !out.url) throw new Error("Malformed API Response");
         return out;
@@ -3120,6 +3210,7 @@
         let extractedBase = extractAmount(safeInput); 
         if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
         let baseAmt = Math.round((extractedBase / rate) * 100) / 100; if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
+        if (baseAmt < 0.01) { showToast("No valid amount found.", 3000); return; } // e.g. "0.004" would round to a £0.00 expense
 
         // Same person, same amount within a day: probably added twice by mistake (others' expenses never trigger this)
         if (!editingId && !skipDupCheck) {
@@ -3215,7 +3306,7 @@
             <input id="edNote" class="chat-note" placeholder="Optional" autocomplete="off">
             <div class="field-label" style="margin-top:12px;">Split between</div>
             <div id="edSplit" style="display:flex; flex-wrap:wrap; gap:8px;">${db.users.map(u => { const on = inv.includes(u); return `<button type="button" class="btn-pill interactive-btn${on ? ' primary' : ''}" data-u="${escapeHTML(u)}" aria-pressed="${on}" onclick="triggerHaptic(); this.classList.toggle('primary'); this.setAttribute('aria-pressed', this.classList.contains('primary'))">${escapeHTML(u)}</button>`; }).join('')}</div>
-            <div class="ex-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); cancelExpenseEdit()">Cancel</button><button class="btn-pill primary interactive-btn" aria-label="Save Expense" onclick="triggerHaptic(); saveExpenseEdit('${ex.id}')">${ico('check')}Save</button></div>`;
+            <div class="ex-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); cancelExpenseEdit()">Cancel</button><button class="btn-pill primary interactive-btn" aria-label="Save Expense" onclick="triggerHaptic(); saveExpenseEdit(${jsArg(ex.id)})">${ico('check')}Save</button></div>`;
         const ta = document.getElementById('edAmt'); ta.value = rawDesc; document.getElementById('edNote').value = note;
         ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
     }
@@ -3226,6 +3317,7 @@
         const { sym, rate } = expenseCurrency(ex); const extracted = extractAmount(raw);
         if (!raw.trim() || !(extracted > 0)) { showToast("No valid amount found.", 3000); return; }
         const baseAmt = Math.round((extracted / rate) * 100) / 100; if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
+        if (baseAmt < 0.01) { showToast("No valid amount found.", 3000); return; } // e.g. "0.004" would round to a £0.00 expense
         const picked = Array.from(document.querySelectorAll('#edSplit [data-u]')).filter(b => b.classList.contains('primary')).map(b => b.dataset.u);
         if (!picked.length) { showToast("Pick at least one person.", 3000); return; }
         const active = db.activeUsers && db.activeUsers.length ? db.activeUsers : db.users;
@@ -3306,7 +3398,7 @@
             involved.forEach(u => { if (balances[u] === undefined) balances[u] = 0; balances[u] -= perHead; });
         }); 
         
-        if (smartRoundingEnabled) {
+        if (smartRounding()) {
             let sum = 0; let keys = Object.keys(balances);
             for (let i=0; i<keys.length; i++) { balances[keys[i]] = Math.round(balances[keys[i]] * 10) / 10; sum += balances[keys[i]]; }
             if (Math.abs(sum) > 0.001 && keys.length > 0) balances[keys[0]] -= sum; 
@@ -3349,21 +3441,28 @@
     
     function deleteArchive(ev, i) { 
         ev.stopPropagation(); 
+        const refind = arcRefind(i);
         customConfirm("Delete this archive permanently?", () => { 
-            if (!db.archives || !db.archives[i]) return; const arc = db.archives[i];
-            if (arc && Array.isArray(arc.details)) { arc.details.forEach(ex => { let delUrls = Array.isArray(ex.receiptDelete) ? ex.receiptDelete : (ex.receiptDelete ? [ex.receiptDelete] : []); delUrls.forEach(u => { if (u) fetch(u, { mode: 'no-cors' }).catch(() => {}); }); }); }
+            i = refind(); if (i < 0) { showToast("That cycle changed - nothing deleted", 2500); return; } const arc = db.archives[i];
+            if (arc && Array.isArray(arc.details)) arc.details.forEach(deleteReceiptPhotos);
             db.archives.splice(i,1); logAudit("Deleted Archive"); render(); executeActionWithSave(); 
         }); 
     }
     
     function changeStartDate() { 
-        customPrompt("Start Date (DD/MM/YYYY):", db.startDate, (val) => { if(val && val.trim() !== "") { db.startDate = escapeHTML(val.trim()); render(); executeActionWithSave(); } }); 
+        customPrompt("Start Date (DD/MM/YYYY):", db.startDate, (val) => {
+            const m = String(val || '').trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+            const d = m && new Date(+m[3], +m[2] - 1, +m[1]);
+            if (!m || d.getDate() !== +m[1] || d.getMonth() !== +m[2] - 1) { if (val && val.trim()) showToast("Use a real date like 01/11/2026", 2500); return; }
+            db.startDate = `${m[1].padStart(2, '0')}/${m[2].padStart(2, '0')}/${m[3]}`; render(); executeActionWithSave();
+        });
     }
 
     function endMonth() {
         if (isArchiving) return; let validExpenses = db.expenses || []; if (validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
         customConfirm("End the current month and move expenses to archive?", () => {
             isArchiving = true; if(!Array.isArray(db.archives)) db.archives = [];
+            validExpenses = db.expenses || []; // re-read: expenses that synced in while this question was open must be archived too, not lost
             const today = new Date(); const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
             let tags = new Set(); validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match) tags.add(match[0]); });
 
