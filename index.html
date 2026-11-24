@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.11.0">
+    <meta name="app-version" content="7.11.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -374,6 +374,20 @@
     </div>
 </div>
 
+<div id="notifCard" class="login-card" role="dialog" aria-label="Turn on notifications" style="display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:96px; width:calc(100% - 32px); max-width:380px; box-sizing:border-box; padding:18px 18px 16px; border-radius:24px; z-index:9000;">
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div style="font-size:1.6rem; line-height:1;">🔔</div>
+        <div style="flex:1;">
+            <div style="font-weight:900; font-size:1rem; margin-bottom:4px; color:var(--text-main);">Turn on notifications?</div>
+            <div id="notifCardText" style="font-size:0.85rem; color:var(--text-muted); line-height:1.4;"></div>
+        </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:14px;">
+        <button id="notifCardLater" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main);" onclick="triggerHaptic(); snoozeNotifCard()">Not now</button>
+        <button id="notifCardOn" class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); notifCardTurnOn()">Turn on</button>
+    </div>
+</div>
+
 <div id="lockOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:15000; display:none; align-items:center; justify-content:center; overscroll-behavior: contain;">
     <form class="login-card" style="box-sizing:border-box; width:90%; max-width:340px; text-align:center; padding: 30px 20px;" onsubmit="event.preventDefault(); unlockApp();">
         <div style="font-size: 2.2rem; margin-bottom: 10px;">🔒</div>
@@ -558,7 +572,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.11.0";
+    const APP_VERSION = "7.11.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -606,18 +620,56 @@
             return;
         }
         try {
+            // Ask for permission first, straight from the tap (Safari only shows the popup if nothing was awaited before it).
+            // Already granted (e.g. turning off) = no popup.
+            const permPromise = Notification.permission === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
             const reg = await swReady(); let sub = await reg.pushManager.getSubscription();
             if (sub) { // turn off
                 fetch(`${API_URL}/unregister`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ token: JSON.stringify(sub) }) }).catch(() => {});
                 await sub.unsubscribe(); try { sessionStorage.removeItem('hx_wreg'); } catch (e) {}
-                setNotifLabel(false); showToast("NOTIFICATIONS OFF", 2000); return;
+                setNotifLabel(false); showToast("NOTIFICATIONS OFF", 2000); return false;
             }
-            const perm = await Notification.requestPermission();
-            if (perm !== 'granted') { showToast("NOTIFICATIONS BLOCKED - ALLOW THEM IN BROWSER SETTINGS", 4000); return; }
-            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyBytes() });
+            const perm = await permPromise;
+            if (perm !== 'granted') { showToast("NOTIFICATIONS BLOCKED - ALLOW THEM IN BROWSER SETTINGS", 4000); return false; }
+            showToast("TURNING ON NOTIFICATIONS...", 0); // signing up with the browser's push service can take a few seconds
+            sub = await Promise.race([
+                reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyBytes() }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('subscribe_timeout')), 30000))
+            ]);
             try { sessionStorage.removeItem('hx_wreg'); } catch (e) {}
-            await registerWebPush(sub); setNotifLabel(true); showToast("NOTIFICATIONS ON", 2000);
-        } catch (e) { console.warn('notifications failed', e); showToast("COULDN'T TURN ON NOTIFICATIONS", 3000); }
+            await registerWebPush(sub); setNotifLabel(true); showToast("NOTIFICATIONS ON", 2000); return true;
+        } catch (e) { console.warn('notifications failed', e); showToast("COULDN'T TURN ON NOTIFICATIONS", 3000); return false; }
+    }
+
+    // One-time card inviting browser users to turn notifications on (a tap is needed: browsers block popups
+    // that aren't started by the user). "Not now" hides it for a week; the menu switch is always there.
+    const NOTIF_CARD_SNOOZE_MS = 7 * 24 * 3600 * 1000;
+    let notifCardChecked = false;
+    function snoozeNotifCard() { try { localStorage.setItem('hx_notif_card_until', String(Date.now() + NOTIF_CARD_SNOOZE_MS)); } catch (e) {} hideNotifCard(); }
+    function hideNotifCard() { const c = document.getElementById('notifCard'); if (c) c.style.display = 'none'; }
+    async function maybeShowNotifCard() {
+        if (notifCardChecked || isNativeApp() || appLocked || !currentUser) return;
+        notifCardChecked = true; // once per page load
+        try { if (Number(localStorage.getItem('hx_notif_card_until') || 0) > Date.now()) return; } catch (e) {}
+        let ios = false;
+        if (webPushSupported()) {
+            if (Notification.permission === 'denied') return; // can't ask again; the menu switch explains how to fix it
+            if (Notification.permission === 'granted') { try { if (await (await swReady()).pushManager.getSubscription()) return; } catch (e) { return; } }
+        } else if (isIOS() && !isStandalone()) { ios = true; }
+        else return; // browser can't do notifications at all
+        document.getElementById('notifCardText').innerHTML = ios
+            ? "Get notified when someone adds or changes an expense.<br><br>On iPhone: tap <b>Share</b> → <b>Add to Home Screen</b>, open House Expenses from your home screen, then turn on notifications."
+            : "Get notified when someone adds or changes an expense.";
+        document.getElementById('notifCardOn').style.display = ios ? 'none' : 'block';
+        document.getElementById('notifCardLater').innerText = ios ? 'Got it' : 'Not now';
+        document.getElementById('notifCard').style.display = 'block';
+    }
+    let notifCardBusy = false;
+    async function notifCardTurnOn() {
+        if (notifCardBusy) return; notifCardBusy = true; // ignore double taps while the browser signs up
+        const btn = document.getElementById('notifCardOn'); btn.disabled = true; btn.style.opacity = '0.6';
+        try { if (await toggleNotifications()) hideNotifCard(); }
+        finally { notifCardBusy = false; btn.disabled = false; btn.style.opacity = '1'; }
     }
     function unlockApp() {
         const v = (document.getElementById('lockInput').value || '').trim(); if (!v) return;
@@ -1001,12 +1053,12 @@
             renderUsers(); saveLocalBackup(); 
             if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
             if (pushLocalChanges) { setNeedsSync(true); setTimeout(() => saveData(), 50); } else { offlineActionsCount = 0; updateOfflineBadge(); }
-            processUploadQueue(); refreshWebPush();
+            processUploadQueue(); refreshWebPush(); setTimeout(maybeShowNotifCard, 2500);
         } catch (e) {
             if (e.message === "AUTH") { forgetHouseKey(); showLock("Wrong PIN. Try again"); }
             else if (e.message === "LOCKED") { showLock("Too many wrong PINs on this network. Try again in an hour"); }
             else if (e.message === "429") { setTimeout(() => { loadData(true); }, 1500); } else if (e.message === "HTTP_API_ERROR") { showToast("CLOUD SERVER OFFLINE", 3000); loadLocalBackup(); } else { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); }
-        } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") { document.getElementById('loading').style.display = 'none'; } isSyncing = false; }
+        } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML === "SYNCING...") { document.getElementById('loading').style.display = 'none'; } /* hide the startup sync badge; leave real messages to their own timer */ isSyncing = false; }
     }
 
     function executeActionWithSave() { if (!checkPayloadSize()) return; editSeq++; setNeedsSync(true); offlineActionsCount++; updateOfflineBadge(); saveData(); }
@@ -1850,7 +1902,7 @@
     function login(u) { 
         currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = escapeHTML(u); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(u);
         if (!localStorage.getItem('has_seen_input')) { document.getElementById('chatWrapper').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
-        render(); refreshWebPush();
+        render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500);
     }
 
     window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (navigator.onLine) { if (needsSync) { saveData(); } else { loadData(false); } processUploadQueue(); } checkForUpdates(); } });
