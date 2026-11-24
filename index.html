@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.15.0">
+    <meta name="app-version" content="7.16.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -299,6 +299,22 @@
     </div>
 </div>
 
+<div id="shoppingOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; max-height:85vh; display:flex; flex-direction:column;">
+        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Shopping List</h2>
+        <div id="shopList" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:10px;"></div>
+        <div id="shopBoughtActions" style="display:none; gap:8px; margin-bottom:10px;">
+            <button class="btn-pill interactive-btn" style="flex:1; font-size:0.75rem; padding:8px;" onclick="triggerHaptic(); shopToExpense()">Add as expense</button>
+            <button class="btn-pill danger interactive-btn" style="flex:1; font-size:0.75rem; padding:8px;" onclick="triggerHaptic(); clearBoughtShop()">Clear bought</button>
+        </div>
+        <textarea id="shopInput" aria-label="New shopping items" class="chat-note" rows="1" maxlength="1000" placeholder="milk, eggs, bread..." style="width:100%; box-sizing:border-box; border:1px solid var(--border); margin-bottom:8px; resize:vertical; font-size:0.95rem;" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addShopItems(); }"></textarea>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeShopping()">Close</button>
+            <button id="shopAddBtn" class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); addShopItems()">Add</button>
+        </div>
+    </div>
+</div>
+
 <div id="helpOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:360px; max-height: 85vh; overflow-y: auto;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center; color:var(--accent);">How to Use</h2>
@@ -492,6 +508,7 @@
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
     <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); openNotices(); event.preventDefault();"><span>📌 Noticeboard</span><span id="noticeCount" class="danger-badge" style="display:none; background:var(--accent); color:#000;"></span></a>
+    <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); openShopping(); event.preventDefault();"><span>🛒 Shopping List</span><span id="shopCount" class="danger-badge" style="display:none; background:var(--accent); color:#000;"></span></a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();">🔍 Search</a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openInsights(); event.preventDefault();">📊 Insights</a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();">📋 Audit Trail</a>
@@ -636,7 +653,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.15.0";
+    const APP_VERSION = "7.16.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -791,6 +808,7 @@
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('historyOverlay').style.display === 'flex') { closeHistory(); history.pushState(null, null, location.href); }
         else if (document.getElementById('noticeOverlay').style.display === 'flex') { closeNotices(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('shoppingOverlay').style.display === 'flex') { closeShopping(); history.pushState(null, null, location.href); }
         else if (document.getElementById('searchOverlay').style.display === 'flex') { closeSearch(); history.pushState(null, null, location.href); }
         else if (document.getElementById('insightsOverlay').style.display === 'flex') { closeInsights(); history.pushState(null, null, location.href); }
         else if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
@@ -956,9 +974,10 @@
         } catch(e) {}
     }
 
-    function logAudit(actionStr, targetUser = null, quiet = false) {
+    function logAudit(actionStr, targetUser = null, quiet = false, kind = null) {
         if(!db.auditLog) db.auditLog = [];
         const entry = { t: Date.now(), by: currentUser, act: actionStr, trg: targetUser }; if (quiet) entry.quiet = true; // quiet: logged, but no notification
+        if (kind) entry.kind = kind; // e.g. 'shop': lets people mute that kind in "What notifies me"
         db.auditLog.unshift(entry);
         if(db.auditLog.length > 200) db.auditLog.pop();
     }
@@ -1256,7 +1275,7 @@
         const loginOpen = document.getElementById('loginOverlay').style.display === 'flex';
         if (appLocked || !currentUser || loginOpen || isSyncing || !localDbLoaded) { pendingQuickAdd = true; return; } // run after first sync / unlock / user pick
         pendingQuickAdd = false;
-        ['searchOverlay', 'insightsOverlay', 'historyOverlay', 'settingsOverlay', 'auditOverlay', 'trashOverlay'].forEach(id => { const el = document.getElementById(id); if (el && el.style.display === 'flex') el.style.display = 'none'; });
+        ['searchOverlay', 'insightsOverlay', 'historyOverlay', 'settingsOverlay', 'auditOverlay', 'trashOverlay', 'noticeOverlay', 'shoppingOverlay'].forEach(id => { const el = document.getElementById(id); if (el && el.style.display === 'flex') el.style.display = 'none'; });
         document.body.style.overflow = '';
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         const el = document.getElementById('amtInput'); if (!el) return;
@@ -1340,6 +1359,72 @@
         customConfirm("Delete this note for everyone?", () => { db.notices = db.notices.filter(x => x.id !== id); logAudit(`Deleted a note: ${n.text.slice(0, 40)}`); if (editingNoticeId === id) cancelNoticeEdit(); renderNotices(); executeActionWithSave(); });
     }
 
+    // ---- Shopping list: db.shopping = [{id, t, by, text, done, doneBy}] ----
+    // Adding notifies everyone (kind 'shop', can be muted in "What notifies me"); ticking/removing is quiet.
+    const SHOP_MAX_ITEMS = 200, SHOP_MAX_LEN = 80;
+    let pendingShopIds = []; // ticked items waiting for "Add as expense" to be sent
+    function updateShopCount() { const el = document.getElementById('shopCount'); if (!el) return; const n = (db.shopping || []).filter(x => !x.done).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; }
+    function openShopping() {
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        history.pushState(null, null, location.href); renderShopping();
+        document.getElementById('shoppingOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+    function closeShopping() { const i = document.getElementById('shopInput'); if (i) i.value = ''; document.getElementById('shoppingOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function renderShopping() {
+        const all = db.shopping || [];
+        const list = all.filter(x => !x.done).sort((a, b) => b.t - a.t).concat(all.filter(x => x.done).sort((a, b) => b.t - a.t));
+        document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item" style="display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--input-bg); border-radius:12px; text-align:left; ${s.done ? 'opacity:0.55;' : ''}">
+                <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem('${escapeHTML(s.id)}')" style="width:20px; height:20px; flex-shrink:0; accent-color:var(--accent);">
+                <div style="flex:1; min-width:0;"><div class="shop-text" style="font-size:0.92rem; color:var(--text-main); font-weight:700; word-break:break-word; ${s.done ? 'text-decoration:line-through;' : ''}">${escapeHTML(s.text)}</div>
+                <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))} · ${new Date(s.t).toLocaleDateString()}</div></div>
+                <button class="btn-pill danger interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="font-size:0.7rem; padding:4px 9px;" onclick="triggerHaptic(); removeShopItem('${escapeHTML(s.id)}')">✕</button></div>`).join('')
+            : `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:15px 0;">Nothing to buy. Add items below, separated by commas.</div>`;
+        document.getElementById('shopBoughtActions').style.display = all.some(x => x.done) ? 'flex' : 'none';
+        updateShopCount();
+    }
+    function addShopItems() {
+        const input = document.getElementById('shopInput');
+        const names = (input.value || '').split(/[,\n]/).map(s => s.trim().replace(/\s+/g, ' ').slice(0, SHOP_MAX_LEN)).filter(Boolean);
+        if (!names.length) { showToast("TYPE AN ITEM FIRST", 2000); return; }
+        if (!Array.isArray(db.shopping)) db.shopping = [];
+        const room = SHOP_MAX_ITEMS - db.shopping.length;
+        if (room <= 0) { showToast("LIST IS FULL - CLEAR BOUGHT ITEMS", 3000); return; }
+        const adding = names.slice(0, room); const now = Date.now();
+        adding.forEach((text, i) => db.shopping.unshift({ id: 's' + now.toString(36) + i + Math.random().toString(36).slice(2, 6), t: now + i, by: currentUser, text, done: false }));
+        let label = adding.join(', '); if (label.length > 38) label = label.slice(0, 36) + '…';
+        logAudit('Added to shopping list', label, false, 'shop');
+        input.value = ''; renderShopping(); executeActionWithSave();
+        if (adding.length < names.length) showToast(`LIST IS FULL - ADDED ${adding.length}`, 3000);
+    }
+    function toggleShopItem(id) {
+        const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
+        s.done = !s.done; if (s.done) s.doneBy = currentUser; else delete s.doneBy;
+        logAudit(`${s.done ? 'Bought' : 'Un-ticked'}: ${s.text.slice(0, 40)}`, null, true); renderShopping(); executeActionWithSave();
+    }
+    function removeShopItem(id) {
+        const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
+        db.shopping = db.shopping.filter(x => x.id !== id); pendingShopIds = pendingShopIds.filter(x => x !== id);
+        logAudit(`Removed from shopping list: ${s.text.slice(0, 40)}`, null, true); renderShopping(); executeActionWithSave();
+    }
+    function clearBoughtShop() {
+        const n = (db.shopping || []).filter(x => x.done).length; if (!n) return;
+        customConfirm(`Remove ${n} bought item${n === 1 ? '' : 's'} from the list?`, () => { db.shopping = db.shopping.filter(x => !x.done); pendingShopIds = []; logAudit(`Cleared ${n} bought item${n === 1 ? '' : 's'} from the shopping list`, null, true); renderShopping(); executeActionWithSave(); });
+    }
+    // Fill the expense box with the ticked items; they leave the list once that expense is actually added
+    function shopToExpense() {
+        const bought = (db.shopping || []).filter(x => x.done); if (!bought.length) return;
+        if (editingId) { editingId = null; document.getElementById('groupNote').value = ''; render(); } // leave edit mode: this is a new expense
+        pendingShopIds = bought.map(x => x.id);
+        closeShopping();
+        // Items go in the General Note (not the amount box: it adds up every number it sees, e.g. "6 eggs")
+        let note = `Shopping: ${bought.map(x => x.text).join(', ')}`; if (note.length > 200) note = note.slice(0, 199) + '…';
+        document.getElementById('groupNote').value = note;
+        const el = document.getElementById('amtInput'); el.value = ''; el.style.height = '40px';
+        toggleOptionsMenu(true); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => el.focus(), 300);
+        showToast("TYPE THE AMOUNT AND SEND", 2500);
+    }
+
     // ---- Everything still unpaid that involves one person, across the current cycle, hashtag bills and all past cycles ----
     function settlementLedgers() {
         const primaryTag = (ex) => { const m = (ex.desc || '').match(/#([\w-]+)/); return m ? m[0] : null; };
@@ -1388,7 +1473,7 @@
         history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
 
-    // ---- "What notifies me": db.notifPrefs[user] = { scope: 'all' | 'mine', minAmount } (the worker applies it) ----
+    // ---- "What notifies me": db.notifPrefs[user] = { scope: 'all' | 'mine', minAmount, shopping?: false } (the worker applies it) ----
     function openNotifPrefs() {
         if (!currentUser) return;
         const p = (db.notifPrefs && db.notifPrefs[currentUser]) || { scope: 'all', minAmount: 0 }; const { sym, rate } = viewMoney();
@@ -1397,6 +1482,7 @@
         document.getElementById('historyList').innerHTML = opt('all', 'Everything', 'Every expense, payment and change in the house.')
             + opt('mine', 'Only things involving me', "Expenses you paid or are part of, payments to or from you, plus house-wide things (new cycle, housemates, notes, restores).")
             + `<label style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); text-align:left;"><span><b style="font-size:0.9rem;">Skip small expenses</b><br><span style="font-size:0.75rem; color:var(--text-muted);">Under this amount (0 = never skip). Payments always notify.</span></span><span style="display:flex; align-items:center; gap:4px; font-weight:800;">${escapeHTML(sym)}<input id="notifMinAmt" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text-main);"></span></label>`
+            + `<label class="interactive-btn" style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); text-align:left; cursor:pointer;"><span><b style="font-size:0.9rem;">Shopping list additions</b><br><span style="font-size:0.75rem; color:var(--text-muted);">When someone adds items to the shopping list.</span></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'} style="width:20px; height:20px; accent-color:var(--accent);"></label>`
             + `<button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
         history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
@@ -1405,7 +1491,9 @@
         const { rate } = viewMoney(); const local = parseFloat((document.getElementById('notifMinAmt').value || '0').replace(',', '.'));
         const minAmount = isFinite(local) && local > 0 ? Math.round(local / rate * 100) / 100 : 0;
         if (!db.notifPrefs) db.notifPrefs = {};
-        if (scope === 'all' && !minAmount) delete db.notifPrefs[currentUser]; else db.notifPrefs[currentUser] = { scope, minAmount };
+        const shopping = document.getElementById('notifShopping').checked;
+        if (scope === 'all' && !minAmount && shopping) delete db.notifPrefs[currentUser];
+        else { db.notifPrefs[currentUser] = { scope, minAmount }; if (!shopping) db.notifPrefs[currentUser].shopping = false; }
         logAudit("Changed notification settings", null, true); executeActionWithSave(); closeHistory(); showToast("NOTIFICATION SETTINGS SAVED", 2000);
     }
 
@@ -1875,6 +1963,7 @@
         if (!db.archives || !Array.isArray(db.archives)) db.archives = [];
         if (!db.paidStatus || typeof db.paidStatus !== 'object') db.paidStatus = {};
         if (!db.payLinks || typeof db.payLinks !== 'object' || Array.isArray(db.payLinks)) db.payLinks = {};
+        if (!Array.isArray(db.shopping)) db.shopping = [];
         if (!db.startDate) { const today = new Date(); db.startDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`; }
         if (!db.users || !Array.isArray(db.users) || db.users.length === 0) db.users = [...defaultUsers];
         if (!db.activeUsers || !Array.isArray(db.activeUsers) || db.activeUsers.length === 0) db.activeUsers = [...db.users];
@@ -2089,7 +2178,7 @@
         }
         document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
         renderArchives(sym, rate);
-        updateNoticeCount(); updateHomeWidget();
+        updateNoticeCount(); updateShopCount(); updateHomeWidget();
     }
 
     function toggleFullPaid(key, totalBaseAmt) {
@@ -2331,6 +2420,9 @@
                 if (!db.startDate || db.startDate === "Unknown Date") db.startDate = dateStr; 
                 if (!Array.isArray(db.expenses)) db.expenses = [];
                 db.expenses.unshift({ id: expenseId, timestamp: safeTimestamp, name: currentUser, amount: baseAmt, desc: descToSave, involved: involvedUsers, originalSym: sym, receipt: finalReceiptData, receiptDelete: finalReceiptDelete, date: dateStr });
+                // Came from the shopping list's "Add as expense" (note still says so): those items are bought, take them off
+                if (pendingShopIds.length && /^\s*Shopping:/i.test(gNote) && Array.isArray(db.shopping)) { const ids = new Set(pendingShopIds); db.shopping = db.shopping.filter(x => !ids.has(x.id)); }
+                pendingShopIds = [];
                 if (failedUploadsArr.length > 0) { let q = safeJSONParse(localStorage.getItem('img_queue'), []); if(!Array.isArray(q)) q = []; failedUploadsArr.forEach(img => q.push({ id: expenseId, image: img })); safeSetStorage('img_queue', JSON.stringify(q)); }
             }
             
@@ -2349,7 +2441,7 @@
         let rawDesc = ex.desc, note = ""; const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/);
         if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
         document.getElementById('amtInput').value = rawDesc; if (note) document.getElementById('groupNote').value = note;
-        editingId = id; toggleOptionsMenu(true); document.getElementById('amtInput').focus(); showToast("EDITING MODE", 0); render();
+        pendingShopIds = []; editingId = id; toggleOptionsMenu(true); document.getElementById('amtInput').focus(); showToast("EDITING MODE", 0); render();
     }
 
     // CSV cell: quote anything containing commas, quotes or line breaks (Excel/Sheets-safe), and defuse formula injection
