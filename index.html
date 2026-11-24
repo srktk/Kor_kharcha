@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.17.2">
+    <meta name="app-version" content="7.18.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -360,7 +360,7 @@
         .danger-badge { background: var(--danger); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; margin-left: 6px; }
         .count-badge { background: var(--accent-soft); color: var(--accent-strong); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-left: 2px; }
 
-        #loading { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 9px 18px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; display: none; z-index: 20000; box-shadow: var(--shadow-lg); letter-spacing: 0.4px; white-space: nowrap; pointer-events: auto; }
+        #loading { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 9px 18px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; display: none; z-index: 20000; box-shadow: var(--shadow-lg); letter-spacing: 0.4px; width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; white-space: normal; text-align: center; line-height: 1.4; pointer-events: auto; }
         #notifCard { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)) !important; }
 
         .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
@@ -814,7 +814,7 @@
         <img src="icon-512.png" alt="" class="lock-logo">
         <h2 style="margin:0 0 6px; font-size:1.4rem;">House Expenses</h2>
         <p id="lockMessage" style="margin:0 0 20px; font-size:0.92rem; color:var(--text-muted); line-height:1.45;">Enter the house PIN</p>
-        <input type="password" id="lockInput" aria-label="House PIN" class="chat-note" inputmode="numeric" style="margin-bottom:14px; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:6px;" autocomplete="off">
+        <input type="password" id="lockInput" aria-label="House PIN" class="chat-note" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" style="margin-bottom:14px; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:6px;" autocomplete="off">
         <button type="submit" class="btn-glowing primary interactive-btn">Unlock</button>
     </form>
 </div>
@@ -1017,7 +1017,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.17.2";
+    const APP_VERSION = "7.18.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1402,18 +1402,18 @@
             localStorage.setItem('v7_write_test', '1');
             localStorage.removeItem('v7_write_test');
             localStorage.setItem(key, val);
+            if (window.ephemeralStorage) delete window.ephemeralStorage[key]; // the stored copy is current again
             return true;
         } catch (e) {
             if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.name === 'SecurityError') {
                 if (key === 'img_queue') {
-                    let q = safeJSONParse(localStorage.getItem('img_queue'), []);
-                    if(q.length > 0) { q.shift(); safeSetStorage('img_queue', JSON.stringify(q)); }
+                    // The queue already stored stays as it is (earlier photos kept); only the photo just taken can't wait offline
+                    showToast("PHONE STORAGE FULL - THAT RECEIPT PHOTO COULDN'T BE KEPT TO SEND LATER", 4000);
                 } else if (key === 'house_db_backup') {
-                    if (db.archives && db.archives.length > 5) {
-                        db.archives.pop(); safeSetStorage(key, JSON.stringify(db)); showToast("Vault Full. Oldest archive pruned.", 4000);
-                    } else {
-                        window.ephemeralStorage = window.ephemeralStorage || {}; window.ephemeralStorage[key] = val; showToast("Memory Limit Reached. Running Volatile.", 4000);
-                    }
+                    // Never make room by trimming the house data: that copy is what gets saved to the server, so it used to delete
+                    // past cycles for everyone. Keep this phone's copy in memory instead (the server still has everything).
+                    window.ephemeralStorage = window.ephemeralStorage || {}; window.ephemeralStorage[key] = val;
+                    if (!window.__storageFullWarned) { window.__storageFullWarned = true; showToast("PHONE STORAGE FULL - NO OFFLINE COPY UNTIL SPACE IS FREED", 4000); }
                 } else { showToast("Storage Limit Reached. Clear Vault.", 4000); }
             }
             return false;
@@ -1427,8 +1427,13 @@
         const sw = document.getElementById('syncWrap'); if (sw) sw.classList.toggle('unsaved', badge.style.display === 'flex');
     }
 
+    // Another tab of the app saved: load the server's copy, whose version number matches its contents. (Taking the other
+    // tab's copy directly kept this tab's old version number, so this tab's next save could undo the other tab's changes.)
+    // With unsaved changes here, nothing to do: this tab's next save merges with the other tab's on the server.
+    let otherTabTimer = null;
     window.addEventListener('storage', (e) => {
-        if (e.key === 'house_db_backup' && e.newValue) { loadLocalBackup(); showToast("SYNCED FROM ANOTHER TAB", 2000); }
+        if (e.key !== 'house_db_backup' || !e.newValue || needsSync || !houseKey()) return;
+        clearTimeout(otherTabTimer); otherTabTimer = setTimeout(() => { if (!needsSync) loadData(true); }, 2000); // give its save time to land
     });
 
     function triggerHaptic() { if (window.navigator && window.navigator.vibrate) navigator.vibrate(40); }
@@ -1557,8 +1562,6 @@
             (db.archives||[]).forEach(arc => { if(arc.tag) allTags.add(arc.tag); (arc.details||[]).forEach(ex => { let tMatch = (ex.desc || "").match(/#([\w-]+)/g); if(tMatch) tMatch.forEach(t => allTags.add(t)); }); });
             let suggestions = Array.from(allTags).filter(t => t.toLowerCase().startsWith(currentTyping.toLowerCase()) && t !== currentTyping);
             if (suggestions.length > 0) { dropdown.innerHTML = suggestions.map(t => `<div class="autocomplete-item" onclick="applyTag(${jsArg(t)}, ${jsArg(e.target.id)})">${escapeHTML(t)}</div>`).join(''); dropdown.style.display = 'flex'; } else { dropdown.style.display = 'none'; }
-            let lastEx = (db.expenses||[]).find(ex => (ex.desc||"").includes(currentTyping));
-            if (lastEx && lastEx.involved && lastEx.involved.length > 0) { db.activeUsers = [...lastEx.involved]; render(); }
         } else { dropdown.style.display = 'none'; }
     }
     
@@ -1567,13 +1570,13 @@
 
     function openTrash() {
         closeSettings(); 
-        const list = document.getElementById('trashList'); const sym = curSymbols[document.getElementById('currency').value]; const rate = rates[document.getElementById('currency').value];
+        const list = document.getElementById('trashList'); const { sym, rate } = viewMoney();
         document.getElementById('trashExpiryText').innerText = `Items permanently deleted after ${trashExpiryDays} days.`;
         if (!db.trash || !Array.isArray(db.trash) || db.trash.length === 0) { list.innerHTML = emptyState('trash', 'Nothing here. Deleted expenses wait here before they expire.'); } 
         else {
             list.innerHTML = db.trash.map((ex, i) => {
                 const daysLeft = trashExpiryDays - Math.floor((Date.now() - ex.deletedAt) / (1000 * 60 * 60 * 24)); const shortDesc = ex.desc ? escapeHTML(ex.desc.split('\n')[0].substring(0, 20)) : "Expense";
-                return `<div class="card"><div class="card-row"><div style="display:flex; gap:10px; align-items:center; min-width:0;">${avatarHTML(ex.name, 'sm')}<div style="min-width:0;"><div class="card-title">${shortDesc}</div><div class="card-meta">${escapeHTML(ex.name || '')} · <span style="color:var(--danger);">${daysLeft} days until deletion</span></div></div></div><div class="card-amt">${sym}${(ex.amount * rate).toFixed(2)}</div></div><div class="card-actions"><button class="btn-pill primary" onclick="triggerHaptic(); restoreTrash(${i})">Restore</button><button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i})">Delete</button></div></div>`;
+                return `<div class="card"><div class="card-row"><div style="display:flex; gap:10px; align-items:center; min-width:0;">${avatarHTML(ex.name, 'sm')}<div style="min-width:0;"><div class="card-title">${shortDesc}</div><div class="card-meta">${escapeHTML(ex.name || '')} · <span style="color:var(--danger);">${daysLeft} days until deletion</span></div></div></div><div class="card-amt">${sym}${(ex.amount * rate).toFixed(2)}</div></div><div class="card-actions"><button class="btn-pill primary" onclick="triggerHaptic(); restoreTrash(${i}, ${jsArg(ex.id || '')}, ${Number(ex.deletedAt) || 0})">Restore</button><button class="btn-pill danger" onclick="triggerHaptic(); permDeleteTrash(${i}, ${jsArg(ex.id || '')}, ${Number(ex.deletedAt) || 0})">Delete</button></div></div>`;
             }).join('');
         }
         document.getElementById('trashOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
@@ -1599,6 +1602,8 @@
     }
     function auditTargetLabel(trg) {
         const ex = typeof trg === 'string' ? findExpenseAnywhere(trg) : null;
+        const pair = ex ? null : paymentPair(trg);
+        if (pair) { const tag = String(trg).slice(pair[0].length + pair[1].length + 2); return escapeHTML(`${pair[0]} → ${pair[1]}${tag ? ' · ' + tag : ''}`); }
         if (!ex) return escapeHTML(String(trg));
         const desc = (ex.desc || '').replace(/\s+/g, ' ').trim();
         return `${viewMoney().fmt(ex.amount)}${desc ? ' · ' + escapeHTML(desc.length > 40 ? desc.slice(0, 40) + '…' : desc) : ''}`;
@@ -1865,8 +1870,9 @@
         const input = document.getElementById('noticeInput'); const text = (input.value || '').trim().slice(0, 1000);
         if (!text) { showToast("WRITE SOMETHING FIRST", 2000); return; }
         if (!Array.isArray(db.notices)) db.notices = [];
-        if (editingNoticeId) {
-            const n = db.notices.find(x => x.id === editingNoticeId); if (n) { n.text = text; n.t = Date.now(); n.by = currentUser; }
+        const n = editingNoticeId ? db.notices.find(x => x.id === editingNoticeId) : null; // gone = deleted on another phone meanwhile: added again below
+        if (n) {
+            n.text = text; n.t = Date.now(); n.by = currentUser;
             logAudit(`Updated a note: ${text.slice(0, 40)}`);
         } else {
             db.notices.unshift({ id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), by: currentUser, text, pinned: false });
@@ -1883,7 +1889,8 @@
     }
 
     // ---- Shopping list: db.shopping = [{id, t, by, text, done, doneBy}] ----
-    // Adding notifies everyone (kind 'shop', can be muted in "What notifies me"); ticking/removing is quiet.
+    // Adding notifies everyone (kind 'shop', can be muted in "What notifies me"). Clearing bought items and
+    // "Add as expense" go in the activity log quietly; ticking, un-ticking and removing one item are not logged.
     const SHOP_MAX_ITEMS = 200, SHOP_MAX_LEN = 80;
     let pendingShopIds = []; // ticked items waiting for "Add as expense" to be sent
     function updateShopCount() { const el = document.getElementById('shopCount'); if (!el) return; const n = (db.shopping || []).filter(x => !x.done).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabShopBadge', n); }
@@ -1923,13 +1930,13 @@
     function toggleShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
         s.done = !s.done; if (s.done) s.doneBy = currentUser; else delete s.doneBy;
-        logAudit(`${s.done ? 'Bought' : 'Un-ticked'}: ${s.text.slice(0, 40)}`, null, true); renderShopping(); executeActionWithSave();
+        renderShopping(); executeActionWithSave(); // not logged: ticking back and forth would flood the activity log
         if (s.done) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
     function removeShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
         db.shopping = db.shopping.filter(x => x.id !== id); pendingShopIds = pendingShopIds.filter(x => x !== id);
-        logAudit(`Removed from shopping list: ${s.text.slice(0, 40)}`, null, true); renderShopping(); executeActionWithSave();
+        renderShopping(); executeActionWithSave(); // not logged (only clearing bought items and "Add as expense" are)
     }
     function clearBoughtShop() {
         const n = (db.shopping || []).filter(x => x.done).length; if (!n) return;
@@ -2128,8 +2135,15 @@
         finally { isSyncing = false; loader.style.display = 'none'; loader.innerText = "SYNCING..."; }
     }
     
-    function restoreTrash(i) {
-        if(db.trash && db.trash[i]) { let ex = db.trash.splice(i, 1)[0]; delete ex.deletedAt; if(!Array.isArray(db.expenses)) db.expenses = []; db.expenses.unshift(ex); db.expenses.sort((a,b) => b.timestamp - a.timestamp); logAudit("Restored Expense", ex.id); openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000); }
+    /** Where a Vault item is now: found again by its id and deletion time (by position only for items without an id) */
+    function trashIndex(i, id, at) {
+        if (!Array.isArray(db.trash)) return -1;
+        if (id) return db.trash.findIndex(x => x && x.id === id && (!at || Number(x.deletedAt) === at));
+        return db.trash[i] ? i : -1;
+    }
+    function restoreTrash(i, id = '', at = 0) {
+        i = trashIndex(i, id, at); if (i < 0) { showToast("The vault changed - try again", 2500); openTrash(); return; }
+        { let ex = db.trash.splice(i, 1)[0]; delete ex.deletedAt; if(!Array.isArray(db.expenses)) db.expenses = []; db.expenses.unshift(ex); db.expenses.sort((a,b) => b.timestamp - a.timestamp); logAudit("Restored Expense", ex.id); openTrash(); render(); executeActionWithSave(); showToast("Restored", 2000); }
     }
     
     /** Delete an expense's receipt photos from storage. Only our own server's delete links are ever called:
@@ -2138,8 +2152,9 @@
         const dels = ex ? [].concat(ex.receiptDelete || []) : [];
         dels.forEach(u => { if (typeof u === 'string' && u.startsWith(API_URL + '/r/') && /\/delete\/[0-9a-f-]{36}$/.test(u)) fetch(u, { mode: 'no-cors' }).catch(() => {}); });
     }
-    function permDeleteTrash(i) {
-        if(db.trash && db.trash[i]) {
+    function permDeleteTrash(i, id = '', at = 0) {
+        i = trashIndex(i, id, at); if (i < 0) { showToast("The vault changed - try again", 2500); openTrash(); return; }
+        {
             const target = db.trash[i]; const same = (x) => x && x.id === target.id && x.deletedAt === target.deletedAt;
             customConfirm("Permanently delete this expense?", () => {
                 i = db.trash.findIndex(same); if (i < 0) { showToast("The vault changed - nothing deleted", 2500); return; } let ex = db.trash[i];
@@ -2154,12 +2169,13 @@
     }
 
     async function fetchLiveRates() {
-        let cached = safeJSONParse(localStorage.getItem('currency_rates_cache'), null);
-        if (cached) { rates.PKR = cached.PKR || rates.PKR; rates.USD = cached.USD || rates.USD; rates.EUR = cached.EUR || rates.EUR; rates.AED = cached.AED || rates.AED; }
+        // Rates come from another site (and a copy saved on this phone). Only positive numbers are taken: they end up inside buttons.
+        const take = (src) => { if (src && typeof src === 'object') ['PKR', 'USD', 'EUR', 'AED'].forEach(c => { const n = Number(src[c]); if (isFinite(n) && n > 0) rates[c] = n; }); };
+        take(safeJSONParse(localStorage.getItem('currency_rates_cache'), null));
         try {
             const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 8000);
             const res = await fetch('https://open.er-api.com/v6/latest/GBP', {signal: controller.signal}); clearTimeout(timeoutId); const data = await res.json();
-            if (data && data.rates) { rates.PKR = data.rates.PKR || rates.PKR; rates.USD = data.rates.USD || rates.USD; rates.EUR = data.rates.EUR || rates.EUR; rates.AED = data.rates.AED || rates.AED; safeSetStorage('currency_rates_cache', JSON.stringify(rates)); render(); }
+            if (data && data.rates) { take(data.rates); safeSetStorage('currency_rates_cache', JSON.stringify(rates)); render(); }
         } catch(e) {}
     }
 
@@ -2177,9 +2193,14 @@
     function setNeedsSync(val) { needsSync = val; safeSetStorage('house_needs_sync', val); }
     function saveLocalBackup() { if (!localDbLoaded) return; safeSetStorage('house_db_backup', JSON.stringify(db)); } // never replace a real backup with the empty startup copy
     
+    /** This phone's saved copy: the in-memory one while phone storage was full, otherwise the stored one */
+    function localBackupRaw() {
+        const mem = window.ephemeralStorage && window.ephemeralStorage['house_db_backup']; if (mem) return mem;
+        try { return localStorage.getItem('house_db_backup'); } catch (e) { return null; }
+    }
     function loadLocalBackup() {
         if (appLocked || !houseKey()) return;
-        const backup = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup');
+        const backup = localBackupRaw();
         if (backup) { 
             try { 
                 db = typeof backup === 'string' ? JSON.parse(backup) : backup; if (db.encrypted) throw new Error("Encrypted backup format found."); initializeDB(); localDbLoaded = true; renderUsers();
@@ -2190,7 +2211,7 @@
 
     function setDbVersion(v) { v = Number(v) || 0; if (v) { dbVersion = v; safeSetStorage('house_db_ver', String(v)); } }
     function readLocalBackup() {
-        try { const b = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup'); const d = typeof b === 'string' ? JSON.parse(b) : b; return d && !d.encrypted ? d : null; } catch (e) { return null; }
+        try { const b = localBackupRaw(); const d = typeof b === 'string' ? JSON.parse(b) : b; return d && !d.encrypted ? d : null; } catch (e) { return null; }
     }
     function scheduleSaveRetry(ms) { clearTimeout(saveRetryTimer); saveRetryTimer = setTimeout(() => { if (needsSync) saveData(); }, ms); }
 
@@ -2401,7 +2422,7 @@
     function markAllSettled() {
         if (isSettling) return;
         customConfirm("Mark every payment in Settlements as settled?", () => {
-            isSettling = true; let totalBase = 0; let allValid = db.expenses || []; let contextExpenses = allValid.filter(e => { let hasTags = /#([\w-]+)/.test(e.desc || ""); return activeHashtag ? (e.desc || "").includes(activeHashtag) : !hasTags; });
+            isSettling = true; let totalBase = 0; let allValid = db.expenses || []; let contextExpenses = allValid.filter(e => { const m = (e.desc || "").match(/#([\w-]+)/); return activeHashtag ? !!m && m[0] === activeHashtag : !m; }); // same expenses as the Settlements on screen
             contextExpenses.forEach(e => totalBase += e.amount); const txs = getSettlements(contextExpenses, totalBase, db.activeUsers, db.mathV);
             txs.forEach(t => { const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`; if (!db.paidStatus) db.paidStatus = {}; db.paidStatus[key] = t.amt; });
             logAudit("Marked All Active Settled"); render(); executeActionWithSave(); showToast("ALL SETTLED", 2000); isSettling = false;
@@ -2447,7 +2468,9 @@
 
     function editUser(oldName) {
         customPrompt(`Rename ${escapeHTML(oldName)} to:`, oldName, (newName) => {
-            const n = sanitizeName(newName); if (!n || n === oldName) return; const nLower = n.toLowerCase(); if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("Name already exists.", 3000); return; }
+            const n = sanitizeName(newName); if (!n || n === oldName) return;
+            if (!db.users.includes(oldName)) { showToast("That housemate was renamed or removed on another phone.", 3000); openManageUsers(); return; }
+            const nLower = n.toLowerCase(); if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("Name already exists.", 3000); return; }
             db.users[db.users.indexOf(oldName)] = n; if (db.activeUsers.includes(oldName)) db.activeUsers[db.activeUsers.indexOf(oldName)] = n;
             db.expenses.forEach(ex => { if (ex.name === oldName) ex.name = n; if (ex.involved && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; });
             db.archives.forEach(arc => {
@@ -2478,20 +2501,25 @@
 
     function deleteUser(name) {
         if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
-        let validExpenses = db.expenses || []; let contexts = [null]; validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match && !contexts.includes(match[0])) contexts.push(match[0]); });
-        let canDelete = true;
-        for(let i=0; i<contexts.length; i++) {
-            let ctx = contexts[i]; let ctxEx = validExpenses.filter(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(ctx) return match && match[0] === ctx; return !match; });
-            let balances = {}; db.users.forEach(u => balances[u] = 0);
-            ctxEx.forEach(e => { balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100; let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : db.activeUsers; let activeCount = Math.max(involved.length, 1); let perHead = Math.round((e.amount / activeCount) * 100) / 100; involved.forEach(u => { balances[u] = Math.round((balances[u] - perHead) * 100) / 100; }); });
-            if (Math.abs(balances[name]) > 0.05) { canDelete = false; break; }
-        }
+        const unsettled = (name) => { // balance (before payments) must be zero in the normal bills and every hashtag
+            let validExpenses = db.expenses || []; let contexts = [null]; validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match && !contexts.includes(match[0])) contexts.push(match[0]); });
+            for (let i = 0; i < contexts.length; i++) {
+                let ctx = contexts[i]; let ctxEx = validExpenses.filter(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(ctx) return match && match[0] === ctx; return !match; });
+                let balances = {}; db.users.forEach(u => balances[u] = 0);
+                ctxEx.forEach(e => { balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100; let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : db.activeUsers; let activeCount = Math.max(involved.length, 1); let perHead = Math.round((e.amount / activeCount) * 100) / 100; involved.forEach(u => { balances[u] = Math.round((balances[u] - perHead) * 100) / 100; }); });
+                if (Math.abs(balances[name]) > 0.05) return true;
+            }
+            return false;
+        };
+        const canDelete = !unsettled(name);
         if (!canDelete) { showToast(`Cannot remove ${escapeHTML(name)}. Balance must be settled in all tags.`, 4000); return; }
         customConfirm(`Remove ${escapeHTML(name)} from housemates? Past expenses are kept.`, () => {
+            if (!db.users.includes(name)) { openManageUsers(); return; } // already renamed or removed on another phone
+            if (db.users.length <= 1 || unsettled(name)) { showToast(`Cannot remove ${escapeHTML(name)} right now - check their balance.`, 4000); openManageUsers(); return; } // changed while the question was open
             const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1); const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
             if (db.payLinks) delete db.payLinks[name];
             if (db.avatars) delete db.avatars[name];
-            logAudit("Removed User", name); if (currentUser === name) { closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
+            logAudit("Removed User", name); if (currentUser === name) { executeActionWithSave(); closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
 
@@ -2510,7 +2538,9 @@
         if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += userTileHTML(u); }); }
     }
 
-    function formatDescDisplay(desc, origSym = '') {
+    function formatDescDisplay(desc, origSym = '') { return escapeHTML(formatDescText(desc, origSym)); }
+    /** The description as plain text with amounts marked (formatDescDisplay is the same, made safe for HTML) */
+    function formatDescText(desc, origSym = '') {
         if (!desc) return "";
         let cleanInput = desc.replace(/[•+]/g, ' ').replace(/&bull;/g, ' ').replace(/\n+/g, ' ').trim();
         let tokens = cleanInput.split(/\s+/).filter(Boolean); let processedDesc = tokens[0] || '';
@@ -2520,7 +2550,7 @@
             if (/^(?:£|\$|€|Rs)?\d/.test(t)) { if (/^\d+(\.\d+)?$/.test(t)) t = origSym + t; processedDesc += ' • ' + t; } 
             else { processedDesc += ' ' + t; }
         }
-        return escapeHTML(processedDesc);
+        return processedDesc;
     }
     
     function formatNiceDate(dateStr) {
@@ -2553,7 +2583,33 @@
 
     // ---- Bell: recent changes by others (and reminders sent to you); unread = newer than the last time you opened it ----
     function inboxSeenKey() { return 'house_inbox_seen_' + currentUser; }
-    function inboxEntries() { return (db.auditLog || []).filter(a => a && a.by !== currentUser && !a.quiet && (a.kind !== 'nudge' || a.to === currentUser)).slice(0, 60); }
+    // What the bell shows: new expenses in this cycle + the activity log's important entries (not quiet ones),
+    // filtered by the same "What notifies me" settings the phone notifications use.
+    const PAST_PAY_ACTS = new Set(['Toggled Archive Paid', 'Partial Archive Payment Logged']); // older apps logged past payments like this
+    function expenseAddedAt(e) { const n = parseInt(String(e.id || '').slice(0, 8), 36); return n > 1.5e12 && n < Date.now() + 864e5 ? n : (Number(e.timestamp) || 0); } // ids start with Date.now() in base 36; timestamp moves on edit
+    function inboxEntries() {
+        const p = (db.notifPrefs && db.notifPrefs[currentUser]) || {}; const min = Number(p.minAmount) || 0;
+        const users = db.users || []; const active = (db.activeUsers && db.activeUsers.length) ? db.activeUsers : users;
+        const involves = (e) => [...new Set([e.name, ...(Array.isArray(e.involved) && e.involved.length > 0 && e.involved.length < users.length ? e.involved : active)])];
+        const wants = (who, amount) => !(p.scope === 'mine' && who && !who.includes(currentUser)) && !(min > 0 && typeof amount === 'number' && amount < min);
+        const byId = new Map(); allExpenseEntries().forEach(x => x.ex && x.ex.id && byId.set(x.ex.id, x.ex)); (db.trash || []).forEach(e => e && e.id && byId.set(e.id, e));
+        const out = [];
+        (db.expenses || []).forEach(e => {
+            if (!e || !e.id || e.name === currentUser || !wants(involves(e), Number(e.amount) || 0)) return;
+            out.push({ t: expenseAddedAt(e), by: e.name, act: 'added an expense', trg: e.id, added: true });
+        });
+        (db.auditLog || []).forEach(a => {
+            if (!a || a.by === currentUser || a.quiet || a.act === 'Added Expense') return; // older apps logged adds too: the expense line above covers it
+            if (a.kind === 'nudge') { if (a.to === currentUser) out.push(a); return; }
+            if (a.kind === 'pastpay' || PAST_PAY_ACTS.has(a.act)) { const who = Array.isArray(a.who) ? a.who : paymentPair(a.trg); if (who && who.includes(currentUser)) out.push(a); return; }
+            if (a.kind === 'shop' && p.shopping === false) return;
+            const ex = typeof a.trg === 'string' ? byId.get(a.trg) : null;
+            if (ex && !wants(involves(ex), Number(ex.amount) || 0)) return;
+            const pair = ex ? null : paymentPair(a.trg); if (pair && !wants(pair)) return;
+            out.push(a);
+        });
+        return out.sort((x, y) => y.t - x.t).slice(0, 60);
+    }
     function inboxSeen() {
         let v = null; try { v = localStorage.getItem(inboxSeenKey()); } catch (e) {}
         if (v === null) { const first = inboxEntries()[0]; v = String(first ? first.t : Date.now()); safeSetStorage(inboxSeenKey(), v); } // first run: start with nothing unread
@@ -2578,11 +2634,13 @@
         document.getElementById('inboxList').innerHTML = list.length ? list.map(a => {
             const ex = typeof a.trg === 'string' ? (db.expenses || []).find(e => e.id === a.trg) : null;
             const nudge = a.kind === 'nudge';
+            const text = nudge ? `<span class="tag danger">Reminder</span> <b>${escapeHTML(a.by)}</b>: ${escapeHTML(a.msg || a.act)}`
+                : `<b>${escapeHTML(a.by)}</b> ${escapeHTML(a.act)}`;
             return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${ex ? ' tappable interactive-btn' : ''}" ${ex ? `role="button" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
-                <div class="card-text">${nudge ? `<span class="tag danger">Reminder</span> <b>${escapeHTML(a.by)}</b>: ${escapeHTML(a.msg || a.act)}` : `<b>${escapeHTML(a.by)}</b> ${escapeHTML(a.act)}`}</div>
+                <div class="card-text">${text}</div>
                 ${a.trg && !nudge ? `<div class="card-meta" style="color:var(--accent-strong);">${auditTargetLabel(a.trg)}</div>` : ''}
                 <div class="card-meta">${timeAgo(a.t)}</div></div></div></div>`;
-        }).join('') : emptyState('bell', 'Nothing new. Changes your housemates make show up here.');
+        }).join('') : emptyState('bell', 'Nothing new. New expenses, payments, reminders and month-end from your housemates show up here.');
         if (list[0]) safeSetStorage(inboxSeenKey(), String(Math.max(seen, list[0].t)));
         updateInboxBadge();
         navEnsureEntry(); document.getElementById('inboxOverlay').style.display = 'flex';
@@ -2593,7 +2651,7 @@
         triggerHaptic(); let urls = [];
         try { if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw); else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw; } catch(e) { urls = [urlArrayRaw]; }
         if(!urls || urls.length === 0) { showToast("Invalid receipt link.", 3000); return; }
-        currentLightboxImages = urls.map(u => sanitizeURL(u.trim())).filter(u => u !== null);
+        currentLightboxImages = (Array.isArray(urls) ? urls : [urls]).map(u => sanitizeURL(typeof u === 'string' ? u.trim() : null)).filter(u => u !== null);
         if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
         currentLightboxIndex = 0; lightboxRotation = 0; lbReset(); updateLightboxDOM();
         const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; lbBind();
@@ -2668,13 +2726,13 @@
     async function downloadPDF() {
         showToast("GENERATING PDF...", 0);
         try {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF(); const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+            const { jsPDF } = window.jspdf; const doc = new jsPDF(); const { sym, rate } = viewMoney();
             doc.setFontSize(18); doc.text("House Expenses Ledger", 14, 22); doc.setFontSize(11); doc.text(`Cycle: ${formatNiceDate(db.startDate)} to Present`, 14, 30);
             let y = 40; let validExpenses = db.expenses || [];
             validExpenses.forEach((ex, i) => {
                 if (y > 270) { doc.addPage(); y = 20; }
-                let exSym = ex.originalSym || sym; let cleanDesc = ex.desc ? ex.desc.replace(/\n/g, ' ') : '';
-                doc.text(`${formatNiceDate(ex.date || db.startDate)} - ${ex.name} - ${exSym}${(ex.amount * rate).toFixed(2)}`, 14, y); doc.setFontSize(9); doc.setTextColor(100); doc.text(cleanDesc.substring(0, 80), 14, y+5); doc.setFontSize(11); doc.setTextColor(0); y += 15;
+                let cleanDesc = ex.desc ? ex.desc.replace(/\n/g, ' ') : '';
+                doc.text(`${formatNiceDate(ex.date || db.startDate)} - ${ex.name} - ${sym}${(ex.amount * rate).toFixed(2)}`, 14, y); doc.setFontSize(9); doc.setTextColor(100); doc.text(cleanDesc.substring(0, 80), 14, y+5); doc.setFontSize(11); doc.setTextColor(0); y += 15;
             });
             doc.save(`House_Ledger_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`); showToast("PDF Downloaded", 2000);
         } catch(e) { showToast("PDF Generation Failed", 3000); }
@@ -2686,21 +2744,21 @@
             const zip = new JSZip(); const imgFolder = zip.folder("Receipts"); let allUrls = [];
             const extractUrls = (receiptField) => { if(!receiptField) return; if(typeof receiptField === 'string' && receiptField.startsWith('[')) { try { JSON.parse(receiptField).forEach(u => allUrls.push(u)); } catch(e){} } else if(typeof receiptField === 'string') { receiptField.split(',').forEach(u => allUrls.push(u.trim())); } else if(Array.isArray(receiptField)) { receiptField.forEach(u => allUrls.push(u)); } };
             (db.expenses||[]).forEach(ex => extractUrls(ex.receipt)); (db.archives||[]).forEach(arc => (arc.details||[]).forEach(ex => extractUrls(ex.receipt)));
-            let validUrls = allUrls.filter(u => u && u.startsWith('http')); if(validUrls.length === 0) { showToast("No receipts found.", 3000); return; }
+            let validUrls = allUrls.filter(u => typeof u === 'string' && /^https?:\/\//.test(u)); if(validUrls.length === 0) { showToast("No receipts found.", 3000); return; }
             showToast(`COMPILING ${validUrls.length} RECEIPTS...`, 0); const batchSize = 10;
             for (let i = 0; i < validUrls.length; i += batchSize) {
                 const batch = validUrls.slice(i, i + batchSize);
                 await Promise.all(batch.map(async (url, idx) => { try { const response = await fetch(url, { mode: 'cors' }); if(response.ok) { const blob = await response.blob(); let filename = `receipt_${i+idx}_${Date.now()}.jpg`; imgFolder.file(filename, blob); } } catch(e) {} }));
                 await new Promise(r => setTimeout(r, 50)); 
             }
-            const content = await zip.generateAsync({type:"blob"}); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `House_Receipts_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.zip`; link.click(); showToast("ZIP Downloaded", 2000);
+            const content = await zip.generateAsync({type:"blob"}); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `House_Receipts_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.zip`; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 60000); showToast("ZIP Downloaded", 2000);
         } catch(e) { showToast("ZIP Compilation Failed", 3000); }
     }
 
 
     function initializeDB() {
-        if (!db || typeof db !== 'object') db = {};
-        if (!db.expenses || !Array.isArray(db.expenses)) db.expenses = []; 
+        if (!db || typeof db !== 'object' || Array.isArray(db)) db = {};
+        if (!db.expenses || !Array.isArray(db.expenses)) db.expenses = [];
         if (!db.archives || !Array.isArray(db.archives)) db.archives = [];
         if (!db.paidStatus || typeof db.paidStatus !== 'object') db.paidStatus = {};
         if (!db.payLinks || typeof db.payLinks !== 'object' || Array.isArray(db.payLinks)) db.payLinks = {};
@@ -2719,6 +2777,9 @@
         const objOr = (x) => isObj(x) ? x : {};
         const items = (x) => Array.isArray(x) ? x.filter(isObj) : [];
         const names = (x) => Array.isArray(x) ? x.filter(u => typeof u === 'string' && u.trim()) : [];
+        // Payment amounts must be numbers ("5" + 2.5 would make "52.5"): anything else is dropped
+        const paid = (o) => { Object.keys(o).forEach(k => { const v = Number(o[k]); if (isFinite(v)) o[k] = v; else delete o[k]; }); return o; };
+        const claims = (o) => { if (isObj(o)) Object.keys(o).forEach(k => { const c = o[k]; if (!isObj(c) || !isFinite(Number(c.amt))) delete o[k]; else c.amt = Number(c.amt); }); return o; };
         const tidy = (list) => list.forEach(ex => {
             const a = Number(ex.amount); ex.amount = isFinite(a) ? a : 0;
             if (ex.desc != null && typeof ex.desc !== 'string') ex.desc = String(ex.desc);
@@ -2730,13 +2791,18 @@
         db.users = names(db.users); if (!db.users.length) db.users = [...defaultUsers];
         db.activeUsers = names(db.activeUsers).filter(u => db.users.includes(u)); if (!db.activeUsers.length) db.activeUsers = [...db.users];
         db.expenses = items(db.expenses); db.trash = items(db.trash); db.auditLog = items(db.auditLog);
+        db.auditLog.forEach(a => {
+            const t = Number(a.t); a.t = isFinite(t) ? t : 0;
+            ['by', 'act', 'kind', 'to', 'msg'].forEach(k => { if (a[k] != null && typeof a[k] !== 'string') a[k] = String(a[k]); });
+            if (a.who != null) { a.who = names(a.who).slice(0, 2); if (!a.who.length) delete a.who; }
+        });
         db.notices = items(db.notices); db.shopping = items(db.shopping);
         db.notices.forEach(n => { if (typeof n.text !== 'string') n.text = n.text == null ? '' : String(n.text); });
         db.shopping.forEach(s => { if (typeof s.text !== 'string') s.text = s.text == null ? '' : String(s.text); });
         db.archives = items(db.archives);
         db.archives.forEach(a => {
             a.details = items(a.details); tidy(a.details);
-            a.paidStatus = objOr(a.paidStatus); if (a.payClaims != null) a.payClaims = objOr(a.payClaims);
+            a.paidStatus = paid(objOr(a.paidStatus)); if (a.payClaims != null) a.payClaims = claims(objOr(a.payClaims));
             const t = Number(a.total); a.total = isFinite(t) ? t : a.details.reduce((s, e) => s + e.amount, 0);
             if (a.activeUsers != null) { a.activeUsers = names(a.activeUsers); if (!a.activeUsers.length) delete a.activeUsers; }
             if (a.tag != null && typeof a.tag !== 'string') a.tag = null;
@@ -2744,9 +2810,31 @@
             if (typeof a.end !== 'string') a.end = a.end == null ? '' : String(a.end);
         });
         tidy(db.expenses); tidy(db.trash);
-        db.paidStatus = objOr(db.paidStatus); if (db.payClaims != null) db.payClaims = objOr(db.payClaims);
+        // Vault items without a deletion time would be purged at once ("now - undefined" is NaN): start their 30 days now
+        db.trash.forEach(ex => { const d = Number(ex.deletedAt); ex.deletedAt = isFinite(d) && d > 0 ? d : Date.now(); });
+        db.paidStatus = paid(objOr(db.paidStatus)); if (db.payClaims != null) db.payClaims = claims(objOr(db.payClaims));
         if (db.notifPrefs != null) db.notifPrefs = objOr(db.notifPrefs);
         if (typeof db.startDate !== 'string') db.startDate = String(db.startDate);
+        followRename();
+    }
+    /** Someone renamed the person using this phone (on another phone): carry on as the new name, so new expenses
+     *  aren't saved under a name that no longer exists. Follows the "Renamed X to" log entries, newest first. */
+    function followRename() {
+        if (typeof currentUser !== 'string' || !currentUser || db.users.includes(currentUser)) return;
+        let name = currentUser;
+        for (let hop = 0; hop < 10 && !db.users.includes(name); hop++) {
+            const r = db.auditLog.find(a => a.act === `Renamed ${name} to` && typeof a.trg === 'string');
+            if (!r) { // not renamed: if they were removed, back to the login screen (nothing new is saved under that name)
+                const who = currentUser;
+                if (name === who && db.auditLog.some(a => a.act === 'Removed User' && a.trg === who)) setTimeout(() => { if (currentUser === who && !db.users.includes(who)) { logout(); showToast(`${escapeHTML(who).toUpperCase()} WAS REMOVED FROM THE HOUSE`, 4000); } }, 0);
+                return;
+            }
+            name = r.trg;
+        }
+        if (!db.users.includes(name)) return;
+        currentUser = name; safeSetStorage('house_user', name);
+        const top = document.getElementById('topUserName'); if (top) top.innerText = name;
+        const menuUser = document.getElementById('menuUserName'); if (menuUser) menuUser.innerText = name;
     }
 
     function renderSkeletons() {
@@ -2758,7 +2846,7 @@
 
     function checkPayloadSize() {
         const payloadStr = JSON.stringify(db); const bytes = new TextEncoder().encode(payloadStr).length;
-        if (bytes > 900000) { showToast("Vault approaching capacity. Export CSV and initialize a new Bin.", 4000); return false; }
+        if (bytes > 900000) { showToast("HOUSE DATA IS FULL - THIS CHANGE WAS NOT SAVED. DELETE OLD PAST CYCLES TO MAKE ROOM.", 5000); return false; }
         return true;
     }
 
@@ -2899,7 +2987,7 @@
     }
 
     function render() {
-        const cur = document.getElementById('currency').value, sym = curSymbols[cur], rate = rates[cur];
+        const { sym, rate } = viewMoney();
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
         
@@ -3020,23 +3108,36 @@
         if(!db.paidStatus) db.paidStatus = {};
         const current = db.paidStatus[key] || 0;
         if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } else { db.paidStatus[key] = totalBaseAmt; }
-        logAudit("Toggled Paid Status", key); render(); executeActionWithSave(); flashPayCard(key);
+        logAudit(db.paidStatus[key] ? `Marked a payment of ${viewMoney().fmt(totalBaseAmt)} as paid` : "Marked a payment as not paid", key); render(); executeActionWithSave(); flashPayCard(key);
     }
+    /** Payment keys look like "From_To" or "From_To_#tag" -> [From, To] (null if it names nobody we know) */
+    function paymentPair(key) {
+        if (typeof key !== 'string') return null; const users = db.users || [];
+        for (const a of users) for (const b of users) if (a !== b && (key === `${a}_${b}` || key.startsWith(`${a}_${b}_#`))) return [a, b];
+        return null;
+    }
+    function archiveLabel(a) {
+        const p = String((a && a.start) || '').split('/'); const when = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]).toLocaleString('default', { month: 'short', year: 'numeric' }) : 'an old cycle';
+        return a && a.tag ? `${a.tag}, ${when}` : when;
+    }
+    /** Past-cycle payments go only to the two people in them (bell + phone notifications, kind 'pastpay') */
+    function logPastPayment(text, key) { logAudit(text, key, false, 'pastpay'); const pair = paymentPair(key); if (pair) db.auditLog[0].who = pair; }
 
     function logPayment(key, remainingLocal, rate) {
         customPrompt(`Log Partial Payment<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Remaining balance: ${remainingLocal.toFixed(2)}</span><br><span style="font-size:0.75rem; font-weight:normal; color:var(--danger);">(Type 0 to clear record)</span>`, remainingLocal.toFixed(2), (val) => {
             if (val === null || val.trim() === "") return; let amtLocal = parseFloat(val.replace(/,/g, '.')); if (isNaN(amtLocal) || amtLocal < 0) return;
             if(!db.paidStatus) db.paidStatus = {};
             if (amtLocal === 0) { db.paidStatus[key] = 0; } else { if(!db.paidStatus[key]) db.paidStatus[key] = 0; db.paidStatus[key] += (amtLocal / rate); }
-            logAudit("Partial Payment Logged", key); render(); executeActionWithSave();
+            logAudit(amtLocal === 0 ? "Cleared a part payment" : `Logged a part payment of ${viewMoney().fmt(amtLocal / rate)}`, key); render(); executeActionWithSave();
         }, "decimal");
     }
 
     function toggleArchiveFullPaid(arcIdx, key, totalBaseAmt) {
+        if (!Array.isArray(db.archives) || !db.archives[arcIdx]) { render(); return; } // that cycle was deleted on another phone a moment ago
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
         const current = db.archives[arcIdx].paidStatus[key] || 0;
         if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
-        logAudit("Toggled Archive Paid", key); render(); executeActionWithSave(); flashPayCard(key);
+        logPastPayment(db.archives[arcIdx].paidStatus[key] ? `Marked a payment of ${viewMoney().fmt(totalBaseAmt)} from ${archiveLabel(db.archives[arcIdx])} as paid` : `Marked a payment from ${archiveLabel(db.archives[arcIdx])} as not paid`, key); render(); executeActionWithSave(); flashPayCard(key);
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
@@ -3046,7 +3147,7 @@
             arcIdx = refind(); if (arcIdx < 0) { showToast("That cycle changed - try again", 2500); return; }
             if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
             if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } else { if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0; db.archives[arcIdx].paidStatus[key] += (amtLocal / rate); }
-            logAudit("Partial Archive Payment Logged", key); render(); executeActionWithSave();
+            logPastPayment(amtLocal === 0 ? `Cleared a part payment from ${archiveLabel(db.archives[arcIdx])}` : `Logged a part payment of ${viewMoney().fmt(amtLocal / rate)} from ${archiveLabel(db.archives[arcIdx])}`, key); render(); executeActionWithSave();
         }, "decimal");
     }
 
@@ -3098,9 +3199,8 @@
                     });
                 }
 
-                const isFullySettled = (!hasUnpaidInArchive && archiveSettleHtml !== ""); let adminActionHtml = "";
-                if (!isFullySettled) { adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`; } 
-                else { adminActionHtml = `<span class="tag success">Settled</span>`; }
+                const isFullySettled = txs.every(t => t.amt - ((a.paidStatus && a.paidStatus[`${t.from}_${t.to}`]) || 0) <= 0.01); // every debt paid, whatever "My view" hides
+                const adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`; // settled cycles too: clearing old ones makes room
 
                 let finalUnpaidBlock = hasUnpaidInArchive ? `<div class="sub-title danger" style="margin-top:0;">Unpaid debts <span class="danger-badge" style="margin:0;">${archiveUnpaidCount}</span></div>${archiveSettleHtml}` : "";
 
@@ -3113,7 +3213,7 @@
 
                 if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
 
-                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div style="min-width:0;"><div class="cycle-dates">${displayStart} → ${displayEnd}</div><div class="cycle-total">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div style="display:flex; gap:8px; align-items:center;">${hasUnpaidInArchive ? `<span class="tag danger">${archiveUnpaidCount} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '')}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div class="card-actions" style="margin:0 0 14px;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${isFullySettled ? '' : adminActionHtml}</div>${finalUnpaidBlock}<div class="sub-title" style="margin-top:${hasUnpaidInArchive ? '16px' : '0'};">Expenses</div><div>${logsHtml || '<div class="card-meta">No logs.</div>'}</div></div></div>`;
+                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div style="min-width:0;"><div class="cycle-dates">${displayStart} → ${displayEnd}</div><div class="cycle-total">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div style="display:flex; gap:8px; align-items:center;">${hasUnpaidInArchive ? `<span class="tag danger">${archiveUnpaidCount} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '')}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div class="card-actions" style="margin:0 0 14px;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${adminActionHtml}</div>${finalUnpaidBlock}<div class="sub-title" style="margin-top:${hasUnpaidInArchive ? '16px' : '0'};">Expenses</div><div>${logsHtml || '<div class="card-meta">No logs.</div>'}</div></div></div>`;
             }).join('');
         }
 
@@ -3135,7 +3235,7 @@
         const bgColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0a0e17' : '#f2f4f7';
         try {
             const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2, useCORS: true, allowTaint: true });
-            const link = document.createElement('a'); link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`; link.href = canvas.toDataURL('image/png'); link.click(); canvas.width = 0; canvas = null; 
+            const link = document.createElement('a'); link.download = `House_Archive_${db.archives[idx].start.replace(/\//g, '-')}.png`; link.href = canvas.toDataURL('image/png'); link.click(); canvas.width = 0; 
         } catch (e) { showToast("Failed to capture snapshot.", 3000); }
         if (!wasExpanded) card.classList.remove('expanded');
         loader.innerText = "SYNCING"; loader.style.display = 'none';
@@ -3276,7 +3376,11 @@
                 if (!Array.isArray(db.expenses)) db.expenses = [];
                 db.expenses.unshift({ id: expenseId, timestamp: safeTimestamp, name: currentUser, amount: baseAmt, desc: descToSave, involved: involvedUsers, originalSym: sym, receipt: finalReceiptData, receiptDelete: finalReceiptDelete, date: dateStr });
                 // Came from the shopping list's "Add as expense" (note still says so): those items are bought, take them off
-                if (pendingShopIds.length && /^\s*Shopping:/i.test(gNote) && Array.isArray(db.shopping)) { const ids = new Set(pendingShopIds); db.shopping = db.shopping.filter(x => !ids.has(x.id)); }
+                if (pendingShopIds.length && /^\s*Shopping:/i.test(gNote) && Array.isArray(db.shopping)) {
+                    const ids = new Set(pendingShopIds); const gone = db.shopping.filter(x => ids.has(x.id));
+                    db.shopping = db.shopping.filter(x => !ids.has(x.id));
+                    if (gone.length) { let label = gone.map(x => x.text).join(', '); if (label.length > 60) label = label.slice(0, 58) + '…'; logAudit(`Added ${gone.length} shopping item${gone.length === 1 ? '' : 's'} as an expense: ${label}`, expenseId, true); } // quiet: the new expense itself already notifies
+                }
                 pendingShopIds = [];
                 if (failedUploadsArr.length > 0) { let q = safeJSONParse(localStorage.getItem('img_queue'), []); if(!Array.isArray(q)) q = []; failedUploadsArr.forEach(img => q.push({ id: expenseId, image: img })); safeSetStorage('img_queue', JSON.stringify(q)); }
             }
@@ -3349,7 +3453,7 @@
     // CSV cell: quote anything containing commas, quotes or line breaks (Excel/Sheets-safe), and defuse formula injection
     function csvCell(v) {
         let t = v == null ? '' : String(v);
-        if (/^[=@\t\r]/.test(t) || /^[+\-](?![\d.])/.test(t)) t = "'" + t;
+        if (/^[=+\-@\t\r]/.test(t) && !/^[+-]?\d+(\.\d+)?$/.test(t)) t = "'" + t; // "-1+cmd|..." starts with a digit too
         return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
     }
     function csvRow(cells) { return cells.map(csvCell).join(',') + '\n'; }
@@ -3377,12 +3481,12 @@
         const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }); const a = document.createElement('a'); a.setAttribute('href', window.URL.createObjectURL(blob)); a.setAttribute('download', `House_Expenses_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`); a.click(); showToast("EXPORTED CSV", 2000);
     }
 
-    function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); canvas.width = 0; canvas = null; }; }; }); }
+    function compressImage(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onerror = () => { showToast("Image read failed.", 3000); resolve(null); }; reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onerror = () => { showToast("Image process failed.", 3000); resolve(null); }; img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.6)); canvas.width = 0; }; }; }); }
     
     async function copyExpense(id) { 
         triggerHaptic(); let ex = (db.expenses||[]).find(e => e.id === id); if (!ex) return;
         const cur = document.getElementById('currency').value, sym = curSymbols[cur]; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1; const exSym = ex.originalSym || sym; 
-        let cleanDesc = formatDescDisplay(ex.desc, exSym).split('•').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
+        let cleanDesc = formatDescText(ex.desc, exSym).split('•').map(part => '• ' + part.trim()).join('\n').replace(/^• \[/g, '['); 
         let txt = `Expense logged by ${ex.name}:\nAmount: ${sym}${(ex.amount * rate).toFixed(2)}\nDetails:\n${cleanDesc}`;
         let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null; if (involvedArr) { txt += `\nSplit Between: ${involvedArr.join(', ')}`; }
         if (navigator.share) { navigator.share({ title: 'House Expense', text: txt }).catch(async e => { await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000); }); } else { await copyToClipboard(txt); showToast("Copied to Clipboard!", 2000); }

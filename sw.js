@@ -1,6 +1,6 @@
 // House Expenses service worker: offline copy of the page + web push notifications.
 // Bump CACHE_NAME together with APP_VERSION in index.html.
-const CACHE_NAME = 'house-expenses-v7.17.2';
+const CACHE_NAME = 'house-expenses-v7.18.0';
 const APP_SHELL = ['./', 'index.html', 'manifest.json', 'icon-512.png', 'fonts/inter.woff2'];
 
 self.addEventListener('install', (e) => {
@@ -32,7 +32,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   // Static files only (the update checker fetches index.html?t=… and must always reach the network)
-  if (/\/(manifest\.json|icon-512\.png)$/.test(url.pathname)) {
+  if (/\/(manifest\.json|icon-512\.png|fonts\/inter\.woff2)$/.test(url.pathname)) {
     e.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => hit || fetch(req)));
   }
 });
