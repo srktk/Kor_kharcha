@@ -1,7 +1,7 @@
 // House Expenses service worker: offline copy of the page + web push notifications.
 // Bump CACHE_NAME together with APP_VERSION in index.html.
 const CACHE_NAME = 'house-expenses-v7.16.0';
-const APP_SHELL = ['./', 'index.html', 'manifest.json', 'icon-512.png'];
+const APP_SHELL = ['./', 'index.html', 'manifest.json', 'icon-512.png', 'fonts/inter.woff2'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
