@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.10.1">
+    <meta name="app-version" content="7.10.2">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses </title>
     
@@ -56,7 +56,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.10.1';
+                    const CACHE_NAME = 'house-expenses-v7.10.2';
                     self.addEventListener('install', e => self.skipWaiting());
                     self.addEventListener('activate', e => {
                         e.waitUntil(caches.keys().then(keys => Promise.all(
@@ -574,7 +574,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.10.1";
+    const APP_VERSION = "7.10.2";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -969,7 +969,7 @@
             offlineActionsCount = 0; updateOfflineBadge(); processUploadQueue();
         } catch (e) {
             if (e.message === "AUTH") { forgetHouseKey(); showLock("Wrong PIN. Try again"); }
-            else if (e.message === "LOCKED") { forgetHouseKey(); showLock("Too many wrong PINs. Try again in an hour"); }
+            else if (e.message === "LOCKED") { showLock("Too many wrong PINs on this network. Try again in an hour"); }
             else if (e.message === "429") { setTimeout(() => { loadData(true); }, 1500); } else if (e.message === "HTTP_API_ERROR") { showToast("CLOUD SERVER OFFLINE", 3000); loadLocalBackup(); } else { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); }
         } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") { document.getElementById('loading').style.display = 'none'; } isSyncing = false; }
     }
