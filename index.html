@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.14.0">
+    <meta name="app-version" content="7.15.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -287,7 +287,19 @@
     </div>
 </div>
 
-<div id="helpOverlay"style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+<div id="noticeOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; max-height:85vh; display:flex; flex-direction:column;">
+        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Noticeboard</h2>
+        <div id="noticeList" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+        <textarea id="noticeInput" aria-label="New note" class="chat-note" rows="2" maxlength="1000" placeholder="Wi-Fi password, bin day, landlord's number..." style="width:100%; box-sizing:border-box; border:1px solid var(--border); margin-bottom:8px; resize:vertical; font-size:0.95rem;"></textarea>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeNotices()">Close</button>
+            <button id="noticeSaveBtn" class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); saveNotice()">Add Note</button>
+        </div>
+    </div>
+</div>
+
+<div id="helpOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:360px; max-height: 85vh; overflow-y: auto;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center; color:var(--accent);">How to Use</h2>
         
@@ -364,6 +376,7 @@
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
             <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); setPayLink();">💳 My Payment Link</button>
+            <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openNotifPrefs();">🔔 What Notifies Me</button>
             <button id="restoreBtn"class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openRestore();">⏪ Restore Backup</button>
             <button class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openManageUsers();">Manage Housemates</button>
             <div style="display:flex; gap:10px;">
@@ -478,6 +491,7 @@
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
+    <a href="#" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); openNotices(); event.preventDefault();"><span>📌 Noticeboard</span><span id="noticeCount" class="danger-badge" style="display:none; background:var(--accent); color:#000;"></span></a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();">🔍 Search</a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openInsights(); event.preventDefault();">📊 Insights</a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();">📋 Audit Trail</a>
@@ -622,7 +636,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.14.0";
+    const APP_VERSION = "7.15.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -743,7 +757,7 @@
     let saveTimeout = null;
     let isArchiving = false;
     let isSettling = false;
-    let lastSubmitTime = 0;
+    let lastSubmitTime = 0; let skipDupCheck = false;
     let editingId = null;
     let myViewActive = false;
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
@@ -776,6 +790,7 @@
 
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('historyOverlay').style.display === 'flex') { closeHistory(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('noticeOverlay').style.display === 'flex') { closeNotices(); history.pushState(null, null, location.href); }
         else if (document.getElementById('searchOverlay').style.display === 'flex') { closeSearch(); history.pushState(null, null, location.href); }
         else if (document.getElementById('insightsOverlay').style.display === 'flex') { closeInsights(); history.pushState(null, null, location.href); }
         else if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
@@ -998,6 +1013,11 @@
             html += healthRow(age(s.lastBackup) > 36 ? 'warn' : 'ok', 'Daily backup', dayLabel(s.lastBackup));
             html += healthRow(age(s.lastR2Backup) > 36 ? 'warn' : 'ok', 'Backup copy (R2)', dayLabel(s.lastR2Backup));
             html += healthRow(s.problems24h ? 'bad' : 'ok', 'Problems (24 h)', s.problems24h ? `${s.problems24h} · View` : 'None', s.problems24h ? 'triggerHaptic(); showHealthProblems()' : '');
+            if (s.dbBytes) {
+                const frac = s.dbBytes / s.dbCap; const perCycle = 8500; // ~8.5 KB per monthly cycle (Nov 2026)
+                const years = Math.max(0, (s.dbCap * 0.9 - s.dbBytes) / perCycle / 12);
+                html += healthRow(frac > 0.7 ? 'bad' : frac > 0.5 ? 'warn' : 'ok', 'House data', `${(s.dbBytes / 1000).toFixed(0)} KB · ~${years >= 1 ? Math.floor(years) + ' yr' : Math.round(years * 12) + ' mo'} of room`);
+            }
             const withPush = new Set((s.devices || []).map(d => d.user));
             const missing = (db.users || []).filter(u => !withPush.has(u));
             html += healthRow(missing.length ? 'warn' : 'ok', 'Notifications on', `${(db.users || []).length - missing.length} / ${(db.users || []).length}`);
@@ -1157,6 +1177,32 @@
         (db.archives || []).filter(a => a.tag).forEach(a => { tags[a.tag] = tags[a.tag] || { total: 0, n: 0 }; tags[a.tag].total += Number(a.total) || 0; tags[a.tag].n += (a.details || []).length; });
         return { cycles, tags };
     }
+    /** "My year": last 12 months for the signed-in person, across every cycle and hashtag bill. */
+    function myYearHtml(h, fmt) {
+        if (!currentUser) return '';
+        const me = currentUser; const now = new Date(); const from = new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime();
+        const when = (ex) => { const p = (ex.date || '').split('/'); if (p.length === 3) { const d = new Date(+p[2], +p[1] - 1, +p[0]); if (!isNaN(d)) return d.getTime(); } return ex.timestamp || 0; };
+        let paid = 0, share = 0, count = 0, biggest = null; const months = Array(12).fill(0);
+        settlementLedgers().forEach(L => L.expenses.forEach(ex => {
+            const t = when(ex); if (t < from) return;
+            const inv = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : (L.active || db.users);
+            if (inv.includes(me)) share += ex.amount / Math.max(inv.length, 1);
+            if (ex.name !== me) return;
+            paid += ex.amount; count++; if (!biggest || ex.amount > biggest.amount) biggest = ex;
+            const d = new Date(t); const idx = (d.getFullYear() - new Date(from).getFullYear()) * 12 + d.getMonth() - new Date(from).getMonth();
+            if (idx >= 0 && idx < 12) months[idx] += ex.amount;
+        }));
+        if (!count && share < 0.01) return '';
+        const diff = paid - share; const mmax = Math.max(...months, 0.01);
+        const label = (i) => new Date(new Date(from).getFullYear(), new Date(from).getMonth() + i, 1).toLocaleString('default', { month: 'narrow' });
+        return h(`My year · ${escapeHTML(me)}`) + `<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                <div style="padding:10px; border-radius:12px; background:var(--input-bg);"><div style="font-size:0.65rem; color:var(--text-muted); font-weight:800;">YOU PAID</div><div style="font-size:1.1rem; font-weight:900;">${fmt(paid)}</div></div>
+                <div style="padding:10px; border-radius:12px; background:var(--input-bg);"><div style="font-size:0.65rem; color:var(--text-muted); font-weight:800;">YOUR FAIR SHARE</div><div style="font-size:1.1rem; font-weight:900;">${fmt(share)}</div></div></div>
+            <div style="font-size:0.8rem; color:var(--text-main); margin-bottom:8px;">${Math.abs(diff) < 1 ? 'You paid almost exactly your share.' : diff > 0 ? `You paid <b>${fmt(diff)}</b> more than your share (others pay you back).` : `You paid <b>${fmt(-diff)}</b> less than your share (you pay others).`} ${count} expense${count === 1 ? '' : 's'} logged${biggest ? `, biggest ${fmt(biggest.amount)}${biggest.desc ? ' · ' + escapeHTML(biggest.desc.replace(/\s+/g, ' ').slice(0, 30)) : ''}` : ''}.</div>
+            <div style="display:flex; align-items:flex-end; gap:3px; height:60px; margin-bottom:2px;">${months.map((m, i) => `<div title="${fmt(m)}" style="flex:1; height:${Math.max(m > 0 ? 4 : 1, m / mmax * 100).toFixed(1)}%; background:${i === 11 ? 'var(--accent)' : 'var(--text-muted)'}; opacity:${i === 11 ? 1 : 0.5}; border-radius:3px 3px 0 0;"></div>`).join('')}</div>
+            <div style="display:flex; gap:3px; font-size:0.6rem; color:var(--text-muted); text-align:center;">${months.map((m, i) => `<span style="flex:1;">${label(i)}</span>`).join('')}</div>`;
+    }
+
     function openInsights() {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
@@ -1172,7 +1218,7 @@
         const max = Math.max(...shown.map(c => c.total), 0.01);
         const pastTotals = cycles.slice(1).map(c => c.total).filter(t => t > 0);
         const avg = pastTotals.length ? pastTotals.reduce((a, b) => a + b, 0) / pastTotals.length : 0;
-        let html = h('Total per cycle') + `<div style="font-size:0.7rem; color:var(--text-muted); margin:-4px 0 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
+        let html = myYearHtml(h, fmt) + h('Total per cycle') + `<div style="font-size:0.7rem; color:var(--text-muted); margin:-4px 0 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
         html += shown.map((c, i) => `<div class="interactive-btn" role="button" onclick="triggerHaptic(); pickInsightsCycle(${i})" style="display:grid; grid-template-columns:48px 1fr auto; align-items:center; gap:8px; padding:5px 6px; border-radius:10px; cursor:pointer; ${i === insightsCycle ? 'background:var(--input-bg); outline:1px solid var(--accent);' : ''}">
                 <span style="font-size:0.7rem; font-weight:800; color:${i === insightsCycle ? 'var(--accent)' : 'var(--text-muted)'};">${escapeHTML(c.label)}</span>
                 <div style="height:12px; border-radius:6px; background:var(--border); overflow:hidden;"><div style="height:100%; width:${Math.max(2, c.total / max * 100).toFixed(1)}%; background:var(--accent); border-radius:6px;"></div></div>
@@ -1218,6 +1264,166 @@
     }
     function runPendingQuickAdd() { if (pendingQuickAdd) setTimeout(openQuickAdd, 400); }
 
+    // ---- "I've paid" -> "Got it": the person who owes says they paid, the person owed confirms ----
+    // Claims live next to paidStatus: db.payClaims[key] (current cycle, key may end in _#tag) or arc.payClaims[key].
+    function claimStore(arcIdx, create) {
+        const holder = arcIdx >= 0 ? db.archives[arcIdx] : db; if (!holder) return null;
+        if (!holder.payClaims && create) holder.payClaims = {};
+        return holder.payClaims || null;
+    }
+    function getClaim(key, arcIdx) { const c = claimStore(arcIdx, false); return c && c[key] ? c[key] : null; }
+    function claimPaid(key, arcIdx, to, remainingBase) {
+        const { fmt } = viewMoney();
+        customConfirm(`Tell ${escapeHTML(to)} you've paid them <b>${fmt(remainingBase)}</b>?<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">They'll get a notification to confirm it.</span>`, () => {
+            claimStore(arcIdx, true)[key] = { by: currentUser, amt: Math.round(remainingBase * 100) / 100, t: Date.now() };
+            logAudit(`Said they paid ${to} ${fmt(remainingBase)}`, key); render(); executeActionWithSave(); showToast(`SENT - WAITING FOR ${escapeHTML(to).toUpperCase()}`, 2500);
+        });
+    }
+    function confirmClaim(key, arcIdx) {
+        const claim = getClaim(key, arcIdx); if (!claim) return;
+        const holder = arcIdx >= 0 ? db.archives[arcIdx] : db; if (!holder.paidStatus) holder.paidStatus = {};
+        holder.paidStatus[key] = Math.round(((holder.paidStatus[key] || 0) + claim.amt) * 100) / 100;
+        delete holder.payClaims[key];
+        logAudit(`Confirmed ${claim.by}'s payment of ${viewMoney().fmt(claim.amt)}`, key); render(); executeActionWithSave(); showToast("PAYMENT CONFIRMED", 2000);
+    }
+    function rejectClaim(key, arcIdx) {
+        const claim = getClaim(key, arcIdx); if (!claim) return;
+        customConfirm(`Not received ${escapeHTML(claim.by)}'s payment yet?<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">They'll be told it hasn't arrived.</span>`, () => {
+            delete claimStore(arcIdx, false)[key];
+            logAudit(`Hasn't received ${claim.by}'s payment yet`, key); render(); executeActionWithSave();
+        });
+    }
+    /** Shown to the person owed when the other person says they've paid. */
+    function claimBanner(key, arcIdx) {
+        const claim = getClaim(key, arcIdx); if (!claim) return '';
+        return `<div style="margin-top:6px; padding:6px 8px; border-radius:10px; background:var(--input-bg); border:1px solid var(--accent); font-size:0.75rem;"><b>${escapeHTML(claim.by)}</b> says they paid <b>${viewMoney().fmt(claim.amt)}</b> <span style="color:var(--text-muted);">· ${new Date(claim.t).toLocaleDateString()}</span><div style="display:flex; gap:6px; margin-top:6px;"><button class="btn-pill success interactive-btn" onclick="triggerHaptic(); confirmClaim('${escapeHTML(key)}', ${arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); rejectClaim('${escapeHTML(key)}', ${arcIdx})">Not yet</button></div></div>`;
+    }
+
+    // ---- Noticeboard: db.notices = [{id, t, by, text, pinned}] ----
+    let editingNoticeId = null;
+    function linkify(text) { return escapeHTML(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent); word-break:break-all;">$1</a>').replace(/\n/g, '<br>'); }
+    function updateNoticeCount() { const el = document.getElementById('noticeCount'); if (!el) return; const n = (db.notices || []).length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; }
+    function openNotices() {
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        history.pushState(null, null, location.href); cancelNoticeEdit(); renderNotices();
+        document.getElementById('noticeOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+    function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function renderNotices() {
+        const list = (db.notices || []).slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
+        document.getElementById('noticeList').innerHTML = list.length ? list.map(n => `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid ${n.pinned ? 'var(--accent)' : 'var(--border)'}; text-align:left;">
+                <div style="font-size:0.9rem; color:var(--text-main); line-height:1.45;">${n.pinned ? '📌 ' : ''}${linkify(n.text)}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-top:6px;"><span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
+                <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" style="font-size:0.6rem;" onclick="triggerHaptic(); toggleNoticePin('${escapeHTML(n.id)}')">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" style="font-size:0.6rem;" onclick="triggerHaptic(); editNotice('${escapeHTML(n.id)}')">Edit</button><button class="btn-pill danger interactive-btn" style="font-size:0.6rem;" onclick="triggerHaptic(); deleteNotice('${escapeHTML(n.id)}')">Delete</button></span></div></div>`).join('')
+            : `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:15px 0;">No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.</div>`;
+        updateNoticeCount();
+    }
+    function saveNotice() {
+        const input = document.getElementById('noticeInput'); const text = (input.value || '').trim().slice(0, 1000);
+        if (!text) { showToast("WRITE SOMETHING FIRST", 2000); return; }
+        if (!Array.isArray(db.notices)) db.notices = [];
+        if (editingNoticeId) {
+            const n = db.notices.find(x => x.id === editingNoticeId); if (n) { n.text = text; n.t = Date.now(); n.by = currentUser; }
+            logAudit(`Updated a note: ${text.slice(0, 40)}`);
+        } else {
+            db.notices.unshift({ id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), by: currentUser, text, pinned: false });
+            logAudit(`Added a note: ${text.slice(0, 40)}`);
+        }
+        cancelNoticeEdit(); renderNotices(); executeActionWithSave();
+    }
+    function editNotice(id) { const n = (db.notices || []).find(x => x.id === id); if (!n) return; editingNoticeId = id; const input = document.getElementById('noticeInput'); input.value = n.text; document.getElementById('noticeSaveBtn').innerText = 'Save Note'; input.focus(); }
+    function cancelNoticeEdit() { editingNoticeId = null; const i = document.getElementById('noticeInput'); if (i) i.value = ''; const b = document.getElementById('noticeSaveBtn'); if (b) b.innerText = 'Add Note'; }
+    function toggleNoticePin(id) { const n = (db.notices || []).find(x => x.id === id); if (!n) return; n.pinned = !n.pinned; logAudit(`${n.pinned ? 'Pinned' : 'Unpinned'} a note`, null, true); renderNotices(); executeActionWithSave(); }
+    function deleteNotice(id) {
+        const n = (db.notices || []).find(x => x.id === id); if (!n) return;
+        customConfirm("Delete this note for everyone?", () => { db.notices = db.notices.filter(x => x.id !== id); logAudit(`Deleted a note: ${n.text.slice(0, 40)}`); if (editingNoticeId === id) cancelNoticeEdit(); renderNotices(); executeActionWithSave(); });
+    }
+
+    // ---- Everything still unpaid that involves one person, across the current cycle, hashtag bills and all past cycles ----
+    function settlementLedgers() {
+        const primaryTag = (ex) => { const m = (ex.desc || '').match(/#([\w-]+)/); return m ? m[0] : null; };
+        const cur = db.expenses || []; const out = [];
+        out.push({ label: 'This cycle', expenses: cur.filter(e => !primaryTag(e)), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '' });
+        [...new Set(cur.map(primaryTag).filter(Boolean))].forEach(tag => out.push({ label: `${tag} (this cycle)`, expenses: cur.filter(e => primaryTag(e) === tag), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '_' + tag }));
+        (db.archives || []).forEach(a => {
+            const p = (a.start || '').split('/'); const when = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]).toLocaleString('default', { month: 'short', year: 'numeric' }) : (a.start || '');
+            out.push({ label: a.tag ? `${a.tag} (${when})` : when, expenses: Array.isArray(a.details) ? a.details : [], active: a.activeUsers || db.users, mathV: a.mathV, paid: a.paidStatus || {}, suffix: '' });
+        });
+        return out;
+    }
+    /** { total: + means others owe `user`, people: { name: { net, parts: [{label, amt}] } } } in base currency */
+    function outstandingFor(user) {
+        const people = {};
+        settlementLedgers().forEach(L => {
+            if (!L.expenses.length) return;
+            getSettlements(L.expenses, L.expenses.reduce((a, e) => a + e.amount, 0), L.active, L.mathV).forEach(t => {
+                if (t.from !== user && t.to !== user) return;
+                const rem = t.amt - (L.paid[`${t.from}_${t.to}${L.suffix}`] || 0); if (rem <= 0.01) return;
+                const other = t.from === user ? t.to : t.from; const signed = t.from === user ? -rem : rem;
+                people[other] = people[other] || { net: 0, parts: [] }; people[other].net += signed; people[other].parts.push({ label: L.label, amt: signed });
+            });
+        });
+        let total = 0; Object.values(people).forEach(p => { p.net = Math.round(p.net * 100) / 100; total += p.net; });
+        return { total: Math.round(total * 100) / 100, people };
+    }
+    function showMoveOut(user) {
+        const { fmt } = viewMoney(); const o = outstandingFor(user);
+        const names = Object.keys(o.people).filter(n => Math.abs(o.people[n].net) > 0.01).sort((a, b) => Math.abs(o.people[b].net) - Math.abs(o.people[a].net));
+        let text = `🏠 Move-out total for ${user}\n`; let html = '';
+        names.forEach(n => {
+            const p = o.people[n]; const owes = p.net < 0;
+            const line = owes ? `${user} owes ${n} ${fmt(-p.net)}` : `${n} owes ${user} ${fmt(p.net)}`;
+            const parts = p.parts.map(x => `${x.label} ${x.amt < 0 ? '-' : '+'}${fmt(Math.abs(x.amt))}`).join(', ');
+            text += `\n${line}\n   (${parts})`;
+            html += `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid ${owes ? 'var(--danger)' : 'var(--success)'}; text-align:left;"><div style="font-size:0.9rem; font-weight:800; color:var(--text-main);">${escapeHTML(line)}</div><div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">${escapeHTML(parts)}</div></div>`;
+        });
+        const verdict = Math.abs(o.total) <= 0.01 ? `${user} is all square with everyone.` : o.total < 0 ? `Overall, ${user} pays ${fmt(-o.total)}.` : `Overall, ${user} gets back ${fmt(o.total)}.`;
+        text += `\n\n${verdict}`;
+        html += `<div style="padding:12px; border-radius:12px; border:1px solid var(--accent); text-align:center; font-weight:900; color:var(--text-main);">${escapeHTML(verdict)}</div>`;
+        if (names.length) html += `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center;">Includes this cycle, hashtag bills and every past cycle, minus payments already marked.</div><button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); copyToClipboard(window.__moveOutText).then(() => showToast('COPIED', 1500))">Copy to Share</button>`;
+        window.__moveOutText = text;
+        closeManageUsers(); document.getElementById('historyOverlay').querySelector('h2').innerText = `Move-out: ${user}`;
+        document.getElementById('historyList').innerHTML = html;
+        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+
+    // ---- "What notifies me": db.notifPrefs[user] = { scope: 'all' | 'mine', minAmount } (the worker applies it) ----
+    function openNotifPrefs() {
+        if (!currentUser) return;
+        const p = (db.notifPrefs && db.notifPrefs[currentUser]) || { scope: 'all', minAmount: 0 }; const { sym, rate } = viewMoney();
+        const opt = (v, title, sub) => `<label class="interactive-btn" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); cursor:pointer; text-align:left;"><input type="radio" name="notifScope" value="${v}" ${p.scope === v ? 'checked' : ''} style="margin-top:3px;"><span><b style="font-size:0.9rem;">${title}</b><br><span style="font-size:0.75rem; color:var(--text-muted);">${sub}</span></span></label>`;
+        document.getElementById('historyOverlay').querySelector('h2').innerText = 'What Notifies Me';
+        document.getElementById('historyList').innerHTML = opt('all', 'Everything', 'Every expense, payment and change in the house.')
+            + opt('mine', 'Only things involving me', "Expenses you paid or are part of, payments to or from you, plus house-wide things (new cycle, housemates, notes, restores).")
+            + `<label style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--border); text-align:left;"><span><b style="font-size:0.9rem;">Skip small expenses</b><br><span style="font-size:0.75rem; color:var(--text-muted);">Under this amount (0 = never skip). Payments always notify.</span></span><span style="display:flex; align-items:center; gap:4px; font-weight:800;">${escapeHTML(sym)}<input id="notifMinAmt" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text-main);"></span></label>`
+            + `<button class="btn-glowing interactive-btn" style="background:var(--accent); border-color:var(--accent); color:#000;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
+        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+    function saveNotifPrefs() {
+        const scope = (document.querySelector('input[name="notifScope"]:checked') || {}).value === 'mine' ? 'mine' : 'all';
+        const { rate } = viewMoney(); const local = parseFloat((document.getElementById('notifMinAmt').value || '0').replace(',', '.'));
+        const minAmount = isFinite(local) && local > 0 ? Math.round(local / rate * 100) / 100 : 0;
+        if (!db.notifPrefs) db.notifPrefs = {};
+        if (scope === 'all' && !minAmount) delete db.notifPrefs[currentUser]; else db.notifPrefs[currentUser] = { scope, minAmount };
+        logAudit("Changed notification settings", null, true); executeActionWithSave(); closeHistory(); showToast("NOTIFICATION SETTINGS SAVED", 2000);
+    }
+
+    // ---- Home-screen widget (Android app): your overall balance, refreshed whenever the app redraws ----
+    let lastWidgetSig = '', lastWidgetT = 0;
+    function updateHomeWidget() {
+        if (!isNativeApp() || typeof window.updateWidget !== 'function' || !currentUser || !localDbLoaded) return;
+        try {
+            const { fmt } = viewMoney(); const o = outstandingFor(currentUser);
+            const line = Math.abs(o.total) <= 0.01 ? 'All square' : o.total < 0 ? `You owe ${fmt(-o.total)}` : `You're owed ${fmt(o.total)}`;
+            const names = Object.keys(o.people).filter(n => Math.abs(o.people[n].net) > 0.01);
+            const detail = names.length ? names.map(n => `${n} ${o.people[n].net < 0 ? '-' : '+'}${fmt(Math.abs(o.people[n].net))}`).join(' · ') : 'Nothing outstanding';
+            // Same text: still refresh now and then so "updated ... ago" stays honest
+            const sig = [currentUser, line, detail].join('|'); if (sig === lastWidgetSig && Date.now() - lastWidgetT < 60000) return; lastWidgetSig = sig; lastWidgetT = Date.now();
+            window.updateWidget({ user: currentUser, line, detail, owe: o.total < -0.01, t: Date.now() });
+        } catch (e) { console.warn('widget update failed', e); }
+    }
+
     // ---- Payment links: each person saves their own (Monzo.me, PayPal.me, Revolut.me...); whoever owes them gets a Pay button
     function cleanPayLink(raw) {
         let s = String(raw || '').trim(); if (!s) return '';
@@ -1237,10 +1443,13 @@
             render(); executeActionWithSave(); showToast(link ? "PAYMENT LINK SAVED" : "PAYMENT LINK REMOVED", 2000);
         }, "url");
     }
-    function payOrPending(from, to, amountLocal, settled) {
+    function payOrPending(from, to, amountLocal, settled, key = null, arcIdx = -1, remainingBase = 0) {
         if (settled) return `<span class="name-pill">Settled</span>`;
-        if (from !== currentUser) return `<span class="name-pill">Pending</span>`;
-        return `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(to)}" onclick="triggerHaptic(); payNow('${escapeHTML(to)}', ${Number(amountLocal).toFixed(2)})">Pay</button>`;
+        const claim = key ? getClaim(key, arcIdx) : null;
+        if (from !== currentUser) return claim ? `<span class="name-pill" title="${escapeHTML(from)} says they paid">Paid?</span>` : `<span class="name-pill">Pending</span>`;
+        if (claim) return `<span class="name-pill" style="white-space:normal; text-align:center;">Waiting for ${escapeHTML(to)} to confirm</span>`;
+        const paidBtn = key ? `<button class="btn-pill interactive-btn" aria-label="I've paid ${escapeHTML(to)}" onclick="triggerHaptic(); claimPaid('${escapeHTML(key)}', ${arcIdx}, '${escapeHTML(to)}', ${Number(remainingBase).toFixed(4)})">I've paid</button> ` : '';
+        return paidBtn + `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(to)}" onclick="triggerHaptic(); payNow('${escapeHTML(to)}', ${Number(amountLocal).toFixed(2)})">Pay</button>`;
     }
     async function payNow(to, amountLocal) {
         const code = document.getElementById('currency').value; const amt = Number(amountLocal).toFixed(2);
@@ -1472,7 +1681,7 @@
         if (isSettling) return;
         customConfirm("Mark ALL displayed debts as Settled?", () => {
             isSettling = true; let totalBase = 0; let allValid = db.expenses || []; let contextExpenses = allValid.filter(e => { let hasTags = /#([\w-]+)/.test(e.desc || ""); return activeHashtag ? (e.desc || "").includes(activeHashtag) : !hasTags; });
-            contextExpenses.forEach(e => totalBase += e.amount); const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
+            contextExpenses.forEach(e => totalBase += e.amount); const txs = getSettlements(contextExpenses, totalBase, db.activeUsers, db.mathV);
             txs.forEach(t => { const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`; if (!db.paidStatus) db.paidStatus = {}; db.paidStatus[key] = t.amt; });
             logAudit("Marked All Active Settled"); render(); executeActionWithSave(); showToast("ALL SETTLED", 2000); isSettling = false;
         });
@@ -1501,7 +1710,7 @@
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         history.pushState(null, null, location.href); 
         const list = document.getElementById('manageUserList');
-        list.innerHTML = db.users.map(u => { return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);"><span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span><div style="display:flex; gap:5px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button></div></div>`; }).join('');
+        list.innerHTML = db.users.map(u => { return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);"><span style="font-weight:bold; color:var(--text-main);">${escapeHTML(u)}</span><div style="display:flex; gap:5px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut('${escapeHTML(u)}')">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser('${escapeHTML(u)}')">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser('${escapeHTML(u)}')">Remove</button></div></div>`; }).join('');
         const addBtn = document.getElementById('addHousemateBtn'); if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
         document.getElementById('manageUsersOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
     }
@@ -1687,8 +1896,28 @@
         return true;
     }
 
-    function getSettlements(expenses, totalBase, specificActiveUsers = null) {
+    // mathV 2 (cycles started from v7.15.0): balances kept exact, rounded once at the end with the leftover pennies
+    // going to whoever is nearest the next penny. Older cycles keep the original maths (mathV missing) so debts
+    // already marked paid never reopen by a few pence.
+    function getSettlements(expenses, totalBase, specificActiveUsers = null, mathV = 1) {
         let balances = {}; let active = specificActiveUsers || db.activeUsers || db.users; db.users.forEach(u => balances[u] = 0);
+        if (mathV >= 2) {
+            expenses.forEach(e => {
+                balances[e.name] = (balances[e.name] || 0) + e.amount;
+                const involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active;
+                const share = e.amount / Math.max(involved.length, 1);
+                involved.forEach(u => { balances[u] = (balances[u] || 0) - share; });
+            });
+            const unit = smartRoundingEnabled ? 10 : 1; // in pennies
+            const keys = Object.keys(balances);
+            const scaled = keys.map(k => Math.round(balances[k] * 100 * 1e6) / 1e6 / unit); // trim float noise
+            const floors = scaled.map(Math.floor);
+            let extra = Math.round(-floors.reduce((a, b) => a + b, 0));
+            keys.map((k, i) => i).sort((a, b) => (scaled[b] - floors[b]) - (scaled[a] - floors[a]) || a - b)
+                .forEach(i => { if (extra > 0) { floors[i]++; extra--; } });
+            keys.forEach((k, i) => { balances[k] = Math.round(floors[i] * unit) / 100; });
+            return settleBalances(balances);
+        }
         expenses.forEach(e => {
             if (balances[e.name] === undefined) balances[e.name] = 0; balances[e.name] = Math.round((balances[e.name] + e.amount) * 100) / 100;
             let involved = (e.involved && e.involved.length > 0 && e.involved.length < db.users.length) ? e.involved : active;
@@ -1703,6 +1932,11 @@
              let sum = 0; let keys = Object.keys(balances); keys.forEach(k => sum += balances[k]);
              if (Math.abs(sum) > 0.001 && keys.length > 0) { balances[keys[0]] = Math.round((balances[keys[0]] - sum) * 100) / 100; }
         }
+        return settleBalances(balances);
+    }
+
+    /** Balances (+ owed, - owes, in pounds) -> the fewest payments that clear them. Matching amounts are paired first. */
+    function settleBalances(balances) {
         let debtors = [], creditors = [];
         for (let u in balances) {
             if (Math.abs(balances[u]) < 0.005) balances[u] = 0; 
@@ -1819,7 +2053,7 @@
         if (Math.abs(prevPerHeadAmount - avgPerHead) > 0.01) { animateValue(perPersonEl, prevPerHeadAmount, avgPerHead, 800, sym); prevPerHeadAmount = avgPerHead; } 
         else { perPersonEl.innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
         
-        const txs = getSettlements(contextExpenses, totalBase, db.activeUsers);
+        const txs = getSettlements(contextExpenses, totalBase, db.activeUsers, db.mathV);
         let credMap = {};
         txs.forEach(t => {
             if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] }; credMap[t.to].totalOwed += t.amt;
@@ -1847,14 +2081,15 @@
                 if (can) {
                     if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
                     sHtmlTemp += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
-                } else { sHtmlTemp += payOrPending(t.from, t.to, tr * rate, isS); }
-                sHtmlTemp += `</div></div></div>`;
+                } else { sHtmlTemp += payOrPending(t.from, t.to, tr * rate, isS, t.key, -1, tr); }
+                sHtmlTemp += `</div></div></div>` + (can && !isS ? claimBanner(t.key, -1) : '');
             });
             sHtmlTemp += `</div>`;
             if (hasVisibleTxs) sHtml += sHtmlTemp;
         }
         document.getElementById('settleList').innerHTML = sHtml || "<div style='color:var(--text-muted); font-size:0.9rem; padding:15px 0;'>All debts clear.</div>";
         renderArchives(sym, rate);
+        updateNoticeCount(); updateHomeWidget();
     }
 
     function toggleFullPaid(key, totalBaseAmt) {
@@ -1898,7 +2133,7 @@
         else {
             arcDiv.innerHTML = db.archives.map((a, idx) => {
                 const pastActive = a.activeUsers || db.users; let validArcEx = Array.isArray(a.details) ? a.details : [];
-                const txs = getSettlements(validArcEx, a.total, pastActive); let credMap = {};
+                const txs = getSettlements(validArcEx, a.total, pastActive, a.mathV); let credMap = {};
                 const displayStart = a.tag ? `<span style="color:var(--accent); font-weight:800;">${escapeHTML(a.tag)}</span> • ${formatNiceDate(a.start)}` : formatNiceDate(a.start);
                 const displayEnd = formatNiceDate(a.end);
                 let cycleHasUnpaid = false; let cycleUnpaidHtml = "";
@@ -1914,7 +2149,7 @@
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false)}</div></div></div>`;
+                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:800; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase)}</div></div></div>${canMarkGlobal ? claimBanner(key, idx) : ''}`;
                     }
                 });
 
@@ -1928,7 +2163,7 @@
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false)}</div></div></div>`;
+                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0; border:none;"><div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.1rem; font-weight:900; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge('${escapeHTML(t.from)}', ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase)}</div></div></div>${canMark ? claimBanner(t.key, idx) : ''}`;
                         }
                     });
                 }
@@ -2043,7 +2278,18 @@
         let extractedBase = extractAmount(safeInput); 
         if (extractedBase <= 0 || isNaN(extractedBase)) { showToast("No valid amount found.", 3000); return; }
         let baseAmt = Math.round((extractedBase / rate) * 100) / 100; if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
-        
+
+        // Same person, same amount within a day: probably added twice by mistake (others' expenses never trigger this)
+        if (!editingId && !skipDupCheck) {
+            const dup = (db.expenses || []).find(e => e.name === currentUser && Math.abs(e.amount - baseAmt) < 0.005 && (e.timestamp || 0) > Date.now() - 86400000);
+            if (dup) {
+                const d = (dup.desc || '').replace(/\s+/g, ' ').trim(); const when = new Date(dup.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                customConfirm(`You already added <b>${viewMoney().fmt(dup.amount)}</b>${d ? ' · ' + escapeHTML(d.length > 40 ? d.slice(0, 40) + '…' : d) : ''} at ${when}.<br>Add it again?`, () => { skipDupCheck = true; lastSubmitTime = 0; addExpense(); });
+                return;
+            }
+        }
+        skipDupCheck = false;
+
         isSubmitting = true; addBtn.disabled = true; addBtn.style.opacity = '0.5';
         let rollbackDb = JSON.parse(JSON.stringify(db));
 
@@ -2191,7 +2437,7 @@
         }); 
         
         txt += `\n*SETTLEMENTS:*\n`; 
-        const txs = getSettlements(contextExpenses, totalBase, db.activeUsers); 
+        const txs = getSettlements(contextExpenses, totalBase, db.activeUsers, db.mathV); 
         txs.forEach(t => { 
             const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`;
             const pd = (db.paidStatus && db.paidStatus[key]) || 0; const rem = t.amt - pd; 
@@ -2235,7 +2481,8 @@
                 if (tagEx.length > 0) {
                     let tTotal = 0; tagEx.forEach(e => tTotal += e.amount); let tagPaidStatus = {};
                     for (let pk in db.paidStatus) { if (pk.endsWith('_' + tag)) { let baseKey = pk.substring(0, pk.lastIndexOf('_' + tag)); tagPaidStatus[baseKey] = db.paidStatus[pk]; } }
-                    db.archives.unshift({ start: db.startDate, end: endDateStr, total: tTotal, details: tagEx, paidStatus: tagPaidStatus, activeUsers: [...(db.activeUsers || db.users)], tag: tag });
+                    let tagClaims = {}; for (let ck in (db.payClaims || {})) { if (ck.endsWith('_' + tag)) tagClaims[ck.substring(0, ck.lastIndexOf('_' + tag))] = db.payClaims[ck]; }
+                    db.archives.unshift({ start: db.startDate, end: endDateStr, total: tTotal, details: tagEx, paidStatus: tagPaidStatus, payClaims: tagClaims, activeUsers: [...(db.activeUsers || db.users)], tag: tag, mathV: db.mathV || 1 });
                 }
             });
 
@@ -2243,11 +2490,13 @@
             if (normalEx.length > 0) {
                 let nTotal = 0; normalEx.forEach(e => nTotal += e.amount); let normalPaidStatus = {};
                 for (let pk in db.paidStatus) { if (!pk.includes('#')) { normalPaidStatus[pk] = db.paidStatus[pk]; } }
-                db.archives.unshift({ start: db.startDate, end: endDateStr, total: nTotal, details: normalEx, paidStatus: normalPaidStatus, activeUsers: [...(db.activeUsers || db.users)], tag: null });
+                let normalClaims = {}; for (let ck in (db.payClaims || {})) { if (!ck.includes('#')) normalClaims[ck] = db.payClaims[ck]; }
+                db.archives.unshift({ start: db.startDate, end: endDateStr, total: nTotal, details: normalEx, paidStatus: normalPaidStatus, payClaims: normalClaims, activeUsers: [...(db.activeUsers || db.users)], tag: null, mathV: db.mathV || 1 });
             }
 
-            if (db.archives.length > 15) db.archives = db.archives.slice(0, 15);
-            db.expenses = []; db.paidStatus = {}; db.startDate = endDateStr; db.activeUsers = [...db.users]; activeHashtag = null;
+            // (Old versions kept only the newest 15 archives and silently deleted the rest, unpaid debts included.
+            //  The data grows ~8.5 KB per cycle, so everything is kept; the health card watches the size.)
+            db.expenses = []; db.paidStatus = {}; db.payClaims = {}; db.mathV = 2; db.startDate = endDateStr; db.activeUsers = [...db.users]; activeHashtag = null;
             logAudit("Ended Month"); render(); executeActionWithSave(); isArchiving = false;
         });
     }
