@@ -34,6 +34,7 @@
 
             const theme = savedTheme || (themeQuery.matches ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
+            try { const acc = localStorage.getItem('house_accent'); if (acc && acc !== 'teal') document.documentElement.setAttribute('data-accent', acc); else document.documentElement.removeAttribute('data-accent'); } catch (e) {}
             
             const metaTheme = document.querySelector('meta[name="theme-color"]');
             if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0a0e17' : '#f2f4f7');
@@ -99,7 +100,7 @@
         button { font-family: inherit; }
         button svg, .badge svg, .action-icon svg { pointer-events: none; }
         button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; -webkit-user-drag: none; }
-        .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: calc(var(--tabbar-h) + 110px + env(safe-area-inset-bottom)); }
+        .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom)); }
 
         @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, #tabBar { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } }
 
@@ -139,7 +140,7 @@
         .spin { animation: spin 1s linear infinite; }
 
         /* ---- Balance card ---- */
-        .hero-section { margin: 6px 16px 4px; padding: 20px 20px 18px; border-radius: 28px; background: var(--hero-gradient); color: #fff; position: relative; overflow: hidden; box-shadow: 0 14px 34px rgba(13, 148, 136, 0.28); }
+        .hero-section { margin: 6px 16px 4px; padding: 20px 20px 18px; border-radius: 28px; background: var(--hero-gradient); color: #fff; position: relative; overflow: hidden; box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 28%, transparent); }
         [data-theme="dark"] .hero-section { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45); }
         .hero-section::before { content: ''; position: absolute; top: -70px; right: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.22), rgba(255,255,255,0) 70%); pointer-events: none; }
         .hero-section::after { content: ''; position: absolute; bottom: -90px; left: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.10), rgba(255,255,255,0) 70%); pointer-events: none; }
@@ -153,7 +154,7 @@
         .stat-block .label { font-size: 0.7rem; color: rgba(255,255,255,0.8); font-weight: 600; }
         .stat-block .val { white-space: nowrap; font-size: 1.02rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
         #hashtagContainer .name-pill { background: rgba(255,255,255,0.16) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.22) !important; }
-        #hashtagContainer .name-pill.main { background: #fff !important; color: #0b6b64 !important; }
+        #hashtagContainer .name-pill.main { background: #fff !important; color: #0d1321 !important; }
         #monthlyTrendText { color: rgba(255,255,255,0.82) !important; text-align: left !important; margin-top: 12px !important; font-weight: 500 !important; font-size: 0.75rem !important; }
         .hero-end-btn { margin-top: 14px; width: 100%; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 11px 16px; border-radius: 16px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .hero-end-btn:active { background: rgba(255,255,255,0.26); }
@@ -199,6 +200,21 @@
         /* ---- Bottom: expense input + tab bar ---- */
         .input-section { position: fixed; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 8px 14px 10px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.15s; }
         .input-section > * { pointer-events: auto; }
+        /* The add box only shows after tapping + (body.adding); the page behind is dimmed */
+        body:not(.adding) .input-section { display: none; }
+        #addBackdrop { position: fixed; inset: 0; z-index: 94; background: rgba(5, 10, 20, 0.38); display: none; }
+        body.adding #addBackdrop { display: block; animation: fade-in 0.2s; }
+        body.adding .input-section { animation: add-up 0.26s cubic-bezier(0.32, 0.72, 0, 1); }
+        @keyframes fade-in { from { opacity: 0; } }
+        @keyframes add-up { from { transform: translateY(24px); opacity: 0; } }
+        #editBar { display: none; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 8px 8px 8px 14px; font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); box-shadow: var(--shadow-lg); }
+        body.editing #editBar { display: flex; }
+        .tab-add { display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; }
+        .tab-add span { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 40%, transparent); transform: translateY(-10px); transition: transform 0.15s; border: 4px solid var(--bg); position: relative; }
+        .tab-add span svg { width: 24px; height: 24px; }
+        .tab-add:active span { transform: translateY(-10px) scale(0.93); }
+        .tab-add.has-draft span::after { content: ''; position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--danger); border: 2px solid var(--bg); }
+        body.adding .tab-add span svg { transform: rotate(45deg); transition: transform 0.2s; }
         /* Only while the on-screen keyboard is really up (kb-open is set from the viewport height): closing the keyboard
            with Back leaves the box focused, and the tab bar must come back then */
         body.kb-open:has(.input-section :focus) .input-section { bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
@@ -223,7 +239,7 @@
         select { background: transparent; color: var(--text-muted); border: none; font-weight: 700; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; font-size: 16px !important; }
         #optionsMenu { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 22px !important; box-shadow: var(--shadow-lg) !important; }
 
-        #tabBar { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding: 6px 10px env(safe-area-inset-bottom); background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 96; }
+        #tabBar { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding: 6px 10px env(safe-area-inset-bottom); background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 96; }
         .tab { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 0.68rem; font-weight: 600; cursor: pointer; position: relative; border-radius: 14px; }
         .tab svg { width: 22px; height: 22px; }
         .tab.active { color: var(--accent); }
@@ -261,6 +277,71 @@
         .owed-head .amt { color: var(--accent-strong); font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
         .settle-row { display: flex; align-items: flex-start; gap: 10px; }
 
+        /* ---- Big title that shrinks into the top bar on scroll ---- */
+        .glass-nav { transition: background-color 0.2s, box-shadow 0.2s; }
+        .glass-nav:not(.scrolled) { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+        .glass-nav.scrolled { box-shadow: 0 1px 0 var(--border); }
+        .nav-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.3px; color: var(--text-main); opacity: 0; transform: translateY(6px); transition: opacity 0.2s, transform 0.2s; background: none; border: none; cursor: pointer; padding: 0; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .glass-nav.scrolled .nav-title { opacity: 1; transform: none; }
+        .big-title { padding: 0 20px 12px; margin-top: -6px; }
+        .big-title .greet-sub { display: block; margin-bottom: 2px; }
+        .big-title h1 { font-size: 1.85rem; font-weight: 800; letter-spacing: -0.8px; line-height: 1.15; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .big-title #topUserName { font-size: inherit !important; letter-spacing: inherit; }
+
+        /* ---- Past cycles link on the home screen ---- */
+        .past-link { margin: 12px 16px 0; background: var(--surface); border: none; border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left; color: var(--text-main); font: inherit; }
+        .past-link:active { transform: scale(0.99); }
+        .past-link .pl-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .past-link .pl-text b { font-size: 1rem; font-weight: 700; }
+        .past-link .pl-text small { font-size: 0.78rem; color: var(--text-muted); }
+        .past-link > .ic { color: var(--text-muted); }
+
+        /* ---- Expense rows (tap for details) and the detail sheet ---- */
+        .ex-row { cursor: pointer; border-radius: 14px; margin: 0 -8px; padding-left: 8px !important; padding-right: 8px !important; transition: background 0.15s; }
+        .ex-row:active { background: var(--surface-2); }
+        .ex-row .item-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .ex-row .item-sub svg { width: 13px; height: 13px; }
+        .ex-hero { text-align: center; padding: 4px 0 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .ex-hero .ex-amt { font-size: 2.3rem; font-weight: 800; letter-spacing: -1.2px; font-variant-numeric: tabular-nums; }
+        .ex-hero .ex-desc { font-size: 1rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; max-width: 100%; }
+        .ex-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+        .ex-actions .btn-pill { padding: 12px 8px; font-size: 0.85rem; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .ex-actions .btn-pill svg { width: 16px; height: 16px; }
+
+        /* ---- Who pays whom ---- */
+        .pay-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; padding: 14px; margin-bottom: 10px; }
+        .pay-card.settled { opacity: 0.55; }
+        .pay-top { display: flex; align-items: center; gap: 12px; }
+        .pay-people { display: flex; align-items: center; flex-shrink: 0; }
+        .pay-people .avatar { width: 34px; height: 34px; font-size: 0.85rem; box-shadow: 0 0 0 2px var(--surface-2); }
+        .pay-arrow { width: 22px; height: 22px; margin: 0 -3px; z-index: 1; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .pay-arrow svg { width: 12px; height: 12px; }
+        .pay-names { flex: 1; min-width: 0; font-size: 0.88rem; line-height: 1.35; overflow-wrap: anywhere; }
+        .pay-names small { display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+        .pay-amt { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .pay-card:not(.settled) .pay-amt.owed { color: var(--danger); }
+        .pay-card .card-actions { margin-top: 12px; justify-content: flex-end; }
+        .pay-card .claim { margin-top: 10px; }
+
+        /* ---- Accent colours (Settings → Display, kept per phone) ---- */
+        .swatches { display: flex; gap: 8px; }
+        .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); background: var(--sw); cursor: pointer; box-shadow: 0 0 0 1px var(--border); transition: transform 0.15s, box-shadow 0.15s; }
+        .swatch:active { transform: scale(0.9); }
+        html:not([data-accent]) .swatch[data-accent="teal"], html[data-accent="blue"] .swatch[data-accent="blue"], html[data-accent="purple"] .swatch[data-accent="purple"], html[data-accent="orange"] .swatch[data-accent="orange"] { box-shadow: 0 0 0 2px var(--sw); }
+        html[data-accent="blue"] { --accent: #2563eb; --accent-strong: #1d4ed8; --accent-glow: rgba(37, 99, 235, 0.14); --accent-soft: rgba(37, 99, 235, 0.10); --hero-gradient: linear-gradient(140deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 130%); }
+        html[data-accent="purple"] { --accent: #7c3aed; --accent-strong: #6d28d9; --accent-glow: rgba(124, 58, 237, 0.14); --accent-soft: rgba(124, 58, 237, 0.10); --hero-gradient: linear-gradient(140deg, #4c1d95 0%, #7c3aed 50%, #db2777 130%); }
+        html[data-accent="orange"] { --accent: #ea580c; --accent-strong: #c2410c; --accent-glow: rgba(234, 88, 12, 0.14); --accent-soft: rgba(234, 88, 12, 0.10); --hero-gradient: linear-gradient(140deg, #9a3412 0%, #ea580c 50%, #e11d48 130%); }
+        html[data-theme="dark"][data-accent="blue"] { --accent: #60a5fa; --accent-strong: #93c5fd; --on-accent: #04122e; --accent-glow: rgba(96, 165, 250, 0.22); --accent-soft: rgba(96, 165, 250, 0.12); --hero-gradient: linear-gradient(140deg, #172554 0%, #1d4ed8 55%, #6d28d9 135%); }
+        html[data-theme="dark"][data-accent="purple"] { --accent: #a78bfa; --accent-strong: #c4b5fd; --on-accent: #1e0b3d; --accent-glow: rgba(167, 139, 250, 0.22); --accent-soft: rgba(167, 139, 250, 0.12); --hero-gradient: linear-gradient(140deg, #2e1065 0%, #6d28d9 55%, #be185d 135%); }
+        html[data-theme="dark"][data-accent="orange"] { --accent: #fb923c; --accent-strong: #fdba74; --on-accent: #2a1003; --accent-glow: rgba(251, 146, 60, 0.22); --accent-soft: rgba(251, 146, 60, 0.12); --hero-gradient: linear-gradient(140deg, #431407 0%, #c2410c 55%, #be123c 135%); }
+
+        /* ---- Motion: new rows slide in, ticks and payments pop (off with reduce-motion) ---- */
+        @keyframes row-in { from { opacity: 0; transform: translateY(-10px); background: var(--accent-soft); } }
+        .ex-row.enter { animation: row-in 0.45s cubic-bezier(0.32, 0.72, 0, 1); }
+        @keyframes tick-pop { 0% { transform: scale(1); } 40% { transform: scale(1.035); background: var(--accent-soft); } 100% { transform: scale(1); } }
+        .just-done { animation: tick-pop 0.42s ease-out; }
+        @media (prefers-reduced-motion: reduce) { .ex-row.enter, .just-done, body.adding .input-section, body.adding #addBackdrop { animation: none !important; } .nav-title { transition: none; } }
+
         /* ---- Cards, sheets and dialogs ---- */
         .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; padding: 28px 22px; box-shadow: var(--shadow-lg); color: var(--text-main); }
         .login-card h2 { font-weight: 800 !important; letter-spacing: -0.4px !important; }
@@ -293,7 +374,7 @@
         .count-badge { background: var(--accent-soft); color: var(--accent-strong); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-left: 2px; }
 
         #loading { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 9px 18px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; display: none; z-index: 20000; box-shadow: var(--shadow-lg); letter-spacing: 0.4px; white-space: nowrap; pointer-events: auto; }
-        #notifCard { bottom: calc(var(--tabbar-h) + 84px + env(safe-area-inset-bottom)) !important; }
+        #notifCard { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)) !important; }
 
         .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
         .toggle-switch { position: relative; display: inline-block; width: 48px; height: 28px; flex-shrink: 0; }
@@ -500,15 +581,38 @@
     </div>
 </div>
 
+<div id="expenseOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Expense</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeExpense()" data-ic="x"></button></div>
+        <div id="expenseDetail"></div>
+    </div>
+</div>
+
+<div id="pastOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Past cycles</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closePast()" data-ic="x"></button></div>
+        <div class="sheet-body">
+            <div id="unpaidArchivesSection" style="display:none;">
+                <div class="group-label danger-text" style="display:flex; align-items:center; gap:6px;">Unpaid debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></div>
+                <div id="unpaidArchivesList" class="stack"></div>
+            </div>
+            <div id="archivesWrapper">
+                <div class="group-label" style="display:flex; align-items:center; gap:6px;">All cycles <span id="archivesCount" class="count-badge" style="display:none;">0</span></div>
+                <div id="archiveList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="settingsOverlay" class="sheet-overlay" style="display:none;">
     <div class="login-card sheet">
         <div class="sheet-head"><h2>Settings</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeSettings()" data-ic="x"></button></div>
 
         <div class="group-label">Display</div>
         <div class="group">
-            <div class="row-item interactive-btn" onclick="triggerHaptic(); toggleSwipeSetting()">
-                <span class="ri-icon" data-ic="swipe"></span><span class="ri-label">Swipe to reveal actions<span class="ri-sub">Hide Share, Edit and Delete behind a swipe</span></span>
-                <span class="toggle-switch"><input type="checkbox" aria-label="Toggle Swipe Actions" id="swipeToggleInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
+            <div class="row-item" style="cursor:default;">
+                <span class="ri-icon" data-ic="palette"></span><span class="ri-label">Accent colour<span class="ri-sub">Only on this phone</span></span>
+                <span class="swatches"><button class="swatch interactive-btn" data-accent="teal" aria-label="Teal" style="--sw:#0d9488;" onclick="setAccent('teal')"></button><button class="swatch interactive-btn" data-accent="blue" aria-label="Blue" style="--sw:#2563eb;" onclick="setAccent('blue')"></button><button class="swatch interactive-btn" data-accent="purple" aria-label="Purple" style="--sw:#7c3aed;" onclick="setAccent('purple')"></button><button class="swatch interactive-btn" data-accent="orange" aria-label="Orange" style="--sw:#ea580c;" onclick="setAccent('orange')"></button></span>
             </div>
             <div id="smartRoundingContainer" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); toggleSmartRounding()">
                 <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Smart rounding<span class="ri-sub">Round settle-up amounts to 10p</span></span>
@@ -641,8 +745,7 @@
         <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'heroSection')"><span class="ri-icon" data-ic="home"></span><span class="ri-label">Dashboard</span></a>
         <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'settlementsWrapper')"><span class="ri-icon" data-ic="swap"></span><span class="ri-label">Settlement Reports</span></a>
         <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'currentExpensesWrapper')"><span class="ri-icon" data-ic="list"></span><span class="ri-label">Current Expenses</span></a>
-        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')"><span class="ri-icon" data-ic="alert"></span><span class="ri-label">Unpaid Past Debts</span></a>
-        <a href="#" class="row-item interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')"><span class="ri-icon" data-ic="archive"></span><span class="ri-label">History &amp; Archives</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openPast(); event.preventDefault();"><span class="ri-icon" data-ic="archive"></span><span class="ri-label">Past cycles</span></a>
     </div>
 
     <div class="group-label">House</div>
@@ -668,11 +771,8 @@
 </nav>
 
 <main class="wrapper">
-    <nav class="glass-nav" aria-label="Top Navigation">
-        <div class="greet">
-            <span class="greet-sub">House Expenses</span>
-            <button id="topUserName" aria-label="Toggle My View" class="interactive-btn" onclick="triggerHaptic(); toggleMyView()" title="Tap to see only your own expenses"></button>
-        </div>
+    <nav class="glass-nav" id="topNav" aria-label="Top Navigation">
+        <button id="navTitle" class="nav-title interactive-btn" onclick="goHome()" aria-hidden="true" tabindex="-1">House Expenses</button>
         <div style="display:flex; align-items:center; gap:10px;">
             <button class="icon-btn interactive-btn" aria-label="Help Guide" onclick="triggerHaptic(); openHelp()" data-ic="help"></button>
             <div style="position:relative;">
@@ -683,6 +783,11 @@
             </div>
         </div>
     </nav>
+
+    <div class="big-title">
+        <span class="greet-sub">House Expenses</span>
+        <h1>Hi, <button id="topUserName" aria-label="Toggle My View" class="interactive-btn" onclick="triggerHaptic(); toggleMyView()" title="Tap to see only your own expenses"></button></h1>
+    </div>
 
     <header class="hero-section" id="heroSection">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -728,7 +833,7 @@
                 <div id="cycleSplitCheckboxes" style="display:none; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
             </div>
             <div id="settleList"></div>
-            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="jumpToSection(event, 'unpaidArchivesSection')">
+            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="triggerHaptic(); openPast()">
                 <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span>Unpaid debts from past cycles</span><span class="ic" data-ic="chev"></span></div>
             </div>
         </div>
@@ -744,29 +849,18 @@
         </div>
     </section>
 
-    <section class="content-section" id="unpaidArchivesSection" style="display:none;">
-        <div class="flow-header interactive-btn" onclick="toggleSection(this)">
-            <h3 class="flow-title danger-text">Unpaid Past Debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></h3>
-            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="collapsible-content">
-            <div id="unpaidArchivesList" class="stack"></div>
-        </div>
-    </section>
-
-    <section class="content-section" id="archivesWrapper">
-        <div class="flow-header interactive-btn" onclick="toggleSection(this)">
-            <h3 class="flow-title">History &amp; Archives <span id="archivesCount" class="count-badge" style="display:none;">0</span></h3>
-            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="collapsible-content">
-            <div id="archiveList"></div>
-        </div>
-    </section>
+    <button id="pastLink" class="past-link interactive-btn" onclick="triggerHaptic(); openPast()">
+        <span class="ri-icon" data-ic="archive"></span>
+        <span class="pl-text"><b>Past cycles</b><small id="pastLinkSub">None yet</small></span>
+        <span id="pastLinkTag" class="tag danger" style="display:none;"></span>
+        <span class="ic" data-ic="chev"></span>
+    </button>
 </main>
+<div id="addBackdrop" onclick="triggerHaptic(); navBack()"></div>
 
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
     <div id="hashtagAutocomplete"></div>
+    <div id="editBar"><span>Editing expense</span><button class="btn-pill interactive-btn" onclick="triggerHaptic(); closeAddBox(true)">Cancel</button></div>
     <div id="optionsMenu" style="display:none; padding:14px; margin-bottom:4px;">
         <label class="field-label" for="groupNote">Note for this expense</label>
         <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom:10px;" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
@@ -790,6 +884,7 @@
 <nav id="tabBar" aria-label="Tabs">
     <button class="tab active interactive-btn" onclick="triggerHaptic(); goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</button>
     <button class="tab interactive-btn" onclick="triggerHaptic(); openShopping()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"></path></svg>Shopping<span id="tabShopBadge" class="tab-badge"></span></button>
+    <button id="tabAddBtn" class="tab-add interactive-btn" aria-label="Add expense" onclick="triggerHaptic(); toggleAddBox()"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></button>
     <button class="tab interactive-btn" onclick="triggerHaptic(); openNotices()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"></path><path d="M9 10.8V5h6v5.8l2.4 3.2a.6.6 0 0 1-.5 1H7.1a.6.6 0 0 1-.5-1z"></path><path d="M8 5h8"></path></svg>Notices<span id="tabNoticeBadge" class="tab-badge"></span></button>
     <button class="tab interactive-btn" onclick="triggerHaptic(); toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>More</button>
 </nav>
@@ -797,7 +892,8 @@
 
     // ---- Line icons (24x24, stroke) used across the app: <span data-ic="name"> is filled on load, ico(name) in templates ----
     const ICONS = {
-        x: '<path d="M18 6 6 18M6 6l12 12"/>', chev: '<path d="m9 6 6 6-6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+        x: '<path d="M18 6 6 18M6 6l12 12"/>', arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>', edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+        palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>', chev: '<path d="m9 6 6 6-6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
         home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
         swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>', list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
         alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2h.01"/>',
@@ -951,6 +1047,7 @@
     let isSettling = false;
     let lastSubmitTime = 0; let skipDupCheck = false;
     let editingId = null;
+    let seenExpenseIds = null; // ids already shown; anything new after the first load slides in
     let myViewActive = false;
     let needsSync = localStorage.getItem('house_needs_sync') === 'true';
     // Version of the server data our local copy is based on. Sent with every save so the server can merge
@@ -985,13 +1082,13 @@
     // and remembers it; Back (phone button / gesture) or the ✕ then returns to it, with its scroll position, instead of home.
     // One history entry ({nav:true}) sits above the page while anything is open, so Back on the home screen leaves the app.
     const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
-        historyOverlay: 'closeHistory', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
+        historyOverlay: 'closeHistory', expenseOverlay: 'closeExpense', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
         manageUsersOverlay: 'closeManageUsers', helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
-        insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog' };
+        insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast' };
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay' };
+        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navBackPending = false, navUserBack = false, navClickAttr = '';
@@ -1001,11 +1098,11 @@
         const el = document.getElementById(id); return !!el && el.style.display === 'flex';
     }
     function navTopPage() { return Object.keys(NAV_SHEETS).find(navShown) || (navShown('menu') ? 'menu' : null); }
-    function navTop() { return Object.keys(NAV_DIALOGS).find(navShown) || navTopPage(); }
+    function navTop() { return Object.keys(NAV_DIALOGS).find(navShown) || (document.body.classList.contains('adding') ? 'addBox' : null) || navTopPage(); }
     function navEnsureEntry() { if (!(history.state && history.state.nav)) history.pushState({ nav: true }, '', location.href); }
     function navCloseTop() {
         const top = navTop(); if (!top) return false;
-        if (top === 'menu') toggleMenu(); else window[NAV_DIALOGS[top] || NAV_SHEETS[top]]();
+        if (top === 'menu') toggleMenu(); else if (top === 'addBox') closeAddBox(true); else window[NAV_DIALOGS[top] || NAV_SHEETS[top]]();
         return true;
     }
     function navRestore(entry) {
@@ -1049,6 +1146,7 @@
         }, true);
         // Whenever screens open or close: lock the page behind them, and drop the history entry once everything is closed
         const watch = new MutationObserver(navSync);
+        watch.observe(document.body, { attributes: true, attributeFilter: ['class'] }); // the add box (body.adding)
         [...Object.keys(NAV_SHEETS), ...Object.keys(NAV_DIALOGS), 'sideMenu', 'loginOverlay'].forEach(id => { const el = document.getElementById(id); if (el) watch.observe(el, { attributes: true, attributeFilter: ['style', 'class'] }); });
     }
     function navSync() {
@@ -1253,7 +1351,6 @@
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         
-        document.getElementById('swipeToggleInput').checked = swipeActionsEnabled;
         const roundingContainer = document.getElementById('smartRoundingContainer');
         if (currentUser === "Shahzeb") { roundingContainer.style.display = 'flex'; document.getElementById('smartRoundingInput').checked = smartRoundingEnabled; } else { roundingContainer.style.display = 'none'; }
         const trashBtn = document.getElementById('trashBtn');
@@ -1526,7 +1623,7 @@
         document.body.style.overflow = '';
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         const el = document.getElementById('amtInput'); if (!el) return;
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => el.focus(), 300);
+        openAddBox();
     }
     function runPendingQuickAdd() { if (pendingQuickAdd) setTimeout(openQuickAdd, 400); }
 
@@ -1623,7 +1720,7 @@
     function renderShopping() {
         const all = db.shopping || [];
         const list = all.filter(x => !x.done).sort((a, b) => b.t - a.t).concat(all.filter(x => x.done).sort((a, b) => b.t - a.t));
-        document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item card" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
+        document.getElementById('shopList').innerHTML = list.length ? list.map(s => `<div class="shop-item card" data-sid="${escapeHTML(s.id)}" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
                 <input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">
                 <div style="flex:1; min-width:0;"><div class="shop-text card-title" style="${s.done ? 'text-decoration:line-through;' : ''}">${escapeHTML(s.text)}</div>
                 <div class="card-meta" style="margin-top:1px;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))} · ${new Date(s.t).toLocaleDateString()}</div></div>
@@ -1650,6 +1747,7 @@
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
         s.done = !s.done; if (s.done) s.doneBy = currentUser; else delete s.doneBy;
         logAudit(`${s.done ? 'Bought' : 'Un-ticked'}: ${s.text.slice(0, 40)}`, null, true); renderShopping(); executeActionWithSave();
+        if (s.done) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
     function removeShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
@@ -1670,8 +1768,7 @@
         let note = `Shopping: ${bought.map(x => x.text).join(', ')}`; if (note.length > 200) note = note.slice(0, 199) + '…';
         document.getElementById('groupNote').value = note;
         const el = document.getElementById('amtInput'); el.value = ''; el.style.height = '40px';
-        toggleOptionsMenu(true); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => el.focus(), 300);
-        showToast("TYPE THE AMOUNT AND SEND", 2500);
+        document.getElementById('optionsMenu').style.display = 'block'; openAddBox();
     }
 
     // ---- Everything still unpaid that involves one person, across the current cycle, hashtag bills and all past cycles ----
@@ -1984,6 +2081,75 @@
         .catch((e) => { if (e.message === "AUTH") { setNeedsSync(true); forgetHouseKey(); showLock("Wrong PIN. Try again"); } else if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { if (e.message === "REJECTED") { setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); showToast("SERVER REFUSED THAT SAVE - RELOADING", 3000); setTimeout(() => loadData(true), 500); } else { setNeedsSync(true); scheduleSaveRetry(15000); } } })
         .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = ''; if (editSeq !== seqAtStart) { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveData(); }, 1500); } });
     }
+
+    // ---- Add box: opened with the + tab, closed by Back / tapping outside / after adding ----
+    function openAddBox() {
+        if (!currentUser) return;
+        document.body.classList.add('adding'); document.body.classList.toggle('editing', !!editingId);
+        const btn = document.getElementById('tabAddBtn'); btn.classList.remove('intro-glow'); safeSetStorage('has_seen_input', 'true');
+        navEnsureEntry(); document.getElementById('amtInput').focus();
+    }
+    /** cancel = the person backed out: an edit in progress is dropped, a new expense's text is kept as a draft */
+    function closeAddBox(cancel = false) {
+        if (cancel && editingId) {
+            editingId = null; ['amtInput', 'groupNote'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('amtInput').style.height = '40px';
+            document.getElementById('optionsMenu').style.display = 'none'; render();
+        }
+        if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.input-section')) document.activeElement.blur();
+        document.getElementById('hashtagAutocomplete').style.display = 'none';
+        document.body.classList.remove('adding', 'editing');
+        document.getElementById('tabAddBtn').classList.toggle('has-draft', !!(document.getElementById('amtInput').value.trim() || document.getElementById('groupNote').value.trim()));
+    }
+    function toggleAddBox() { if (document.body.classList.contains('adding')) navBack(); else openAddBox(); }
+
+    // ---- Expense detail sheet (tap a row) ----
+    let openExpenseId = null;
+    function expenseDetailHTML(ex) {
+        const { sym, rate } = viewMoney(); const exSym = ex.originalSym || sym;
+        const amt = sym + (ex.amount * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const when = ex.timestamp ? new Date(ex.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const receipts = ex.receipt ? (Array.isArray(ex.receipt) ? ex.receipt.length : 1) : 0;
+        const receiptArg = typeof ex.receipt === 'string' ? jsArg(ex.receipt) : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+        let html = `<div class="ex-hero">${avatarHTML(ex.name, 'lg')}<div class="ex-amt">${amt}</div><div class="ex-desc">${formatDescDisplay(ex.desc, exSym) || escapeHTML(ex.name)}</div><div class="card-meta" style="margin:0;">Paid by <b>${escapeHTML(ex.name)}</b> · ${formatNiceDate(ex.date || db.startDate)}${when ? ' · ' + when : ''}</div></div>`;
+        html += `<div class="group">`;
+        html += `<div class="row-item" style="cursor:default;"><span class="ri-icon" data-ic="users">${ico('users')}</span><span class="ri-label">Split<span class="ri-sub">${escapeHTML(splitLabel(ex.involved))}</span></span></div>`;
+        if (receipts) html += `<div class="row-item interactive-btn" role="button" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptArg})"><span class="ri-icon">${ico('image')}</span><span class="ri-label">Receipt${receipts > 1 ? 's' : ''}<span class="ri-sub">${receipts} photo${receipts > 1 ? 's' : ''}</span></span><span class="ic">${ico('chev')}</span></div>`;
+        if (ex.edited) html += `<div class="row-item interactive-btn" role="button" onclick="triggerHaptic(); showEditHistory('${ex.id}')"><span class="ri-icon">${ico('clock')}</span><span class="ri-label">Edited<span class="ri-sub">${Array.isArray(ex.history) && ex.history.length ? 'See earlier versions' : 'No earlier versions saved'}</span></span><span class="ic">${ico('chev')}</span></div>`;
+        html += `</div><div class="ex-actions"><button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">${ico('share')}Share</button>`;
+        if (ex.name === currentUser) html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">${ico('edit')}Edit</button><button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">${ico('trash')}Delete</button>`;
+        return html + '</div>';
+    }
+    function openExpense(id) {
+        const ex = (db.expenses || []).find(e => e.id === id); if (!ex) return;
+        if (document.activeElement) document.activeElement.blur();
+        openExpenseId = id; document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex);
+        navEnsureEntry(); document.getElementById('expenseOverlay').style.display = 'flex';
+    }
+    function closeExpense() { openExpenseId = null; document.getElementById('expenseOverlay').style.display = 'none'; }
+    /** After any change (sync, edit, delete) keep the open detail sheet in step, or close it if the expense is gone */
+    function refreshExpenseSheet() {
+        if (!openExpenseId || document.getElementById('expenseOverlay').style.display !== 'flex') return;
+        const ex = (db.expenses || []).find(e => e.id === openExpenseId);
+        if (ex) document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex); else closeExpense();
+    }
+
+    // ---- Past cycles sheet ----
+    function openPast() {
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        navEnsureEntry(); document.getElementById('pastOverlay').style.display = 'flex';
+    }
+    function closePast() { document.getElementById('pastOverlay').style.display = 'none'; }
+
+    // ---- Accent colour (this phone only) ----
+    function setAccent(name) {
+        triggerHaptic();
+        if (name === 'teal') document.documentElement.removeAttribute('data-accent'); else document.documentElement.setAttribute('data-accent', name);
+        safeSetStorage('house_accent', name);
+    }
+
+    // Briefly highlight something that just changed (a ticked item, a payment marked)
+    function flashDone(el) { if (!el) return; el.classList.remove('just-done'); void el.offsetWidth; el.classList.add('just-done'); }
 
     function toggleMyView() {
         myViewActive = !myViewActive; const el = document.getElementById('topUserName');
@@ -2304,7 +2470,7 @@
     }
 
     // Round coloured initial for a housemate; the colour is picked from the name so it stays the same everywhere
-    const AVATAR_COLOURS = ["#0d9488", "#6366f1", "#f59e0b", "#ec4899", "#0ea5e9", "#8b5cf6", "#ef4444", "#10b981", "#f97316", "#3b82f6"];
+    const AVATAR_COLOURS = ["#0d9488", "#6366f1", "#f59e0b", "#ec4899", "#0ea5e9", "#8b5cf6", "#ef4444", "#64748b", "#f97316", "#3b82f6"]; // distinct hues (no second green next to teal)
     function avatarColour(name) { let n = 0; for (const ch of String(name || "")) n = (n * 31 + ch.codePointAt(0)) >>> 0; return AVATAR_COLOURS[n % AVATAR_COLOURS.length]; }
     function avatarHTML(name, size = "") { const s = String(name || "?"); return `<span class="avatar ${size}" aria-hidden="true" style="background:${avatarColour(s)}">${escapeHTML(Array.from(s.trim())[0] || "?").toUpperCase()}</span>`; }
     function goHome() { navCloseAll(); window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -2361,7 +2527,7 @@
         });
 
         const list = document.getElementById('expenseList');
-        if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); list.innerHTML = emptyState('receipt', `No expenses yet${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}. Type an amount below to add the first one.`); } 
+        if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); list.innerHTML = emptyState('receipt', `No expenses yet${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}. Tap + to add the first one.`); } 
         else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
             let listHtml = `<div class="timeline-wrapper">`; let currentGroupDate = null;
@@ -2373,20 +2539,17 @@
                 let exDate = ex.date || db.startDate || "Unknown Date"; 
                 if (exDate !== currentGroupDate) { let mt = (renderIndex === 0) ? '0px' : '20px'; listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`; currentGroupDate = exDate; }
 
-                let pillsHtml = generateActionPills(ex);
-                let receiptSafeStr = typeof ex.receipt === 'string' ? `${jsArg(ex.receipt)}` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
-                let receiptHtml = ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
 
                 const amtStr = `${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                const rowInfo = `<div class="item-top"><div class="item-title">${displayDesc || escapeHTML(ex.name)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${escapeHTML(ex.name)}${editedTag(ex)}</div>${splitNote}`;
-                if (swipeActionsEnabled) {
-                    listHtml += `<div class="linear-row timeline-item" style="padding:0;"><div class="swipe-track"><div class="swipe-content" style="padding:12px 0;">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}${receiptHtml ? `<div class="row-actions">${receiptHtml}</div>` : ""}</div></div><div class="swipe-actions" style="padding: 10px 0 10px 15px;">${pillsHtml}</div></div></div>`;
-                } else {
-                    listHtml += `<div class="linear-row timeline-item">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}<div class="row-actions">${pillsHtml}${receiptHtml}</div></div></div>`;
-                }
+                const flags = (ex.receipt ? `<span title="Has receipt">${ico('image')}</span>` : '') + (ex.edited ? '<span>· Edited</span>' : '');
+                const rowInfo = `<div class="item-top"><div class="item-title">${displayDesc || escapeHTML(ex.name)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${escapeHTML(ex.name)}${flags}</div>${splitNote}`;
+                const isNew = seenExpenseIds && !seenExpenseIds.has(ex.id);
+                listHtml += `<div class="linear-row timeline-item ex-row interactive-btn${isNew ? ' enter' : ''}" role="button" tabindex="0" data-id="${escapeHTML(ex.id)}" onclick="triggerHaptic(); openExpense('${ex.id}')">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}</div></div>`;
             });
             list.innerHTML = listHtml + `</div>`;
         }
+        if (localDbLoaded) seenExpenseIds = new Set((db.expenses || []).map(e => e.id)); // rows added after the first load slide in
+        document.getElementById('navTitle').textContent = currentUser ? `Hi, ${currentUser}` : 'House Expenses';
 
         let totalLocal = Math.round(totalBase * rate * 100) / 100; let activeCount = Math.max(db.activeUsers.length, 1); let avgPerHead = Math.round((totalLocal / activeCount) * 100) / 100;
         
@@ -2407,42 +2570,39 @@
             credMap[t.to].txs.push({ ...t, paid, key });
         });
 
-        document.getElementById('settlementCount').innerText = Object.keys(credMap).length; document.getElementById('settlementCount').style.display = Object.keys(credMap).length > 0 ? 'inline-block' : 'none';
-        
-        let sHtml = "";
-        for (let c in credMap) {
-            const data = credMap[c], rem = data.totalOwed - data.received, can = currentUser === c;
-            let showCreditor = !myViewActive || (c === currentUser) || data.txs.some(t => t.from === currentUser); if (!showCreditor) continue;
-
-            let sHtmlTemp = `<div class="archive-item"><div class="owed-head"><div class="who">${avatarHTML(c)}<span>${escapeHTML(c)} is owed</span></div><div class="amt">${sym}${(rem * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`;
-            let hasVisibleTxs = false;
-
-            data.txs.forEach((t, ti) => {
-                if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
-                hasVisibleTxs = true; const tr = t.amt - t.paid, isS = tr <= 0.01, topB = ti === 0 ? 'border-top: 1px dashed var(--border);' : '';
-                
-                sHtmlTemp += `<div class="flow-row timeline-item" style="padding: 12px 0; ${topB} opacity: ${isS ? 0.45 : 1}; border-bottom: none;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> pays: <b class="${isS ? '' : 'danger-text'}" style="font-size:1.02rem;">${sym}${(tr * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></div>${t.paid > 0.01 && !isS ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${(t.paid * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">`;
-                
-                if (can) {
-                    if (!isS) { sHtmlTemp += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${tr * rate}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`; }
-                    sHtmlTemp += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓' : 'Paid'}</button>`;
-                } else { sHtmlTemp += payOrPending(t.from, t.to, tr * rate, isS, t.key, -1, tr); }
-                sHtmlTemp += `</div></div></div>` + (can && !isS ? claimBanner(t.key, -1) : '');
-            });
-            sHtmlTemp += `</div>`;
-            if (hasVisibleTxs) sHtml += sHtmlTemp;
-        }
+        // One card per payment: yours first, then unpaid before settled
+        const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const pays = []; for (const c in credMap) credMap[c].txs.forEach(t => { if (!myViewActive || t.from === currentUser || t.to === currentUser) pays.push(t); });
+        const mineFirst = (t) => (t.from === currentUser || t.to === currentUser) ? 0 : 1;
+        pays.sort((a, b) => ((a.amt - a.paid <= 0.01) - (b.amt - b.paid <= 0.01)) || (mineFirst(a) - mineFirst(b)) || (b.amt - a.amt));
+        const openCount = pays.filter(t => t.amt - t.paid > 0.01).length;
+        document.getElementById('settlementCount').innerText = openCount; document.getElementById('settlementCount').style.display = openCount > 0 ? 'inline-block' : 'none';
+        const sHtml = pays.map(t => {
+            const tr = t.amt - t.paid, isS = tr <= 0.01, can = currentUser === t.to;
+            let actions = '';
+            if (can) {
+                if (!isS) actions += `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${tr * rate}, '${sym}')">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logPayment('${t.key}', ${tr * rate}, ${rate})">Partial</button>`;
+                actions += `<button class="btn-pill interactive-btn ${isS ? 'success' : 'primary'}" aria-label="Mark Full Paid" onclick="triggerHaptic(); toggleFullPaid('${t.key}', ${t.amt})">${isS ? '✓ Paid' : 'Paid'}</button>`;
+            } else actions = payOrPending(t.from, t.to, tr * rate, isS, t.key, -1, tr);
+            const meta = t.paid > 0.01 && !isS ? `Was ${money(t.amt * rate)} · ${money(t.paid * rate)} paid` : '';
+            return payCardHTML(t.from, t.to, 'pays', money((isS ? t.amt : tr) * rate), meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
+        }).join('');
         document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
-        renderArchives(sym, rate);
+        renderArchives(sym, rate); refreshExpenseSheet();
         updateNoticeCount(); updateShopCount(); updateHomeWidget();
         const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') : '';
     }
 
+    /** "From → To" payment card used in Settlements and Past cycles */
+    function payCardHTML(from, to, verb, amountText, meta, settled, actions, claimHtml, key) {
+        return `<div class="pay-card timeline-item${settled ? ' settled' : ''}" data-key="${escapeHTML(key || '')}"><div class="pay-top"><div class="pay-people">${avatarHTML(from, 'sm')}<span class="pay-arrow">${ico('arrow')}</span>${avatarHTML(to, 'sm')}</div><div class="pay-names"><b>${escapeHTML(from)}</b> ${verb} <b>${escapeHTML(to)}</b>${meta ? `<small>${meta}</small>` : ''}</div><div class="pay-amt${settled ? '' : ' owed'}">${amountText}</div></div>${actions ? `<div class="card-actions">${actions}</div>` : ''}${claimHtml || ''}</div>`;
+    }
+    function flashPayCard(key) { flashDone(Array.from(document.querySelectorAll('.pay-card')).find(el => el.dataset.key === key)); }
     function toggleFullPaid(key, totalBaseAmt) {
         if(!db.paidStatus) db.paidStatus = {};
         const current = db.paidStatus[key] || 0;
         if (totalBaseAmt - current <= 0.01) { db.paidStatus[key] = 0; } else { db.paidStatus[key] = totalBaseAmt; }
-        logAudit("Toggled Paid Status", key); render(); executeActionWithSave();
+        logAudit("Toggled Paid Status", key); render(); executeActionWithSave(); flashPayCard(key);
     }
 
     function logPayment(key, remainingLocal, rate) {
@@ -2458,7 +2618,7 @@
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
         const current = db.archives[arcIdx].paidStatus[key] || 0;
         if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
-        logAudit("Toggled Archive Paid", key); render(); executeActionWithSave();
+        logAudit("Toggled Archive Paid", key); render(); executeActionWithSave(); flashPayCard(key);
     }
 
     function logArchivePayment(arcIdx, key, remainingLocal, rate) {
@@ -2495,11 +2655,13 @@
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        cycleUnpaidHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${pdLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase)}</div></div></div>${canMarkGlobal ? claimBanner(key, idx) : ''}`;
+                        const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const acts = canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, '${sym}')">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${key}', ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase);
+                        cycleUnpaidHtml += payCardHTML(t.from, t.to, 'owes', money(remLocal), amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(pdLocal)} paid` : '', false, acts, canMarkGlobal ? claimBanner(key, idx) : '', key);
                     }
                 });
 
-                if (cycleHasUnpaid && cycleUnpaidHtml !== "") { globalUnpaidHtml += `<div class="archive-item timeline-item" style="margin-bottom:0;"><div class="cycle-dates" style="display:flex; align-items:center; gap:6px;">${ico('calendar').replace('<svg', '<svg width="13" height="13"')}${displayStart} → ${displayEnd}</div>${cycleUnpaidHtml}</div>`; }
+                if (cycleHasUnpaid && cycleUnpaidHtml !== "") { globalUnpaidHtml += `<div class="cycle-dates" style="display:flex; align-items:center; gap:6px; margin:4px 4px 8px;">${ico('calendar').replace('<svg', '<svg width="13" height="13"')}${displayStart} → ${displayEnd}</div>${cycleUnpaidHtml}`; }
 
                 let archiveSettleHtml = "", hasUnpaidInArchive = false, archiveUnpaidCount = 0;
                 for (let cred in credMap) {
@@ -2509,7 +2671,9 @@
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            archiveSettleHtml += `<div class="flow-row timeline-item" style="padding: 12px 0;"><div class="settle-row">${avatarHTML(t.from, 'sm')}<div><div style="font-size:0.9rem; color:var(--text-main);"><b>${escapeHTML(t.from)}</b> owes <b>${escapeHTML(t.to)}</b></div><div class="danger-text" style="font-size:1.02rem; font-weight:700; margin-top:2px;">${sym}${remainingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>${t.amountPaidBase > 0.01 ? `<div class="card-meta">Original: ${sym}${(t.amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} • Paid: ${sym}${paidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}</div></div><div><div class="action-group">${canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, '${sym}')">Nudge</button> <button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button> <button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase)}</div></div></div>${canMark ? claimBanner(t.key, idx) : ''}`;
+                            const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            const acts = canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, '${sym}')">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, '${t.key}', ${remainingLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, '${t.key}', ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase);
+                            archiveSettleHtml += payCardHTML(t.from, t.to, 'owes', money(remainingLocal), t.amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(paidLocal)} paid` : '', false, acts, canMark ? claimBanner(t.key, idx) : '', t.key);
                         }
                     });
                 }
@@ -2536,6 +2700,9 @@
         const unpaidSection = document.getElementById('unpaidArchivesSection'), unpaidList = document.getElementById('unpaidArchivesList'), unpaidNoticeWrapper = document.getElementById('unpaidDebtsNoticeWrapper'), globalUnpaidBadge = document.getElementById('unpaidGlobalCount');
         if (globalUnpaidBadge) { globalUnpaidBadge.innerText = totalUnpaidCount; globalUnpaidBadge.style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none'; }
 
+        const plSub = document.getElementById('pastLinkSub'), plTag = document.getElementById('pastLinkTag');
+        if (plSub) plSub.innerText = arcCount ? `${arcCount} past cycle${arcCount === 1 ? '' : 's'}` : 'None yet';
+        if (plTag) { plTag.innerText = `${totalUnpaidCount} unpaid`; plTag.style.display = totalUnpaidCount ? 'inline-flex' : 'none'; }
         if (hasUnpaidPast) { unpaidSection.style.display = 'block'; unpaidList.innerHTML = globalUnpaidHtml; if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'block'; } 
         else { unpaidSection.style.display = 'none'; unpaidList.innerHTML = ""; if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'none'; }
     }
@@ -2687,6 +2854,7 @@
             document.getElementById('groupNote').value = ""; document.getElementById('receiptInput').value = ""; document.getElementById('cameraInput').value = "";
             document.getElementById('optionsMenu').style.display = "none"; document.getElementById('hashtagAutocomplete').style.display = "none";
             render(); executeActionWithSave(); if(failedUploadsArr.length > 0) processUploadQueue();
+            if (document.body.classList.contains('adding')) navBack(); document.getElementById('tabAddBtn').classList.remove('has-draft');
             
         } catch (error) { db = rollbackDb; render(); showToast("Failed to process expense.", 3000); } 
         finally { addBtn.disabled = false; addBtn.style.opacity = '1'; isSubmitting = false; }
@@ -2698,7 +2866,8 @@
         let rawDesc = ex.desc, note = ""; const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/);
         if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
         document.getElementById('amtInput').value = rawDesc; if (note) document.getElementById('groupNote').value = note;
-        pendingShopIds = []; editingId = id; toggleOptionsMenu(true); document.getElementById('amtInput').focus(); showToast("EDITING MODE", 0); render();
+        pendingShopIds = []; editingId = id; if (document.getElementById('expenseOverlay').style.display === 'flex') closeExpense();
+        document.getElementById('optionsMenu').style.display = 'block'; render(); openAddBox();
     }
 
     // CSV cell: quote anything containing commas, quotes or line breaks (Excel/Sheets-safe), and defuse formula injection
@@ -2856,7 +3025,7 @@
     
     function login(u) { 
         currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = u; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = u;
-        if (!localStorage.getItem('has_seen_input')) { document.getElementById('chatWrapper').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
+        if (!localStorage.getItem('has_seen_input')) { document.getElementById('tabAddBtn').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
         render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500); runPendingQuickAdd();
     }
 
@@ -2884,6 +3053,7 @@
         fetchLiveRates(); checkForUpdates();
     };
     navInstall(); // after every function above exists
+    (function () { const nav = document.getElementById('topNav'); const upd = () => nav.classList.toggle('scrolled', window.scrollY > 44); window.addEventListener('scroll', upd, { passive: true }); upd(); })();
 </script>
 </body>
 </html>
