@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.18.3">
+    <meta name="app-version" content="7.18.4">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -108,7 +108,7 @@
         /* ---- Side menu ("More") ---- */
         #sideMenu { position: fixed; top: 0; left: -320px; width: 300px; height: 100dvh; background: var(--surface); z-index: 1001; transition: left 0.32s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s; padding: max(22px, env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom)) 16px; border-radius: 0 28px 28px 0; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-lg); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #sideMenu.open { left: 0; }
-        #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.45); z-index: 1000; display: none; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+        #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.5); z-index: 1000; display: none; animation: dim-in 0.2s ease-out; }
         #menuUserName { color: var(--text-main) !important; text-transform: none !important; letter-spacing: -0.3px !important; font-size: 1.15rem !important; }
         .menu-link { text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 0.95rem; padding: 13px 14px; border-radius: 14px; transition: background 0.15s; display: block; cursor: pointer; border: none !important; background: transparent; }
         @media (hover: hover) { .menu-link:hover { background: var(--surface-2); } }
@@ -330,7 +330,11 @@
         /* ---- Cards, sheets and dialogs ---- */
         .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; padding: 28px 22px; box-shadow: var(--shadow-lg); color: var(--text-main); }
         .login-card h2 { font-weight: 800 !important; letter-spacing: -0.4px !important; }
-        .sheet-overlay, .dialog-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); overscroll-behavior-y: contain; }
+        /* The dim behind pop-ups fades in. No blur: a full-screen blur is heavy for phones and flickers on some Android ones.
+           A pop-up that replaces another (More → Settings, Settings → What notifies me, Back) skips this and the slide-up,
+           so the page behind never shows for a moment (see navSync) */
+        .sheet-overlay, .dialog-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(5, 10, 20, 0.5); overscroll-behavior-y: contain; animation: dim-in 0.2s ease-out; }
+        @keyframes dim-in { from { background-color: transparent; } }
         .sheet-overlay { align-items: flex-end; justify-content: center; }
         .dialog-overlay { align-items: center; justify-content: center; }
         /* --kb: the part of the window covered by the on-screen keyboard, including any password / autofill bar on top of it
@@ -343,7 +347,7 @@
         .login-card.dialog { animation: pop-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
         @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes pop-in { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @media (prefers-reduced-motion: reduce) { .login-card.sheet, .login-card.dialog { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .login-card.sheet, .login-card.dialog, .sheet-overlay, .dialog-overlay, #menuOverlay { animation: none; } }
         .user-select-btn { display: flex; align-items: center; gap: 14px; background: var(--surface-2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 18px; color: var(--text-main); font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.15s; width: 100%; text-align: left; margin-bottom: 10px; }
         @media (hover: hover) { .user-select-btn:hover { border-color: var(--accent); } }
         .user-select-btn:active { transform: scale(0.98); border-color: var(--accent); background: var(--accent-soft); }
@@ -1023,7 +1027,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.18.3";
+    const APP_VERSION = "7.18.4";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1303,6 +1307,26 @@
         root.classList.toggle('scroll-lock', lock);
         if (!open) navStack = [];
         navSyncHistory();
+        // One layer REPLACED another in the same tap (More → Settings, Settings → What notifies me, Back, Shopping → "Add as
+        // expense"): the new one appears in place at once. Fading the dim in or sliding the sheet up from the bottom would show
+        // the page behind for a few frames, which looks like a flicker. A layer opened from the plain home screen, or on top of
+        // another one (a question box over a sheet), still plays its entry motion. Runs before the next frame is drawn.
+        const layers = navShownLayers(), added = layers.filter(l => !navPrevLayers.includes(l)), removed = navPrevLayers.filter(l => !layers.includes(l));
+        if (added.length && removed.length) {
+            added.forEach(l => navSkipMotion(l === 'menu' ? 'sideMenu' : l === 'addBox' ? 'addBackdrop' : l));
+            if (added.includes('menu')) navSkipMotion('menuOverlay');
+            if (removed.includes('menu')) navSkipMotion('sideMenu'); // and the menu leaves at once, not sliding out behind
+        }
+        navPrevLayers = layers;
+    }
+    let navPrevLayers = [];
+    function navShownLayers() {
+        return [...Object.keys(NAV_DIALOGS), ...Object.keys(NAV_SHEETS), 'loginOverlay', 'menu'].filter(navShown).concat(document.body.classList.contains('adding') ? ['addBox'] : []);
+    }
+    const NAV_ENTRY_MOTION = ['dim-in', 'fade-in', 'sheet-up', 'pop-in', 'left']; // keyframes, and the menu's slide (a transition on left)
+    function navSkipMotion(id) {
+        const el = document.getElementById(id); if (!el || !el.getAnimations) return;
+        el.getAnimations({ subtree: true }).forEach(a => { if (NAV_ENTRY_MOTION.includes(a.animationName || a.transitionProperty)) { try { a.finish(); } catch (e) {} } });
     }
     function navCloseAll() { navStack = []; let guard = 30; while (navTop() && guard--) navCloseTop(); }
     window.addEventListener('popstate', () => {
@@ -2439,7 +2463,9 @@
     function toggleMenu() {
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); const overlay = document.getElementById('menuOverlay'); const isOpen = menu.classList.contains('open');
-        if(!isOpen) navEnsureEntry(); menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block';
+        // Open first, then add its history entry: counted before it was open, Back from a screen opened from the menu saw
+        // nothing open, stepped back once more and re-added the entry during Back (Chrome may skip such entries)
+        menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block'; if (!isOpen) navEnsureEntry();
     }
 
 
