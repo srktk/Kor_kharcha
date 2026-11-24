@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.20.0">
+    <meta name="app-version" content="7.21.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -28,8 +28,6 @@
 
         // Theme: 'system' (default, follows the phone's dark mode live) or a fixed 'light' / 'dark' (Settings → Display)
         function themeMode() { try { const m = localStorage.getItem('house_theme_mode'); return m === 'light' || m === 'dark' ? m : 'system'; } catch (e) { return 'system'; } }
-        // Tab bar look (Settings → Display, this phone only): 'glass' (default) or 'classic' (the design before 7.19)
-        function tabbarMode() { try { return localStorage.getItem('house_tabbar') === 'classic' ? 'classic' : 'glass'; } catch (e) { return 'glass'; } }
         function applyTheme() {
             try { sessionStorage.removeItem('house_theme'); sessionStorage.removeItem('house_theme_time'); } catch (e) {} // old 10-minute override
             const mode = themeMode(); const theme = mode === 'system' ? (themeQuery.matches ? 'dark' : 'light') : mode;
@@ -38,8 +36,6 @@
             const metaTheme = document.querySelector('meta[name="theme-color"]');
             if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0a0e17' : '#f2f4f7');
             document.querySelectorAll('[data-theme-mode]').forEach((b) => b.classList.toggle('active', b.dataset.themeMode === mode));
-            const bar = tabbarMode(); document.documentElement.setAttribute('data-tabbar', bar);
-            document.querySelectorAll('[data-tabbar-mode]').forEach((b) => b.classList.toggle('active', b.dataset.tabbarMode === bar));
             const st = document.getElementById('themeState'); if (st) st.innerText = { system: 'System', light: 'Light', dark: 'Dark' }[mode];
         }
         applyTheme();
@@ -89,7 +85,7 @@
         button { font-family: inherit; }
         button svg, .badge svg, .action-icon svg { pointer-events: none; }
         button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; -webkit-user-drag: none; }
-        .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom)); }
+        .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom)); }
 
         @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, #tabBar, #tabGlass, .sheet-overlay, .dialog-overlay, #menuOverlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } }
 
@@ -194,8 +190,7 @@
         /* ---- Bottom: expense input + tab bar ---- */
         /* The add box sits right on top of the tab bar, inside the bar's glass (#tabGlass), which grows up around it when + is
            tapped (addBoxMotion) - one piece with the + */
-        .input-section { position: fixed; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 12px 12px 12px 18px; z-index: 95; display: flex; flex-direction: column; gap: 0; pointer-events: none; }
-        html:not([data-tabbar="glass"]) .input-section { padding-bottom: 24px; } /* clear of the raised + of the classic bar */
+        .input-section { position: fixed; margin: 0 auto; background: transparent; padding: 12px 12px 12px 18px; z-index: 95; display: flex; flex-direction: column; gap: 0; pointer-events: none; left: 14px; right: 14px; width: auto; max-width: 452px; bottom: calc(var(--tabbar-h) + 10px + env(safe-area-inset-bottom)); }
         .input-section > * { pointer-events: auto; }
         /* The add box only shows after tapping + (body.adding); the page behind is dimmed. add-closing: drawn (untouchable)
            while it shrinks back into the bar */
@@ -205,22 +200,22 @@
         body.adding #addBackdrop { display: block; animation: fade-in 0.2s; }
         body.add-closing #addBackdrop { display: block; pointer-events: none; }
         @keyframes fade-in { from { opacity: 0; } }
-        #tabGlass { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-top: 1px solid var(--border); z-index: 95; pointer-events: none; }
+        #tabGlass { position: fixed; margin: 0 auto; z-index: 95; pointer-events: none; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); border-radius: 32px; background: var(--glass-bg); border: 1px solid var(--glass-rim); box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-lo); backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%); }
         #amtPreview { padding: 0 2px 2px; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); overflow-wrap: anywhere; }
         #amtPreview b { color: var(--accent-strong); font-weight: 700; }
         .add-chips { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 10px; }
-        .add-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: var(--surface-2); color: var(--text-main); font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s, transform 0.15s; }
+        .add-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; border: 0; color: var(--text-main); font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s, transform 0.15s; background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi); }
         .add-chip:active { transform: scale(0.95); }
         .add-chip .ic { color: var(--text-muted); transition: color 0.2s; }
         .add-chip .ic svg { width: 16px; height: 16px; }
-        .add-chip.on { background: var(--accent-soft); color: var(--accent-strong); }
+        .add-chip.on { color: var(--accent-strong); background: var(--accent-soft); }
         .add-chip.on .ic { color: inherit; }
         #editBar { display: none; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 8px 8px 8px 14px; font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); box-shadow: var(--shadow-lg); }
         body.editing #editBar { display: flex; }
         .tab-add { display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; }
-        .tab-add span { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 40%, transparent); transform: translateY(-10px); transition: transform 0.15s; border: 4px solid var(--bg); position: relative; }
+        .tab-add span { border-radius: 50%; color: var(--on-accent); display: flex; align-items: center; justify-content: center; position: relative; width: 50px; height: 50px; transform: none; border: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 78%, #fff), var(--accent) 65%); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 42%, transparent), inset 0 1px 1px rgba(255, 255, 255, 0.55), inset 0 -2px 5px rgba(0, 0, 0, 0.1); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
         .tab-add span svg { width: 24px; height: 24px; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
-        .tab-add:active span { transform: translateY(-10px) scale(0.93); }
+        .tab-add:active span { transform: scale(0.9); transition-duration: 0.1s; }
         .tab-add.has-draft span::after { content: ''; position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--danger); border: 2px solid var(--bg); }
         body.adding .tab-add span svg { transform: rotate(45deg); }
         /* The tab bar stays up while typing (keyboard open): the add box is part of it */
@@ -248,34 +243,21 @@
         #optionsMenu { padding: 2px 0 6px; }
 
         /* The bar's look is drawn by #tabGlass behind it (so it can grow around the add box); #tabBar only holds the tabs */
-        #tabBar { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding: 6px 10px env(safe-area-inset-bottom); border-top: 1px solid transparent; display: grid; grid-template-columns: repeat(5, 1fr); z-index: 96; }
-        .tab { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 0.68rem; font-weight: 600; cursor: pointer; position: relative; border-radius: 14px; }
+        #tabBar { position: fixed; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); z-index: 96; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); padding: 6px; border-radius: 32px; border: 1px solid transparent; }
+        .tab { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 0.68rem; font-weight: 600; cursor: pointer; position: relative; isolation: isolate; border-radius: 26px; }
         .tab svg { width: 22px; height: 22px; }
         .tab.active { color: var(--accent); }
-        .tab:active { background: var(--surface-2); }
-        /* ---- "Glass" tab bar, like the iPhone's (the default; Settings → Display → Tab bar → Classic is the bar above).
+        /* ---- "Glass" tab bar, like the iPhone's (the only tab bar since 7.21; the Classic one is gone).
            A floating capsule of frosted glass: strong blur, a bright rim and sheen, a soft shadow. The + sits inside it,
            Home has a glass pill behind it, and a pressed tab shows a glass bubble under the finger. ---- */
         :root { --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.36)); --glass-rim: rgba(255, 255, 255, 0.8); --glass-hi: rgba(255, 255, 255, 0.95); --glass-lo: rgba(16, 24, 40, 0.06); --glass-shadow: 0 12px 34px rgba(16, 24, 40, 0.18), 0 2px 8px rgba(16, 24, 40, 0.06); --glass-sheen: rgba(255, 255, 255, 0.5); --glass-pill: rgba(255, 255, 255, 0.78); --glass-press: rgba(255, 255, 255, 0.6); }
         [data-theme="dark"] { --glass-bg: linear-gradient(180deg, rgba(52, 62, 82, 0.62), rgba(24, 30, 44, 0.52)); --glass-rim: rgba(255, 255, 255, 0.13); --glass-hi: rgba(255, 255, 255, 0.22); --glass-lo: rgba(0, 0, 0, 0.25); --glass-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3); --glass-sheen: rgba(255, 255, 255, 0.09); --glass-pill: rgba(255, 255, 255, 0.12); --glass-press: rgba(255, 255, 255, 0.16); }
-        html[data-tabbar="glass"] #tabBar { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); padding: 6px; border-radius: 32px; border: 1px solid transparent; }
-        html[data-tabbar="glass"] #tabGlass { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); border-radius: 32px; background: var(--glass-bg); border: 1px solid var(--glass-rim); box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-lo); backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%); }
-        html[data-tabbar="glass"] #tabGlass::before { content: ''; position: absolute; inset: 0 0 auto; height: calc(var(--tabbar-h) * 0.55); border-radius: 32px 32px 18px 18px; background: linear-gradient(180deg, var(--glass-sheen), transparent); pointer-events: none; }
-        html[data-tabbar="glass"] .input-section { left: 14px; right: 14px; width: auto; max-width: 452px; }
-        html[data-tabbar="glass"] .add-chip { background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi); }
-        html[data-tabbar="glass"] .add-chip.on { background: var(--accent-soft); }
-        html[data-tabbar="glass"] #groupNote { background: var(--glass-pill) !important; }
-        html[data-tabbar="glass"] .tab { isolation: isolate; border-radius: 26px; }
-        html[data-tabbar="glass"] .tab:active { background: none; }
-        html[data-tabbar="glass"] .tab::after { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-press); box-shadow: inset 0 1px 0 var(--glass-hi); opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3); z-index: -1; pointer-events: none; }
-        html[data-tabbar="glass"] .tab:active::after { opacity: 1; transform: scale(1); transition-duration: 0.08s, 0.2s; }
-        html[data-tabbar="glass"] .tab.active::before { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 4px rgba(16, 24, 40, 0.08); z-index: -1; pointer-events: none; }
-        html[data-tabbar="glass"] .tab-add span { width: 50px; height: 50px; transform: none; border: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 78%, #fff), var(--accent) 65%); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 42%, transparent), inset 0 1px 1px rgba(255, 255, 255, 0.55), inset 0 -2px 5px rgba(0, 0, 0, 0.1); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
-        html[data-tabbar="glass"] .tab-add:active span { transform: scale(0.9); transition-duration: 0.1s; }
-        html[data-tabbar="glass"] .wrapper { padding-bottom: calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom)); }
-        html[data-tabbar="glass"] .input-section { bottom: calc(var(--tabbar-h) + 10px + env(safe-area-inset-bottom)); }
-        html[data-tabbar="glass"] #notifCard { bottom: calc(var(--tabbar-h) + 26px + env(safe-area-inset-bottom)) !important; }
-        @media (prefers-reduced-transparency: reduce) { html[data-tabbar="glass"] #tabGlass { background: var(--surface); } }
+        #tabGlass::before { content: ''; position: absolute; inset: 0 0 auto; height: calc(var(--tabbar-h) * 0.55); border-radius: 32px 32px 18px 18px; background: linear-gradient(180deg, var(--glass-sheen), transparent); pointer-events: none; }
+        #groupNote { background: var(--glass-pill) !important; }
+        .tab::after { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-press); box-shadow: inset 0 1px 0 var(--glass-hi); opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3); z-index: -1; pointer-events: none; }
+        .tab:active::after { opacity: 1; transform: scale(1); transition-duration: 0.08s, 0.2s; }
+        .tab.active::before { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 4px rgba(16, 24, 40, 0.08); z-index: -1; pointer-events: none; }
+        @media (prefers-reduced-transparency: reduce) { #tabGlass { background: var(--surface); } }
         .tab-badge { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 0.62rem; font-weight: 800; display: none; align-items: center; justify-content: center; border: 2px solid var(--bg); }
 
         #hashtagAutocomplete { position: absolute; bottom: 100%; left: 10px; width: calc(100% - 20px); background: var(--surface); border: 1px solid var(--border); border-radius: 18px; margin-bottom: 8px; max-height: 160px; overflow-y: auto; display: none; flex-direction: column; z-index: 1000; box-shadow: var(--shadow-lg); }
@@ -423,7 +405,7 @@
         .count-badge { background: var(--accent-soft); color: var(--accent-strong); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-left: 2px; }
 
         #loading { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 9px 18px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; display: none; z-index: 20000; box-shadow: var(--shadow-lg); letter-spacing: 0.4px; width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; white-space: normal; text-align: center; line-height: 1.4; pointer-events: auto; }
-        #notifCard { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)) !important; }
+        #notifCard { bottom: calc(var(--tabbar-h) + 26px + env(safe-area-inset-bottom)) !important; }
 
         .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
         .toggle-switch { position: relative; display: inline-block; width: 48px; height: 28px; flex-shrink: 0; }
@@ -583,10 +565,6 @@
             #settlementsWrapper { grid-column: 1; grid-row: 3; }
             #pastLink { grid-column: 1; grid-row: 4; }
             #currentExpensesWrapper { grid-column: 2; grid-row: 2 / 6; margin-top: 6px; }
-            #tabBar { bottom: 16px; height: var(--tabbar-h); padding-bottom: 6px; border-radius: 24px; border: 1px solid transparent; }
-            #tabGlass { bottom: 16px; height: var(--tabbar-h); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
-            .input-section { bottom: calc(var(--tabbar-h) + 16px); }
-            #notifCard { bottom: calc(var(--tabbar-h) + 32px) !important; }
             .sheet-overlay { align-items: center; }
             .login-card.sheet { border-radius: 28px !important; border-bottom: 1px solid var(--border); max-height: calc(86dvh - var(--kb, 0px)) !important; padding-bottom: 18px !important; animation: pop-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
             .login-card.sheet::before { display: none; }
@@ -740,10 +718,6 @@
             <div class="row-item" style="cursor:default; flex-wrap:wrap;">
                 <span class="ri-icon" data-ic="moon"></span><span class="ri-label">Theme<span class="ri-sub">System follows your phone's dark mode</span></span>
                 <div class="seg" role="tablist" aria-label="Theme" style="width:100%; margin:8px 0 0;"><button data-theme-mode="system" class="interactive-btn" onclick="setThemeMode('system')">System</button><button data-theme-mode="light" class="interactive-btn" onclick="setThemeMode('light')">Light</button><button data-theme-mode="dark" class="interactive-btn" onclick="setThemeMode('dark')">Dark</button></div>
-            </div>
-            <div class="row-item" style="cursor:default; flex-wrap:wrap;">
-                <span class="ri-icon" data-ic="dock"></span><span class="ri-label">Tab bar<span class="ri-sub">Only on this phone</span></span>
-                <div class="seg" role="tablist" aria-label="Tab bar" style="width:100%; margin:8px 0 0;"><button data-tabbar-mode="glass" class="interactive-btn" onclick="setTabbarMode('glass')">Glass</button><button data-tabbar-mode="classic" class="interactive-btn" onclick="setTabbarMode('classic')">Classic</button></div>
             </div>
             <div class="row-item" style="cursor:default;">
                 <span class="ri-icon" data-ic="palette"></span><span class="ri-label">Accent colour<span class="ri-sub">Only on this phone</span></span>
@@ -1053,7 +1027,7 @@
         x: '<path d="M18 6 6 18M6 6l12 12"/>', chevl: '<path d="m15 6-6 6 6 6"/>', rotate: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
         user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', refresh: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>', arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>', edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
         palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>', chev: '<path d="m9 6 6 6-6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
-        home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', dock: '<rect x="2.5" y="13" width="19" height="8" rx="4"/><path d="M7.5 17h.01M12 17h.01M16.5 17h.01"/><path d="M6 4h12M6 8h12" opacity=".5"/>',
+        home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
         swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>', list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
         alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2h.01"/>',
         archive: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/>',
@@ -1083,7 +1057,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.20.0";
+    const APP_VERSION = "7.21.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1364,6 +1338,10 @@
         [...Object.keys(NAV_SHEETS), ...Object.keys(NAV_DIALOGS), 'sideMenu', 'loginOverlay'].forEach(id => { const el = document.getElementById(id); if (el) watch.observe(el, { attributes: true, attributeFilter: ['style', 'class'] }); });
     }
     function navSync() {
+        // A pop-up or the menu opened from the add box (e.g. a tab tapped while adding) replaces it: the box closes, its
+        // text kept as a draft. Left open underneath, it stayed "on top": Back closed the hidden box first, and tapping
+        // outside / swiping down the pop-up did nothing. Question boxes still show over the add box.
+        if (document.body.classList.contains('adding') && navTopPage()) closeAddBox();
         const open = !!navTop(), lock = open || navShown('loginOverlay'), root = document.documentElement;
         // Measured before locking (the scrollbar is still there): 0 on phones, whose scrollbars take no room
         if (lock && !root.classList.contains('scroll-lock')) root.classList.toggle('lock-gutter', window.innerWidth - root.clientWidth > 0);
@@ -2497,6 +2475,8 @@
     }
     // While open, the glass follows the box (note opening, more lines typed, the phone turned)
     if (window.ResizeObserver) new ResizeObserver(() => { if (document.body.classList.contains('adding') && !addMotion.some(a => a.playState === 'running')) addGlassFit(); }).observe(document.getElementById('inputSection'));
+    // Computers and tablets (768px and wider, either way round): Settlements starts open; phones keep it closed
+    if (window.matchMedia('(min-width: 768px)').matches) document.getElementById('settlementsWrapper').classList.add('expanded');
     function toggleAddBox() { if (document.body.classList.contains('adding')) navBack(); else openAddBox(); }
 
     // ---- Expense detail sheet (tap a row) ----
@@ -2600,7 +2580,6 @@
     }
 
     function setThemeMode(m) { triggerHaptic(); safeSetStorage('house_theme_mode', m); applyTheme(); }
-    function setTabbarMode(m) { triggerHaptic(); safeSetStorage('house_tabbar', m); applyTheme(); }
     function toggleTheme() { const order = ['system', 'light', 'dark']; setThemeMode(order[(order.indexOf(themeMode()) + 1) % order.length]); } // More menu: System → Light → Dark
 
     function toggleMenu() {
