@@ -8,5 +8,14 @@
   "theme_color": "#00f2fe",
   "icons": [
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add expense",
+      "short_name": "Add",
+      "description": "Open House Expenses ready to log a new expense",
+      "url": "index.html?action=log",
+      "icons": [{ "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }]
+    }
   ]
 }

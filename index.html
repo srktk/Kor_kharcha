@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.13.0">
+    <meta name="app-version" content="7.14.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -261,7 +261,33 @@
     </div>
 </div>
 
-<div id="helpOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+<div id="searchOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; height:85vh; display:flex; flex-direction:column;">
+        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Search All Expenses</h2>
+        <input type="search" id="searchInput" aria-label="Search expenses" class="chat-note" placeholder="Words, name, amount or #tag" style="width:100%; box-sizing:border-box; border:1px solid var(--border); margin-bottom:8px; font-size:1rem;" autocomplete="off" oninput="scheduleSearch()">
+        <div id="searchCount" style="font-size:0.7rem; color:var(--text-muted); font-weight:800; margin-bottom:8px; text-align:center;"></div>
+        <div id="searchResults" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeSearch()">Close</button>
+    </div>
+</div>
+
+<div id="insightsOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="box-sizing:border-box; width:calc(100% - 32px); max-width:420px; max-height:85vh; display:flex; flex-direction:column;">
+        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Spending Insights</h2>
+        <div id="insightsBody" style="flex:1; min-height:0; overflow-y:auto; margin-bottom:12px;"></div>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeInsights()">Close</button>
+    </div>
+</div>
+
+<div id="historyOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
+    <div class="login-card" style="box-sizing:border-box; width:calc(100% - 32px); max-width:380px; max-height:85vh; display:flex; flex-direction:column;">
+        <h2 style="margin:0 0 12px 0; font-size: 1.2rem; font-weight:900; text-align:center;">Edit History</h2>
+        <div id="historyList" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+        <button class="btn-glowing interactive-btn" style="background:var(--border); border-color:var(--border); color:var(--text-main);" onclick="triggerHaptic(); closeHistory()">Close</button>
+    </div>
+</div>
+
+<div id="helpOverlay"style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overscroll-behavior-y: contain;">
     <div class="login-card" style="width:90%; max-width:360px; max-height: 85vh; overflow-y: auto;">
         <h2 style="margin:0 0 15px 0; font-size: 1.2rem; font-weight:900; text-align:center; color:var(--accent);">How to Use</h2>
         
@@ -327,6 +353,13 @@
                 <option value="14">14 Days</option>
                 <option value="30">30 Days</option>
             </select>
+        </div>
+        <div id="healthCard" style="display:none; padding: 12px; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-weight:800; font-size:0.9rem;">System Health</span>
+                <button class="btn-pill interactive-btn" style="font-size:0.65rem;" onclick="triggerHaptic(); loadHealth()">Refresh</button>
+            </div>
+            <div id="healthRows" style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem;"></div>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             <button id="trashBtn" class="btn-glowing interactive-btn" style="background:transparent; color:var(--text-main); border-color:var(--border);" onclick="triggerHaptic(); closeSettings(); openTrash();">🗑️ Recovery Vault</button>
@@ -445,6 +478,8 @@
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'unpaidArchivesSection')">Unpaid Past Debts</a>
     <a href="#" class="menu-link interactive-btn" onclick="jumpToSection(event, 'archivesWrapper')">History & Archives</a>
     
+    <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();">🔍 Search</a>
+    <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openInsights(); event.preventDefault();">📊 Insights</a>
     <a href="#" class="menu-link interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();">📋 Audit Trail</a>
     <a href="#" id="notifMenuLink" class="menu-link interactive-btn" style="display:flex; justify-content:space-between; align-items:center;" onclick="triggerHaptic(); toggleNotifications(); event.preventDefault();"><span>🔔 Notifications</span><span id="notifState" style="font-weight:800; color:var(--text-muted);">Off</span></a>
     
@@ -587,7 +622,7 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.13.0";
+    const APP_VERSION = "7.14.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -740,7 +775,10 @@
     }, { passive: true, capture: true });
 
     window.addEventListener('popstate', (e) => {
-        if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
+        if (document.getElementById('historyOverlay').style.display === 'flex') { closeHistory(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('searchOverlay').style.display === 'flex') { closeSearch(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('insightsOverlay').style.display === 'flex') { closeInsights(); history.pushState(null, null, location.href); }
+        else if (document.getElementById('settingsOverlay').style.display === 'flex') { closeSettings(); history.pushState(null, null, location.href); }
         else if (document.getElementById('manageUsersOverlay').style.display === 'flex') { closeManageUsers(); history.pushState(null, null, location.href); }
         else if (document.getElementById('trashOverlay').style.display === 'flex') { closeTrash(); history.pushState(null, null, location.href); }
         else if (document.getElementById('restoreOverlay').style.display === 'flex') { closeRestore(); history.pushState(null, null, location.href); }
@@ -810,7 +848,7 @@
                 <div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid var(--accent); text-align: left;">
                     <div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${new Date(log.t).toLocaleString()}</div>
                     <div style="font-size:0.85rem; color:var(--text-main);"><b>${escapeHTML(log.by)}</b> ${escapeHTML(log.act)}</div>
-                    ${log.trg ? `<div style="font-size:0.75rem; color:var(--accent);">Target: ${escapeHTML(log.trg)}</div>` : ''}
+                    ${log.trg ? `<div style="font-size:0.75rem; color:var(--accent);">Target: ${auditTargetLabel(log.trg)}</div>` : ''}
                 </div>
             `).join('');
         }
@@ -934,7 +972,45 @@
         const trashBtn = document.getElementById('trashBtn');
         document.getElementById('restoreBtn').style.display = currentUser === "Shahzeb" ? 'flex' : 'none';
         if (currentUser === "Shahzeb") { trashBtn.style.display = 'flex'; document.getElementById('trashExpirySelect').parentElement.style.display = 'flex'; document.getElementById('trashExpirySelect').value = trashExpiryDays.toString(); } else { trashBtn.style.display = 'none'; document.getElementById('trashExpirySelect').parentElement.style.display = 'none'; }
-        document.getElementById('settingsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden'; 
+        const hc = document.getElementById('healthCard'); hc.style.display = currentUser === "Shahzeb" ? 'block' : 'none'; if (currentUser === "Shahzeb") loadHealth();
+        document.getElementById('settingsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+
+    // ---- Owner-only health card (worker GET /status) ----
+    function healthRow(level, label, value, onclick) {
+        const dot = { ok: 'var(--success)', warn: '#f59e0b', bad: 'var(--danger)', info: 'var(--text-muted)' }[level];
+        return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; ${onclick ? 'cursor:pointer;' : ''}" ${onclick ? `class="interactive-btn" onclick="${onclick}"` : ''}><span style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:50%; background:${dot}; flex-shrink:0;"></span>${label}</span><span style="font-weight:800; text-align:right;">${value}</span></div>`;
+    }
+    let lastHealth = null;
+    async function loadHealth() {
+        const rows = document.getElementById('healthRows'); rows.innerHTML = `<div style="color:var(--text-muted);">Checking...</div>`;
+        try {
+            const res = await secureFetch(`${API_URL}/status`, { headers: apiHeaders() }, 10000);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const s = lastHealth = await res.json(); let html = '';
+            const gb = (b) => (b / 1e9).toFixed(b < 1e8 ? 3 : 2) + ' GB';
+            const pct = s.storage.cap ? s.storage.used / s.storage.cap : 0;
+            html += healthRow(pct > 0.85 ? 'bad' : pct > 0.6 ? 'warn' : 'ok', 'Receipt photos', `${gb(s.storage.used)} / ${gb(s.storage.cap)}`);
+            const upPct = s.storage.monthlyCap ? s.storage.uploadsThisMonth / s.storage.monthlyCap : 0;
+            html += healthRow(upPct > 0.85 ? 'bad' : upPct > 0.6 ? 'warn' : 'ok', 'Uploads this month', `${s.storage.uploadsThisMonth} / ${s.storage.monthlyCap.toLocaleString()}`);
+            const age = (day) => day ? (Date.now() - Date.parse(day + 'T03:00:00Z')) / 3600000 : Infinity;
+            const dayLabel = (day) => day ? formatNiceDate(day.split('-').reverse().join('/')) : 'None yet';
+            html += healthRow(age(s.lastBackup) > 36 ? 'warn' : 'ok', 'Daily backup', dayLabel(s.lastBackup));
+            html += healthRow(age(s.lastR2Backup) > 36 ? 'warn' : 'ok', 'Backup copy (R2)', dayLabel(s.lastR2Backup));
+            html += healthRow(s.problems24h ? 'bad' : 'ok', 'Problems (24 h)', s.problems24h ? `${s.problems24h} · View` : 'None', s.problems24h ? 'triggerHaptic(); showHealthProblems()' : '');
+            const withPush = new Set((s.devices || []).map(d => d.user));
+            const missing = (db.users || []).filter(u => !withPush.has(u));
+            html += healthRow(missing.length ? 'warn' : 'ok', 'Notifications on', `${(db.users || []).length - missing.length} / ${(db.users || []).length}`);
+            if (missing.length) html += `<div style="font-size:0.7rem; color:var(--text-muted); padding-left:17px;">Not set up: ${escapeHTML(missing.join(', '))}</div>`;
+            rows.innerHTML = html;
+        } catch (e) { rows.innerHTML = healthRow('bad', 'Server', "Couldn't check"); }
+    }
+    function showHealthProblems() {
+        if (!lastHealth || !lastHealth.problems.length) return;
+        document.getElementById('historyOverlay').querySelector('h2').innerText = 'Problems (last 24 h)';
+        document.getElementById('historyList').innerHTML = lastHealth.problems.map(p => `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid var(--danger);"><div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${new Date(p.t).toLocaleString()} · ${escapeHTML(p.kind)}</div><div style="font-size:0.85rem; color:var(--text-main);">${escapeHTML(p.text)}</div></div>`).join('')
+            + (lastHealth.problems24h > lastHealth.problems.length ? `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center;">Showing the latest ${lastHealth.problems.length} of ${lastHealth.problems24h}</div>` : '');
+        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
 
@@ -973,6 +1049,174 @@
     }
     
     function closeTrash() { document.getElementById('trashOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+
+    // ---- Shared helpers for search / insights / edit history ----
+    function viewMoney() {
+        const cur = document.getElementById('currency').value; const sym = curSymbols[cur] || '£'; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1;
+        return { sym, rate, fmt: (base) => sym + (base * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
+    }
+    function cycleLabel(arc) { return `${arc.tag ? arc.tag + ' · ' : ''}${formatNiceDate(arc.start)} → ${formatNiceDate(arc.end)}`; }
+    /** Every expense with where it lives: current cycle first, then archives newest first. */
+    function allExpenseEntries() {
+        const out = (db.expenses || []).map(ex => ({ ex, cycle: 'Current cycle', fallbackDate: db.startDate }));
+        (db.archives || []).forEach(arc => (Array.isArray(arc.details) ? arc.details : []).forEach(ex => out.push({ ex, cycle: cycleLabel(arc), fallbackDate: arc.start })));
+        return out;
+    }
+    function findExpenseAnywhere(id) {
+        const hit = allExpenseEntries().find(e => e.ex && e.ex.id === id); if (hit) return hit.ex;
+        return (db.trash || []).find(e => e && e.id === id) || null;
+    }
+    function auditTargetLabel(trg) {
+        const ex = typeof trg === 'string' ? findExpenseAnywhere(trg) : null;
+        if (!ex) return escapeHTML(String(trg));
+        const desc = (ex.desc || '').replace(/\s+/g, ' ').trim();
+        return `${viewMoney().fmt(ex.amount)}${desc ? ' · ' + escapeHTML(desc.length > 40 ? desc.slice(0, 40) + '…' : desc) : ''}`;
+    }
+    function splitLabel(involved) { return (involved && involved.length > 0 && involved.length < db.users.length) ? involved.join(', ') : 'Everyone active'; }
+    function editedTag(ex) {
+        if (!ex.edited) return '';
+        if (Array.isArray(ex.history) && ex.history.length) return `<span class="interactive-btn" role="button" style="font-size:0.65rem; color:var(--accent); font-style:italic; margin-left: 6px; text-decoration:underline; cursor:pointer;" onclick="event.stopPropagation(); triggerHaptic(); showEditHistory('${escapeHTML(ex.id)}')">(Edited · history)</span>`;
+        return `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>`;
+    }
+
+    // ---- Edit history (each expense keeps its last 5 earlier versions in ex.history) ----
+    function showEditHistory(id) {
+        const ex = findExpenseAnywhere(id); if (!ex) return;
+        const { fmt } = viewMoney(); const exSym = ex.originalSym || viewMoney().sym;
+        const card = (title, v, accent) => `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border-left:3px solid ${accent}; text-align:left;"><div style="font-size:0.7rem; color:var(--text-muted); font-weight:800;">${title}</div><div style="font-size:1rem; font-weight:900; color:var(--text-main); margin:2px 0;">${fmt(v.amount)}</div><div style="font-size:0.8rem; color:var(--text-main);">${formatDescDisplay(v.desc || '', exSym)}</div><div style="font-size:0.7rem; color:var(--accent); margin-top:2px;">Split: ${escapeHTML(splitLabel(v.involved))}</div></div>`;
+        let html = card('Now', ex, 'var(--accent)');
+        (ex.history || []).forEach(h => { html += card(`Before the edit on ${new Date(h.t).toLocaleString()} by ${escapeHTML(h.by || 'someone')}`, h, 'var(--border)'); });
+        if (!(ex.history || []).length) html += `<div style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No earlier versions saved (edited before history was added).</div>`;
+        document.getElementById('historyOverlay').querySelector('h2').innerText = 'Edit History';
+        document.getElementById('historyList').innerHTML = html;
+        history.pushState(null, null, location.href); document.getElementById('historyOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+    function closeHistory() {
+        document.getElementById('historyOverlay').style.display = 'none';
+        const stillOpen = ['searchOverlay', 'insightsOverlay', 'settingsOverlay', 'auditOverlay'].some(id => document.getElementById(id).style.display === 'flex');
+        if (!stillOpen) document.body.style.overflow = '';
+    }
+
+    // ---- Search across the current cycle and all archives (on the phone, no network) ----
+    let searchTimer = null;
+    function openSearch() {
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        history.pushState(null, null, location.href);
+        document.getElementById('searchOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+        runSearch(); setTimeout(() => document.getElementById('searchInput').focus(), 100);
+    }
+    function closeSearch() { document.getElementById('searchOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function scheduleSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 150); }
+    function searchMatches(entry, words, rate) {
+        const ex = entry.ex; if (!ex) return false;
+        const text = [ex.desc, ex.name, ex.date || entry.fallbackDate, entry.cycle, (ex.involved || []).join(' ')].join(' ').toLowerCase();
+        return words.every(w => {
+            if (/^[£$€]?\d+(\.\d{1,2})?$/.test(w)) { // amount: match the stored (£) amount or the amount in the shown currency
+                const n = parseFloat(w.replace(/^[£$€]/, ''));
+                if (Math.abs(ex.amount - n) < 0.005 || Math.abs(ex.amount * rate - n) < 0.005) return true;
+                if (!w.includes('.') && (Math.floor(ex.amount) === n || Math.floor(ex.amount * rate) === n)) return true; // "12" finds 12.49
+            }
+            return text.includes(w);
+        });
+    }
+    function runSearch() {
+        const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+        const out = document.getElementById('searchResults'), countEl = document.getElementById('searchCount');
+        if (!q) { countEl.innerText = ''; out.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:20px 0;">Searches every cycle, including archives.<br>Try a word, a name, an amount like <b>12.50</b>, or a <b>#tag</b>.</div>`; return; }
+        const { rate, fmt } = viewMoney(); const words = q.split(/\s+/).filter(Boolean);
+        const hits = allExpenseEntries().filter(e => searchMatches(e, words, rate));
+        countEl.innerText = hits.length === 0 ? 'No matches' : hits.length > 100 ? `${hits.length} matches · showing the newest 100` : `${hits.length} match${hits.length === 1 ? '' : 'es'}`;
+        out.innerHTML = hits.slice(0, 100).map(({ ex, cycle, fallbackDate }) => {
+            const exSym = ex.originalSym || viewMoney().sym;
+            const custom = ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length;
+            const receiptStr = typeof ex.receipt === 'string' ? `'${escapeHTML(ex.receipt)}'` : `'${escapeHTML(JSON.stringify(ex.receipt))}'`;
+            return `<div style="padding:10px; background:var(--input-bg); border-radius:12px; border:1px solid var(--border); text-align:left;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><span><span class="name-pill main" style="margin:0;">${escapeHTML(ex.name)}</span>${editedTag(ex)}</span><span style="font-weight:900; font-size:1rem; color:var(--text-main);">${fmt(ex.amount)}</span></div>
+                <div style="font-size:0.85rem; color:var(--text-main); margin:6px 0 4px;">${formatDescDisplay(ex.desc, exSym)}</div>
+                ${custom ? `<div style="font-size:0.7rem; color:var(--accent);">Split: ${escapeHTML(ex.involved.join(', '))}</div>` : ''}
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:4px;"><span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">${formatNiceDate(ex.date || fallbackDate)} · ${cycle === 'Current cycle' ? cycle : escapeHTML(cycle)}</span>${ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptStr})">Receipt</button>` : ''}</div>
+            </div>`;
+        }).join('');
+    }
+
+    // ---- Spending insights: totals per cycle, who paid what, biggest expenses, hashtag bills ----
+    let insightsCycle = 0;
+    function insightCycles() {
+        const primaryTag = (ex) => { const m = (ex.desc || '').match(/#([\w-]+)/); return m ? m[0] : null; };
+        const current = (db.expenses || []).filter(ex => !primaryTag(ex));
+        const cycles = [{ label: 'Now', long: `Current cycle (since ${formatNiceDate(db.startDate)})`, expenses: current, total: current.reduce((a, e) => a + e.amount, 0), active: db.activeUsers && db.activeUsers.length ? db.activeUsers : db.users }];
+        (db.archives || []).filter(a => !a.tag).forEach(a => {
+            const ex = Array.isArray(a.details) ? a.details : [];
+            const p = (a.start || '').split('/'); const short = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]).toLocaleString('default', { month: 'short', year: '2-digit' }) : a.start;
+            cycles.push({ label: short, long: cycleLabel(a), expenses: ex, total: Number(a.total) || ex.reduce((s, e) => s + e.amount, 0), active: a.activeUsers || db.users });
+        });
+        // Hashtag bills: tagged expenses in the current cycle + tagged archives
+        const tags = {};
+        (db.expenses || []).forEach(ex => { const t = primaryTag(ex); if (t) { tags[t] = tags[t] || { total: 0, n: 0 }; tags[t].total += ex.amount; tags[t].n++; } });
+        (db.archives || []).filter(a => a.tag).forEach(a => { tags[a.tag] = tags[a.tag] || { total: 0, n: 0 }; tags[a.tag].total += Number(a.total) || 0; tags[a.tag].n += (a.details || []).length; });
+        return { cycles, tags };
+    }
+    function openInsights() {
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        history.pushState(null, null, location.href); insightsCycle = 0; renderInsights();
+        document.getElementById('insightsOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    }
+    function closeInsights() { document.getElementById('insightsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
+    function pickInsightsCycle(i) { insightsCycle = i; renderInsights(); }
+    function renderInsights() {
+        const { fmt } = viewMoney(); const { cycles, tags } = insightCycles();
+        const h = (t) => `<h4 style="font-size:0.75rem; color:var(--text-muted); margin:18px 0 8px; text-transform:uppercase; letter-spacing:1px;">${t}</h4>`;
+        const shown = cycles.slice(0, 12); if (insightsCycle >= shown.length) insightsCycle = 0;
+        const max = Math.max(...shown.map(c => c.total), 0.01);
+        const pastTotals = cycles.slice(1).map(c => c.total).filter(t => t > 0);
+        const avg = pastTotals.length ? pastTotals.reduce((a, b) => a + b, 0) / pastTotals.length : 0;
+        let html = h('Total per cycle') + `<div style="font-size:0.7rem; color:var(--text-muted); margin:-4px 0 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
+        html += shown.map((c, i) => `<div class="interactive-btn" role="button" onclick="triggerHaptic(); pickInsightsCycle(${i})" style="display:grid; grid-template-columns:48px 1fr auto; align-items:center; gap:8px; padding:5px 6px; border-radius:10px; cursor:pointer; ${i === insightsCycle ? 'background:var(--input-bg); outline:1px solid var(--accent);' : ''}">
+                <span style="font-size:0.7rem; font-weight:800; color:${i === insightsCycle ? 'var(--accent)' : 'var(--text-muted)'};">${escapeHTML(c.label)}</span>
+                <div style="height:12px; border-radius:6px; background:var(--border); overflow:hidden;"><div style="height:100%; width:${Math.max(2, c.total / max * 100).toFixed(1)}%; background:var(--accent); border-radius:6px;"></div></div>
+                <span style="font-size:0.75rem; font-weight:800; color:var(--text-main); min-width:70px; text-align:right;">${fmt(c.total)}</span></div>`).join('');
+        if (cycles.length > shown.length) html += `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center; margin-top:4px;">Showing the latest ${shown.length} of ${cycles.length} cycles</div>`;
+
+        const c = shown[insightsCycle];
+        html += h(escapeHTML(c.long));
+        // Who paid what vs their fair share (same split rules as the settlement maths)
+        const paid = {}, share = {}; (db.users || []).forEach(u => { paid[u] = 0; share[u] = 0; });
+        c.expenses.forEach(ex => {
+            paid[ex.name] = (paid[ex.name] || 0) + ex.amount;
+            const inv = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : c.active;
+            inv.forEach(u => { share[u] = (share[u] || 0) + ex.amount / Math.max(inv.length, 1); });
+        });
+        const people = Object.keys(paid).filter(u => paid[u] > 0 || share[u] > 0).sort((a, b) => paid[b] - paid[a]);
+        const pmax = Math.max(...people.map(u => Math.max(paid[u], share[u])), 0.01);
+        if (!people.length) html += `<div style="font-size:0.85rem; color:var(--text-muted); text-align:center; padding:10px 0;">No expenses in this cycle yet.</div>`;
+        else {
+            html += `<div style="display:flex; gap:12px; font-size:0.65rem; color:var(--text-muted); margin-bottom:6px;"><span><span style="display:inline-block; width:10px; height:8px; background:var(--accent); border-radius:2px;"></span> Paid</span><span><span style="display:inline-block; width:10px; height:8px; background:var(--text-muted); opacity:0.5; border-radius:2px;"></span> Their share</span></div>`;
+            html += people.map(u => `<div style="margin-bottom:8px;"><div style="display:flex; justify-content:space-between; font-size:0.8rem;"><b>${escapeHTML(u)}</b><span>paid <b>${fmt(paid[u])}</b> · share ${fmt(share[u])}</span></div>
+                <div style="height:8px; border-radius:4px; background:var(--border); margin-top:3px; overflow:hidden;"><div style="height:100%; width:${(paid[u] / pmax * 100).toFixed(1)}%; background:var(--accent);"></div></div>
+                <div style="height:4px; border-radius:2px; margin-top:2px; overflow:hidden;"><div style="height:100%; width:${(share[u] / pmax * 100).toFixed(1)}%; background:var(--text-muted); opacity:0.5;"></div></div></div>`).join('');
+            const top = c.expenses.slice().sort((a, b) => b.amount - a.amount).slice(0, 5);
+            html += h('Biggest expenses') + top.map(ex => `<div style="display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.8rem;"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(ex.name)}</b> · ${formatDescDisplay(ex.desc, ex.originalSym || viewMoney().sym)}</span><b style="flex-shrink:0;">${fmt(ex.amount)}</b></div>`).join('');
+        }
+        const tagList = Object.entries(tags).sort((a, b) => b[1].total - a[1].total);
+        if (tagList.length) html += h('Hashtag bills (all time)') + tagList.map(([t, v]) => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.8rem;"><span><b style="color:var(--accent);">${escapeHTML(t)}</b> <span style="color:var(--text-muted);">· ${v.n} expense${v.n === 1 ? '' : 's'}</span></span><b>${fmt(v.total)}</b></div>`).join('');
+        document.getElementById('insightsBody').innerHTML = html;
+    }
+
+    // ---- "Add expense" shortcut (?action=log on the web, houseexpenses://add in the Android app) ----
+    let pendingQuickAdd = false;
+    function openQuickAdd() {
+        const loginOpen = document.getElementById('loginOverlay').style.display === 'flex';
+        if (appLocked || !currentUser || loginOpen || isSyncing || !localDbLoaded) { pendingQuickAdd = true; return; } // run after first sync / unlock / user pick
+        pendingQuickAdd = false;
+        ['searchOverlay', 'insightsOverlay', 'historyOverlay', 'settingsOverlay', 'auditOverlay', 'trashOverlay'].forEach(id => { const el = document.getElementById(id); if (el && el.style.display === 'flex') el.style.display = 'none'; });
+        document.body.style.overflow = '';
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        const el = document.getElementById('amtInput'); if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => el.focus(), 300);
+    }
+    function runPendingQuickAdd() { if (pendingQuickAdd) setTimeout(openQuickAdd, 400); }
 
     // ---- Payment links: each person saves their own (Monzo.me, PayPal.me, Revolut.me...); whoever owes them gets a Pay button
     function cleanPayLink(raw) {
@@ -1166,7 +1410,7 @@
             if (e.message === "AUTH") { forgetHouseKey(); showLock("Wrong PIN. Try again"); }
             else if (e.message === "LOCKED") { showLock("Too many wrong PINs on this network. Try again in an hour"); }
             else if (e.message === "429") { setTimeout(() => { loadData(true); }, 1500); } else if (e.message === "HTTP_API_ERROR") { showToast("CLOUD SERVER OFFLINE", 3000); loadLocalBackup(); } else { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); }
-        } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML === "SYNCING...") { document.getElementById('loading').style.display = 'none'; } /* hide the startup sync badge; leave real messages to their own timer */ isSyncing = false; }
+        } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML === "SYNCING...") { document.getElementById('loading').style.display = 'none'; } /* hide the startup sync badge; leave real messages to their own timer */ isSyncing = false; runPendingQuickAdd(); }
     }
 
     function executeActionWithSave() { if (!checkPayloadSize()) return; editSeq++; setNeedsSync(true); offlineActionsCount++; updateOfflineBadge(); saveData(); }
@@ -1557,9 +1801,9 @@
                 let receiptHtml = ex.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : '';
 
                 if (swipeActionsEnabled) {
-                    listHtml += `<div class="linear-row timeline-item" style="padding:0;"><div class="swipe-track"><div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;"><div style="display:flex; flex-direction:column; justify-content:center;"><span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${escapeHTML(ex.name)}</span>${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}<div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div><div class="item-desc">${displayDesc}</div>${splitNote}</div>${receiptHtml ? `<div style="padding-right:15px; flex-shrink:0;">${receiptHtml}</div>` : `<div style="padding-right:15px; flex-shrink:0; width:1px;"></div>`}</div><div class="swipe-actions" style="padding: 10px 0 10px 15px;">${pillsHtml}</div></div></div>`;
+                    listHtml += `<div class="linear-row timeline-item" style="padding:0;"><div class="swipe-track"><div class="swipe-content" style="padding: 10px 0; display:flex; justify-content:space-between; align-items:center; width:100%;"><div style="display:flex; flex-direction:column; justify-content:center;"><span class="name-pill main" style="margin-bottom: 6px; width:fit-content;">${escapeHTML(ex.name)}</span>${editedTag(ex)}<div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div><div class="item-desc">${displayDesc}</div>${splitNote}</div>${receiptHtml ? `<div style="padding-right:15px; flex-shrink:0;">${receiptHtml}</div>` : `<div style="padding-right:15px; flex-shrink:0; width:1px;"></div>`}</div><div class="swipe-actions" style="padding: 10px 0 10px 15px;">${pillsHtml}</div></div></div>`;
                 } else {
-                    listHtml += `<div class="linear-row timeline-item"><div class="item-main"><span class="name-pill main" style="margin-bottom: 6px;">${escapeHTML(ex.name)}</span>${ex.edited ? `<span style="font-size:0.65rem; color:var(--text-muted); font-style:italic; margin-left: 6px;">(Edited)</span>` : ''}<div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div><div class="item-desc">${displayDesc}</div>${splitNote}</div><div class="linear-meta">${pillsHtml}${receiptHtml}</div></div>`;
+                    listHtml += `<div class="linear-row timeline-item"><div class="item-main"><span class="name-pill main" style="margin-bottom: 6px;">${escapeHTML(ex.name)}</span>${editedTag(ex)}<div class="item-amt">${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div><div class="item-desc">${displayDesc}</div>${splitNote}</div><div class="linear-meta">${pillsHtml}${receiptHtml}</div></div>`;
                 }
             });
             list.innerHTML = listHtml + `</div>`;
@@ -1699,7 +1943,7 @@
                 let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
                     hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `'${escapeHTML(d.receipt)}'` : `'${escapeHTML(JSON.stringify(d.receipt))}'`;
-                    return `<div class="flow-row timeline-item" style="padding:10px 0; border:none;"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span><span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div></div>${d.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}</div>`
+                    return `<div class="flow-row timeline-item" style="padding:10px 0; border:none;"><div style="flex-grow:1; padding-right:15px;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span class="name-pill main" style="background:transparent; border:1px solid var(--border); padding:2px 8px;">${escapeHTML(d.name)}</span>${editedTag(d)}<span style="font-size:1rem; font-weight:800; color:var(--text-main);">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">${displayDesc}</div></div>${d.receipt ? `<button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button>` : ''}</div>`
                 }).join('');
 
                 if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
@@ -1823,14 +2067,18 @@
             const expenseId = Date.now().toString(36) + Math.random().toString(36).substring(2) + performance.now().toString(36).replace('.','');
             
             if (editingId) {
-                let ex = db.expenses.find(e => e.id === editingId);
+                const editedId = editingId; let ex = db.expenses.find(e => e.id === editedId);
                 if (ex) {
+                    // Keep the previous version (newest first, last 5) so anyone can see what was changed
+                    if (!Array.isArray(ex.history)) ex.history = [];
+                    ex.history.unshift({ t: Date.now(), by: currentUser, amount: ex.amount, desc: ex.desc, involved: Array.isArray(ex.involved) ? [...ex.involved] : [] });
+                    if (ex.history.length > 5) ex.history.length = 5;
                     ex.amount = baseAmt; ex.desc = descToSave; if (involvedUsers.length > 0) ex.involved = involvedUsers;
                     ex.originalSym = sym; ex.edited = true; ex.timestamp = Date.now();
                     if (finalReceiptData) { ex.receipt = finalReceiptData; ex.receiptDelete = finalReceiptDelete; }
                     if (failedUploadsArr.length > 0) { let q = safeJSONParse(localStorage.getItem('img_queue'), []); if(!Array.isArray(q)) q = []; failedUploadsArr.forEach(img => q.push({ id: ex.id, image: img })); safeSetStorage('img_queue', JSON.stringify(q)); }
                 }
-                editingId = null; logAudit("Edited Expense", expenseId);
+                editingId = null; logAudit("Edited Expense", editedId);
             } else {
                 let safeTimestamp = Date.now(); if (db.expenses.length > 0 && safeTimestamp <= db.expenses[0].timestamp) { safeTimestamp = db.expenses[0].timestamp + 1; }
                 const today = new Date(); const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
@@ -2011,7 +2259,7 @@
     function login(u) { 
         currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = escapeHTML(u); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(u);
         if (!localStorage.getItem('has_seen_input')) { document.getElementById('chatWrapper').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
-        render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500);
+        render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500); runPendingQuickAdd();
     }
 
     window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (navigator.onLine) { if (needsSync) { saveData(); } else { loadData(false); } processUploadQueue(); } checkForUpdates(); } });
@@ -2029,10 +2277,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const action = urlParams.get('action');
         if (action === 'log') {
-            setTimeout(() => {
-                const el = document.getElementById('amtInput');
-                if (el) el.focus();
-            }, 500);
+            history.replaceState(null, '', location.pathname); // don't re-open the add box on every refresh
+            setTimeout(openQuickAdd, 500);
         } else if (action === 'vault') {
             setTimeout(() => openTrash(), 500);
         }
