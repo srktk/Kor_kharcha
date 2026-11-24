@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b0f1a">
-    <meta name="app-version" content="7.10.0">
+    <meta name="app-version" content="7.10.1">
     <link rel="manifest" href="manifest.json">
     <title>House Expenses </title>
     
@@ -56,7 +56,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'house-expenses-v7.10.0';
+                    const CACHE_NAME = 'house-expenses-v7.10.1';
                     self.addEventListener('install', e => self.skipWaiting());
                     self.addEventListener('activate', e => {
                         e.waitUntil(caches.keys().then(keys => Promise.all(
@@ -391,6 +391,16 @@
     </div>
 </div>
 
+<div id="lockOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:15000; display:none; align-items:center; justify-content:center; overscroll-behavior: contain;">
+    <form class="login-card" style="box-sizing:border-box; width:90%; max-width:340px; text-align:center; padding: 30px 20px;" onsubmit="event.preventDefault(); unlockApp();">
+        <div style="font-size: 2.2rem; margin-bottom: 10px;">🔒</div>
+        <h2 style="margin:0 0 8px 0; font-size: 1.3rem; font-weight:900; letter-spacing:-0.5px;">House Expenses</h2>
+        <p id="lockMessage" style="margin: 0 0 20px 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main); opacity: 0.8; line-height: 1.4;">Enter the house PIN</p>
+        <input type="password" id="lockInput" aria-label="House PIN" class="chat-note" style="margin-bottom: 20px; width: 100%; border: 1px solid var(--border); text-align: center; font-size: 1.2rem; font-weight: bold; letter-spacing: 4px;" autocomplete="off">
+        <button type="submit" class="btn-glowing interactive-btn" style="width: 100%; background: var(--accent); border-color: var(--accent); color: #000;">Unlock</button>
+    </form>
+</div>
+
 <div id="lightboxOverlay" class="interactive-btn" onclick="closeLightbox(event)">
     <button class="lightbox-close interactive-btn" aria-label="Close image" onclick="closeLightbox(event)">×</button>
     <button class="lightbox-rotate interactive-btn" aria-label="Rotate image" onclick="rotateLightboxImg(event)">↻</button>
@@ -564,14 +574,27 @@
     </div>
 </section>
 <script>
-    const APP_VERSION = "7.10.0";
+    const APP_VERSION = "7.10.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
     function apiHeaders(extra) { return Object.assign({ 'X-House-Key': houseKey() }, extra || {}); }
-    function askHouseKey(msg) {
-        if (document.getElementById('promptOverlay').style.display === 'flex') return;
-        customPrompt(msg || "Enter the house PIN", "", (v) => { v = (v || '').trim(); if (v) { safeSetStorage('house_key', v); loadData(true); } });
+    // Full-screen lock: nothing in the app is usable or visible until the house PIN is accepted by the server.
+    let appLocked = false;
+    function forgetHouseKey() { try { localStorage.removeItem('house_key'); } catch (e) {} }
+    function showLock(msg) {
+        appLocked = true; const ld = document.getElementById('loading'); if (ld) ld.style.display = 'none';
+        const o = document.getElementById('lockOverlay'); const wasOpen = o.style.display === 'flex';
+        document.getElementById('lockMessage').innerText = msg || "Enter the house PIN";
+        ['promptOverlay', 'confirmOverlay', 'loginOverlay'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        o.style.display = 'flex';
+        const input = document.getElementById('lockInput'); input.value = ''; if (!wasOpen || msg) setTimeout(() => input.focus(), 100);
+    }
+    function hideLock() { appLocked = false; document.getElementById('lockOverlay').style.display = 'none'; }
+    function unlockApp() {
+        const v = (document.getElementById('lockInput').value || '').trim(); if (!v) return;
+        safeSetStorage('house_key', v); document.getElementById('lockMessage').innerText = "Checking...";
+        loadData(true);
     }
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
     let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
@@ -890,6 +913,7 @@
     function saveLocalBackup() { safeSetStorage('house_db_backup', JSON.stringify(db)); }
     
     function loadLocalBackup() {
+        if (appLocked || !houseKey()) return;
         const backup = window.ephemeralStorage ? window.ephemeralStorage['house_db_backup'] : localStorage.getItem('house_db_backup');
         if (backup) { 
             try { 
@@ -921,6 +945,7 @@
     }
 
     async function loadData(force = false) {
+        if (!houseKey()) { showLock(); return; }
         if (isSyncing) return; if (!force && Date.now() - lastSyncTime < 2500) return;
         lastSyncTime = Date.now(); isSyncing = true;
         const isReallyOnline = await checkTrueNetwork();
@@ -931,6 +956,7 @@
             const res = await secureFetch(`${API_URL}/db`, { headers: apiHeaders() });
             if (res.status === 401) { const b = await res.json().catch(() => ({})); throw new Error(b.error === 'locked' ? "LOCKED" : "AUTH"); }
             if (res.status === 429) throw new Error("429"); if (!res.ok) throw new Error("HTTP_API_ERROR");
+            hideLock();
             const data = await res.json(); const targetData = data.record ? data.record : data;
             if (targetData && (targetData.expenses || targetData.users)) {
                 if (targetData.encrypted) { showToast("ENCRYPTED VAULT DETECTED. PLEASE CLEAR BIN.", 4000); initializeDB(); } 
@@ -942,8 +968,8 @@
             if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = escapeHTML(currentUser); const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = escapeHTML(currentUser); render(); }
             offlineActionsCount = 0; updateOfflineBadge(); processUploadQueue();
         } catch (e) {
-            if (e.message === "AUTH") { loadLocalBackup(); askHouseKey(houseKey() ? "Wrong house PIN. Enter it again" : "Enter the house PIN"); }
-            else if (e.message === "LOCKED") { showToast("TOO MANY WRONG PINS - TRY LATER", 4000); loadLocalBackup(); }
+            if (e.message === "AUTH") { forgetHouseKey(); showLock("Wrong PIN. Try again"); }
+            else if (e.message === "LOCKED") { forgetHouseKey(); showLock("Too many wrong PINs. Try again in an hour"); }
             else if (e.message === "429") { setTimeout(() => { loadData(true); }, 1500); } else if (e.message === "HTTP_API_ERROR") { showToast("CLOUD SERVER OFFLINE", 3000); loadLocalBackup(); } else { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); }
         } finally { if(syncIcon) syncIcon.classList.remove('spin'); if (document.getElementById('loading').innerHTML !== "SYNCING..." && document.getElementById('loading').innerHTML !== "INITIALIZING NEW VAULT...") { document.getElementById('loading').style.display = 'none'; } isSyncing = false; }
     }
@@ -957,7 +983,7 @@
         const syncIcon = document.getElementById('syncIconElement'); if(syncIcon) syncIcon.classList.add('spin'); document.body.style.overscrollBehavior = 'none';
         secureFetch(`${API_URL}/db`, { method: 'PUT', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(db) })
         .then(res => { if (res.status === 401) throw new Error("AUTH"); if (res.status === 429) throw new Error("429"); if (!res.ok) throw new Error("HTTP_API_ERROR"); setNeedsSync(false); offlineActionsCount = 0; updateOfflineBadge(); })
-        .catch((e) => { if (e.message === "AUTH") { setNeedsSync(true); askHouseKey("Wrong house PIN. Enter it again"); } else if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { setNeedsSync(true); } })
+        .catch((e) => { if (e.message === "AUTH") { setNeedsSync(true); forgetHouseKey(); showLock("Wrong PIN. Try again"); } else if (e.message === "429" && retryCount < 2) { setTimeout(() => { saveData(retryCount + 1); }, 1500 * (retryCount + 1)); } else { setNeedsSync(true); } })
         .finally(() => { if(syncIcon) syncIcon.classList.remove('spin'); isSyncing = false; document.body.style.overscrollBehavior = 'auto'; });
     }
 
