@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.19.0">
+    <meta name="app-version" content="7.20.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -91,7 +91,7 @@
         button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; -webkit-user-drag: none; }
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom)); }
 
-        @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, #tabBar, .sheet-overlay, .dialog-overlay, #menuOverlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } }
+        @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, #tabBar, #tabGlass, .sheet-overlay, .dialog-overlay, #menuOverlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } }
 
         /* ---- Top bar ---- */
         .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); z-index: 100; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; min-height: 60px; }
@@ -192,51 +192,63 @@
         .swipe-actions { flex-shrink: 0; scroll-snap-align: end; display: flex; align-items: center; gap: 6px; padding-left: 15px; }
 
         /* ---- Bottom: expense input + tab bar ---- */
-        .input-section { position: fixed; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 8px 14px 10px; z-index: 95; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: bottom 0.15s; }
+        /* The add box sits right on top of the tab bar, inside the bar's glass (#tabGlass), which grows up around it when + is
+           tapped (addBoxMotion) - one piece with the + */
+        .input-section { position: fixed; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 480px; background: transparent; padding: 12px 12px 12px 18px; z-index: 95; display: flex; flex-direction: column; gap: 0; pointer-events: none; }
+        html:not([data-tabbar="glass"]) .input-section { padding-bottom: 24px; } /* clear of the raised + of the classic bar */
         .input-section > * { pointer-events: auto; }
-        /* The add box only shows after tapping + (body.adding); the page behind is dimmed */
-        body:not(.adding) .input-section { display: none; }
+        /* The add box only shows after tapping + (body.adding); the page behind is dimmed. add-closing: drawn (untouchable)
+           while it shrinks back into the bar */
+        body:not(.adding):not(.add-closing) .input-section { display: none; }
+        body.add-closing .input-section, body.add-closing .input-section * { pointer-events: none !important; }
         #addBackdrop { position: fixed; inset: 0; z-index: 94; background: rgba(5, 10, 20, 0.38); display: none; }
         body.adding #addBackdrop { display: block; animation: fade-in 0.2s; }
-        body.adding .input-section { animation: add-up 0.26s cubic-bezier(0.32, 0.72, 0, 1); }
+        body.add-closing #addBackdrop { display: block; pointer-events: none; }
         @keyframes fade-in { from { opacity: 0; } }
-        @keyframes add-up { from { transform: translateY(24px); opacity: 0; } }
+        #tabGlass { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-top: 1px solid var(--border); z-index: 95; pointer-events: none; }
+        #amtPreview { padding: 0 2px 2px; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); overflow-wrap: anywhere; }
+        #amtPreview b { color: var(--accent-strong); font-weight: 700; }
+        .add-chips { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 10px; }
+        .add-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: var(--surface-2); color: var(--text-main); font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s, transform 0.15s; }
+        .add-chip:active { transform: scale(0.95); }
+        .add-chip .ic { color: var(--text-muted); transition: color 0.2s; }
+        .add-chip .ic svg { width: 16px; height: 16px; }
+        .add-chip.on { background: var(--accent-soft); color: var(--accent-strong); }
+        .add-chip.on .ic { color: inherit; }
         #editBar { display: none; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 8px 8px 8px 14px; font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); box-shadow: var(--shadow-lg); }
         body.editing #editBar { display: flex; }
         .tab-add { display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; }
         .tab-add span { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 40%, transparent); transform: translateY(-10px); transition: transform 0.15s; border: 4px solid var(--bg); position: relative; }
-        .tab-add span svg { width: 24px; height: 24px; }
+        .tab-add span svg { width: 24px; height: 24px; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
         .tab-add:active span { transform: translateY(-10px) scale(0.93); }
         .tab-add.has-draft span::after { content: ''; position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--danger); border: 2px solid var(--bg); }
-        body.adding .tab-add span svg { transform: rotate(45deg); transition: transform 0.2s; }
-        /* Only while the on-screen keyboard is really up (kb-open is set from the viewport height): closing the keyboard
-           with Back leaves the box focused, and the tab bar must come back then */
-        body.kb-open:has(.input-section :focus) .input-section { bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-        body.kb-open:has(.input-section :focus) #tabBar { display: none; }
+        body.adding .tab-add span svg { transform: rotate(45deg); }
+        /* The tab bar stays up while typing (keyboard open): the add box is part of it */
         /* While a sheet, dialog or the menu is open the page behind must not scroll. Lock <html> only: overflow on <body> makes
            it a scroll box, which unsticks the top bar (it jumped off the screen behind every pop-up when scrolled down).
            lock-gutter (computers with a real scrollbar): keep the scrollbar's space, or the page jumps sideways. */
         html.scroll-lock { overflow: hidden !important; }
         html.scroll-lock.lock-gutter { scrollbar-gutter: stable; }
         .login-card.sheet, .sheet-body, #insightsBody, #historyList, #auditList, #searchResults { overscroll-behavior: contain; }
-        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; min-width: 0; position: relative; }
-        .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--surface); border: 1px solid var(--border); border-radius: 26px; padding: 4px 6px 4px 10px; gap: 4px; transition: border-color 0.2s, box-shadow 0.2s; flex-grow: 1; box-shadow: var(--shadow-lg); min-width: 0; position: relative; }
-        .chat-input-wrapper:focus-within { border-color: var(--accent); }
+        .chat-row { display: flex; align-items: flex-end; gap: 8px; width: 100%; min-width: 0; position: relative; }
+        .chat-input-wrapper { display: flex; align-items: flex-end; flex-grow: 1; min-width: 0; position: relative; }
+        #inputSection .chat-textarea { font-size: 17px !important; padding: 10px 0; height: 44px; min-height: 44px; max-height: 120px; }
         .chat-textarea { flex-grow: 1; background: transparent; border: none; padding: 10px 6px; color: var(--text-main) !important; background-color: transparent !important; outline: none; resize: none; min-height: 40px; max-height: 120px; height: 40px; overflow-y: auto; font-family: inherit; line-height: 1.4; scrollbar-width: none; -ms-overflow-style: none; min-width: 0; font-size: 16px !important; }
         .chat-textarea::-webkit-scrollbar { display: none; }
         .chat-textarea::placeholder { color: var(--text-muted); }
 
         .chat-btn { background: transparent; color: var(--text-muted); width: 38px; height: 38px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin-bottom: 2px; }
-        .chat-btn.primary { width: 50px; height: 50px; background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 20px var(--accent-glow); margin-bottom: 0; }
+        .chat-btn.primary { width: 44px; height: 44px; background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); margin-bottom: 0; }
         .chat-btn.primary:active { transform: scale(0.94); }
         .chat-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .chat-note { width: 100%; background: var(--input-bg) !important; border: 1px solid transparent !important; padding: 12px 14px; color: var(--text-main) !important; border-radius: 14px; outline: none; transition: border-color 0.2s; font-size: 16px !important; }
         .chat-note:focus { border-color: var(--accent) !important; }
         select { background: transparent; color: var(--text-muted); border: none; font-weight: 700; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; font-size: 16px !important; }
-        #optionsMenu { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 22px !important; box-shadow: var(--shadow-lg) !important; }
+        #optionsMenu { padding: 2px 0 6px; }
 
-        #tabBar { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding: 6px 10px env(safe-area-inset-bottom); background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 96; }
+        /* The bar's look is drawn by #tabGlass behind it (so it can grow around the add box); #tabBar only holds the tabs */
+        #tabBar { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding: 6px 10px env(safe-area-inset-bottom); border-top: 1px solid transparent; display: grid; grid-template-columns: repeat(5, 1fr); z-index: 96; }
         .tab { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 0.68rem; font-weight: 600; cursor: pointer; position: relative; border-radius: 14px; }
         .tab svg { width: 22px; height: 22px; }
         .tab.active { color: var(--accent); }
@@ -246,8 +258,13 @@
            Home has a glass pill behind it, and a pressed tab shows a glass bubble under the finger. ---- */
         :root { --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.36)); --glass-rim: rgba(255, 255, 255, 0.8); --glass-hi: rgba(255, 255, 255, 0.95); --glass-lo: rgba(16, 24, 40, 0.06); --glass-shadow: 0 12px 34px rgba(16, 24, 40, 0.18), 0 2px 8px rgba(16, 24, 40, 0.06); --glass-sheen: rgba(255, 255, 255, 0.5); --glass-pill: rgba(255, 255, 255, 0.78); --glass-press: rgba(255, 255, 255, 0.6); }
         [data-theme="dark"] { --glass-bg: linear-gradient(180deg, rgba(52, 62, 82, 0.62), rgba(24, 30, 44, 0.52)); --glass-rim: rgba(255, 255, 255, 0.13); --glass-hi: rgba(255, 255, 255, 0.22); --glass-lo: rgba(0, 0, 0, 0.25); --glass-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3); --glass-sheen: rgba(255, 255, 255, 0.09); --glass-pill: rgba(255, 255, 255, 0.12); --glass-press: rgba(255, 255, 255, 0.16); }
-        html[data-tabbar="glass"] #tabBar { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); padding: 6px; border-radius: 32px; background: var(--glass-bg); border: 1px solid var(--glass-rim); box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-lo); backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%); }
-        html[data-tabbar="glass"] #tabBar::before { content: ''; position: absolute; inset: 0 0 45%; border-radius: 32px 32px 18px 18px; background: linear-gradient(180deg, var(--glass-sheen), transparent); pointer-events: none; z-index: -1; }
+        html[data-tabbar="glass"] #tabBar { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); padding: 6px; border-radius: 32px; border: 1px solid transparent; }
+        html[data-tabbar="glass"] #tabGlass { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); border-radius: 32px; background: var(--glass-bg); border: 1px solid var(--glass-rim); box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-lo); backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%); }
+        html[data-tabbar="glass"] #tabGlass::before { content: ''; position: absolute; inset: 0 0 auto; height: calc(var(--tabbar-h) * 0.55); border-radius: 32px 32px 18px 18px; background: linear-gradient(180deg, var(--glass-sheen), transparent); pointer-events: none; }
+        html[data-tabbar="glass"] .input-section { left: 14px; right: 14px; width: auto; max-width: 452px; }
+        html[data-tabbar="glass"] .add-chip { background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi); }
+        html[data-tabbar="glass"] .add-chip.on { background: var(--accent-soft); }
+        html[data-tabbar="glass"] #groupNote { background: var(--glass-pill) !important; }
         html[data-tabbar="glass"] .tab { isolation: isolate; border-radius: 26px; }
         html[data-tabbar="glass"] .tab:active { background: none; }
         html[data-tabbar="glass"] .tab::after { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-press); box-shadow: inset 0 1px 0 var(--glass-hi); opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3); z-index: -1; pointer-events: none; }
@@ -258,7 +275,7 @@
         html[data-tabbar="glass"] .wrapper { padding-bottom: calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom)); }
         html[data-tabbar="glass"] .input-section { bottom: calc(var(--tabbar-h) + 10px + env(safe-area-inset-bottom)); }
         html[data-tabbar="glass"] #notifCard { bottom: calc(var(--tabbar-h) + 26px + env(safe-area-inset-bottom)) !important; }
-        @media (prefers-reduced-transparency: reduce) { html[data-tabbar="glass"] #tabBar { background: var(--surface); } }
+        @media (prefers-reduced-transparency: reduce) { html[data-tabbar="glass"] #tabGlass { background: var(--surface); } }
         .tab-badge { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 0.62rem; font-weight: 800; display: none; align-items: center; justify-content: center; border: 2px solid var(--bg); }
 
         #hashtagAutocomplete { position: absolute; bottom: 100%; left: 10px; width: calc(100% - 20px); background: var(--surface); border: 1px solid var(--border); border-radius: 18px; margin-bottom: 8px; max-height: 160px; overflow-y: auto; display: none; flex-direction: column; z-index: 1000; box-shadow: var(--shadow-lg); }
@@ -566,8 +583,9 @@
             #settlementsWrapper { grid-column: 1; grid-row: 3; }
             #pastLink { grid-column: 1; grid-row: 4; }
             #currentExpensesWrapper { grid-column: 2; grid-row: 2 / 6; margin-top: 6px; }
-            #tabBar { bottom: 16px; height: var(--tabbar-h); padding-bottom: 6px; border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
-            .input-section { bottom: calc(var(--tabbar-h) + 22px); }
+            #tabBar { bottom: 16px; height: var(--tabbar-h); padding-bottom: 6px; border-radius: 24px; border: 1px solid transparent; }
+            #tabGlass { bottom: 16px; height: var(--tabbar-h); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
+            .input-section { bottom: calc(var(--tabbar-h) + 16px); }
             #notifCard { bottom: calc(var(--tabbar-h) + 32px) !important; }
             .sheet-overlay { align-items: center; }
             .login-card.sheet { border-radius: 28px !important; border-bottom: 1px solid var(--border); max-height: calc(86dvh - var(--kb, 0px)) !important; padding-bottom: 18px !important; animation: pop-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
@@ -999,27 +1017,26 @@
     </button>
 </main>
 <div id="addBackdrop" onclick="triggerHaptic(); navBack()"></div>
+<div id="tabGlass" aria-hidden="true"></div>
 
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
     <div id="hashtagAutocomplete"></div>
-    <div id="optionsMenu" style="display:none; padding:14px; margin-bottom:4px;">
-        <label class="field-label" for="groupNote">Note for this expense</label>
-        <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom:10px;" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-glowing small interactive-btn" onclick="triggerHaptic(); document.getElementById('cameraInput').click()"><span class="ic" data-ic="camera"></span>Camera</button>
-            <button class="btn-glowing small interactive-btn" onclick="triggerHaptic(); document.getElementById('receiptInput').click()"><span class="ic" data-ic="image"></span>Gallery</button>
-        </div>
-    </div>
     <div class="chat-row">
         <div class="chat-input-wrapper" id="chatWrapper">
-            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Add expense, e.g. 12.50 milk" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
-            <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
-            <input type="file" id="cameraInput" aria-label="Take Photo" accept="image/*" capture="environment" style="display:none;">
-            <button class="chat-btn interactive-btn" aria-label="More Options" onmousedown="event.preventDefault()" onclick="triggerHaptic(); toggleOptionsMenu()" title="Note and receipt photo">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-            </button>
+            <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Add expense, e.g. 12.50 milk" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event); updateAmtPreview();" spellcheck="false"></textarea>
+            <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;" onchange="photoChipsSync()">
+            <input type="file" id="cameraInput" aria-label="Take Photo" accept="image/*" capture="environment" style="display:none;" onchange="photoChipsSync()">
         </div>
         <button id="mainAddBtn" aria-label="Submit Expense" class="chat-btn primary interactive-btn" onclick="triggerHaptic(); addExpense()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+    </div>
+    <div id="amtPreview" aria-live="polite" style="display:none;"></div>
+    <div id="optionsMenu" style="display:none;">
+        <input type="text" id="groupNote" aria-label="Note for this expense" class="chat-note wipe-trigger" placeholder="Note for this expense" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
+    </div>
+    <div class="add-chips">
+        <button id="noteChip" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); toggleOptionsMenu()"><span class="ic" data-ic="edit"></span>Note</button>
+        <button id="cameraChip" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); document.getElementById('cameraInput').click()"><span class="ic" data-ic="camera"></span><span class="chip-label">Camera</span></button>
+        <button id="galleryChip" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); document.getElementById('receiptInput').click()"><span class="ic" data-ic="image"></span><span class="chip-label">Gallery</span></button>
     </div>
 </section>
 <nav id="tabBar" aria-label="Tabs">
@@ -1066,7 +1083,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.19.0";
+    const APP_VERSION = "7.20.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1362,7 +1379,8 @@
         if (swapped) {
             added.forEach(l => navSkipMotion(l === 'menu' ? 'sideMenu' : l === 'addBox' ? 'addBackdrop' : l));
             if (added.includes('menu')) navSkipMotion('menuOverlay');
-            if (removed.includes('menu')) navSkipMotion('sideMenu'); // and the menu leaves at once, not sliding out behind
+            if (removed.includes('menu')) navSkipMotion('sideMenu');
+            if ((added.includes('addBox') || removed.includes('addBox')) && addMotion) addMotion.forEach(a => a.finish()); // the add box grows / shrinks at once too // and the menu leaves at once, not sliding out behind
         }
         // Pop-ups closed in this tap slide away (navExit), unless another one took their place: then they go at once too
         if (navClosing.length) { const list = navClosing; navClosing = []; list.forEach(el => (swapped || el.style.display === 'flex' || el.style.display === 'block') ? navEndClosing(el) : navExit(el)); }
@@ -2085,7 +2103,7 @@
         let note = `Shopping: ${bought.map(x => x.text).join(', ')}`; if (note.length > 200) note = note.slice(0, 199) + '…';
         document.getElementById('groupNote').value = note;
         const el = document.getElementById('amtInput'); el.value = ''; el.style.height = '40px';
-        showNow(document.getElementById('optionsMenu'), 'block'); openAddBox();
+        showNow(document.getElementById('optionsMenu'), 'block'); setNoteChip(true); updateAmtPreview(true); openAddBox();
     }
 
     // ---- Everything still unpaid that involves one person, across the current cycle, hashtag bills and all past cycles ----
@@ -2312,10 +2330,7 @@
         } catch(e) {}
     }
 
-    document.addEventListener('click', function(event) {
-        const menu = document.getElementById('optionsMenu'); const inputSection = document.getElementById('inputSection');
-        if (menu && menu.style.display === 'block' && inputSection && !inputSection.contains(event.target)) { menu.style.display = 'none'; }
-    });
+    // (The note field is part of the add box now: it no longer closes on a tap elsewhere; openAddBox shows it when it has text)
 
     function showToast(msg, duration = 0) {
         if(document.activeElement && document.activeElement.tagName === 'TEXTAREA') document.activeElement.blur(); 
@@ -2425,7 +2440,13 @@
     // ---- Add box: opened with the + tab, closed by Back / tapping outside / after adding ----
     function openAddBox() {
         if (!currentUser) return;
+        const wasOpen = document.body.classList.contains('adding');
         document.body.classList.add('adding'); document.body.classList.toggle('editing', !!editingId);
+        if (!wasOpen) {
+            const hasNote = !!document.getElementById('groupNote').value.trim(); // a draft's note shows, an empty note field doesn't
+            showNow(document.getElementById('optionsMenu'), hasNote ? 'block' : 'none'); setNoteChip(hasNote);
+            updateAmtPreview(true); addBoxMotion(true);
+        }
         const btn = document.getElementById('tabAddBtn'); btn.classList.remove('intro-glow'); safeSetStorage('has_seen_input', 'true');
         navEnsureEntry(); document.getElementById('amtInput').focus();
     }
@@ -2433,13 +2454,49 @@
     function closeAddBox(cancel = false) {
         if (cancel && editingId) {
             editingId = null; ['amtInput', 'groupNote'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('amtInput').style.height = '40px';
-            showNow(document.getElementById('optionsMenu'), 'none'); render();
+            showNow(document.getElementById('optionsMenu'), 'none'); setNoteChip(false); render();
         }
         if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.input-section')) document.activeElement.blur();
         document.getElementById('hashtagAutocomplete').style.display = 'none';
+        const wasOpen = document.body.classList.contains('adding');
         document.body.classList.remove('adding', 'editing');
+        if (wasOpen) addBoxMotion(false);
         document.getElementById('tabAddBtn').classList.toggle('has-draft', !!(document.getElementById('amtInput').value.trim() || document.getElementById('groupNote').value.trim()));
     }
+    /* The add box comes out of the tab bar: the bar's glass (#tabGlass) grows up around the box as it fades in, and shrinks
+       back into the bar when it closes (body.add-closing keeps the box drawn meanwhile). Opening again mid-way carries on
+       from where the glass got to. Swapped straight for another screen: no motion (navSync). */
+    var addMotion = []; // var: navSync (earlier in the page) can look at it before this line has run
+    function addGlassBase(glass) { const h = glass.style.height; glass.style.height = ''; const base = glass.offsetHeight; glass.style.height = h; return base; }
+    function addGlassFit() {
+        const glass = document.getElementById('tabGlass'), box = document.getElementById('inputSection');
+        glass.style.height = document.body.classList.contains('adding') ? (addGlassBase(glass) + box.offsetHeight) + 'px' : '';
+    }
+    function addMotionEnd() { const list = addMotion; addMotion = []; list.forEach(a => a.cancel()); document.body.classList.remove('add-closing'); addGlassFit(); }
+    function addBoxMotion(open) {
+        const glass = document.getElementById('tabGlass'), box = document.getElementById('inputSection'), bd = document.getElementById('addBackdrop');
+        const fromH = glass.getBoundingClientRect().height;
+        addMotionEnd();
+        if (revealMotionOff()) return;
+        const base = addGlassBase(glass);
+        if (open) {
+            const toH = base + box.offsetHeight;
+            const grow = glass.animate([{ height: fromH + 'px' }, { height: toH + 'px' }], { duration: 460, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+            const show = box.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 340, delay: fromH > base + 1 ? 0 : 110, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'backwards' });
+            addMotion = [grow, show];
+            grow.onfinish = () => { if (addMotion[0] === grow) addGlassFit(); }; // the box may have changed size meanwhile
+        } else {
+            if (fromH <= base + 1) return;
+            document.body.classList.add('add-closing');
+            const shrink = glass.animate([{ height: fromH + 'px' }, { height: base + 'px' }], { duration: 380, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' });
+            addMotion = [shrink,
+                box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(14px)' }], { duration: 170, easing: 'ease-in', fill: 'forwards' }),
+                bd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 280, easing: 'ease-out', fill: 'forwards' })];
+            shrink.onfinish = () => { if (addMotion[0] === shrink) addMotionEnd(); };
+        }
+    }
+    // While open, the glass follows the box (note opening, more lines typed, the phone turned)
+    if (window.ResizeObserver) new ResizeObserver(() => { if (document.body.classList.contains('adding') && !addMotion.some(a => a.playState === 'running')) addGlassFit(); }).observe(document.getElementById('inputSection'));
     function toggleAddBox() { if (document.body.classList.contains('adding')) navBack(); else openAddBox(); }
 
     // ---- Expense detail sheet (tap a row) ----
@@ -2538,7 +2595,7 @@
     function toggleOptionsMenu(forceOpen = false) {
         const menu = document.getElementById('optionsMenu');
         const isOpening = forceOpen || !isShown(menu);
-        toggleShown(menu, isOpening);
+        toggleShown(menu, isOpening); setNoteChip(isOpening);
         if (isOpening || document.body.classList.contains('adding')) document.getElementById('amtInput').focus(); // closing it must not drop the keyboard
     }
 
@@ -3468,20 +3525,41 @@
     }
 
     // FIX: Math calculation properly extracts numbers without squishing them
-    function extractAmount(text) {
-        if (!text) return 0; 
-        let safeText = text.substring(0, 500);
-        let normalized = safeText.replace(/(\d)[,.](\d{3})(?!\d)/g, '$1$2'); 
+    /** The numbers in an expense's text that get added up (dates like 12/11 don't count) */
+    function amountParts(text) {
+        if (!text) return [];
+        let normalized = text.substring(0, 500).replace(/(\d)[,.](\d{3})(?!\d)/g, '$1$2');
         normalized = normalized.replace(/,/g, '.');
-        let noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/g, ''); 
-        let nums = noDates.match(/\d+\.\d+|\d+/g);
-        
-        if (nums && nums.length > 0) { 
-            let total = nums.reduce((sum, val) => sum + parseFloat(val), 0); 
-            if(isNaN(total) || !isFinite(total)) return 0; 
-            return total; 
+        const noDates = normalized.replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/g, '');
+        return (noDates.match(/\d+\.\d+|\d+/g) || []).map(parseFloat);
+    }
+    function extractAmount(text) {
+        const nums = amountParts(text); if (!nums.length) return 0;
+        const total = nums.reduce((sum, val) => sum + val, 0);
+        return (isNaN(total) || !isFinite(total)) ? 0 : total;
+    }
+    /** The line under the add box saying how the text will be read: "£12.50 for milk", "£5.00 (2 + 3) for milk bread" */
+    function updateAmtPreview(instant = false) {
+        const el = document.getElementById('amtPreview'); if (!el) return;
+        const text = document.getElementById('amtInput').value.substring(0, 500);
+        const nums = amountParts(text), total = extractAmount(text), show = total >= 0.01;
+        if (show) {
+            const sym = curSymbols[document.getElementById('currency').value] || '£';
+            let what = text.split(/\s+/).filter(w => w && !/^[£$€]?\d+(?:[.,]\d+)*$/.test(w)).join(' ');
+            if (what.length > 60) what = what.slice(0, 59) + '…';
+            const parts = nums.length > 1 ? (nums.length <= 6 ? ` (${nums.join(' + ')})` : ` (${nums.length} numbers added up)`) : '';
+            el.innerHTML = `<b>${escapeHTML(sym + money2(total))}</b>${escapeHTML(parts)}${what ? ' for ' + escapeHTML(what) : ''}`;
         }
-        return 0;
+        if (instant) showNow(el, show ? 'block' : 'none');
+        else if (isShown(el) !== show) toggleShown(el, show);
+    }
+    function setNoteChip(on) { const c = document.getElementById('noteChip'); if (c) { c.classList.toggle('on', on); c.setAttribute('aria-pressed', String(on)); } }
+    /** Camera / Gallery show how many photos are picked for this expense */
+    function photoChipsSync() {
+        [['cameraChip', 'cameraInput', 'Camera'], ['galleryChip', 'receiptInput', 'Gallery']].forEach(([chipId, inputId, label]) => {
+            const chip = document.getElementById(chipId), files = document.getElementById(inputId).files, n = files ? files.length : 0;
+            if (!chip) return; chip.classList.toggle('on', n > 0); chip.querySelector('.chip-label').textContent = n ? `${label} · ${n}` : label;
+        });
     }
 
     async function addExpense() {
@@ -3562,7 +3640,7 @@
             
             const amtInputEl = document.getElementById('amtInput'); amtInputEl.value = ""; amtInputEl.style.height = "40px"; 
             document.getElementById('groupNote').value = ""; document.getElementById('receiptInput').value = ""; document.getElementById('cameraInput').value = "";
-            showNow(document.getElementById('optionsMenu'), "none"); document.getElementById('hashtagAutocomplete').style.display = "none";
+            showNow(document.getElementById('optionsMenu'), "none"); setNoteChip(false); updateAmtPreview(true); photoChipsSync(); document.getElementById('hashtagAutocomplete').style.display = "none";
             render(); executeActionWithSave(); if(failedUploadsArr.length > 0) processUploadQueue();
             if (document.body.classList.contains('adding')) navBack(); document.getElementById('tabAddBtn').classList.remove('has-draft');
             
