@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <!-- Security policy: even if some text slipped through unescaped, the page can only talk to its own server and load
          scripts from here and cdnjs, so nothing can be sent to another site. ('unsafe-inline' is needed by the inline
          onclick handlers.) Add any new outside address here or it will be blocked. -->
@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.18.0">
+    <meta name="app-version" content="7.18.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -330,7 +330,10 @@
         .sheet-overlay, .dialog-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); overscroll-behavior-y: contain; }
         .sheet-overlay { align-items: flex-end; justify-content: center; }
         .dialog-overlay { align-items: center; justify-content: center; }
-        .login-card.sheet { width: 100% !important; max-width: 480px !important; max-height: 90dvh !important; margin: 0 !important; border-radius: 28px 28px 0 0 !important; border-bottom: none; padding: 26px 18px calc(18px + env(safe-area-inset-bottom)) !important; overflow-y: auto; animation: sheet-up 0.32s cubic-bezier(0.32, 0.72, 0, 1); position: relative; }
+        /* --kb: the part of the window covered by the on-screen keyboard, including any password / autofill bar on top of it
+           (0 where the browser already shrinks the page for the keyboard). Sheets, dialogs and the PIN box end above it. */
+        .sheet-overlay, .dialog-overlay, #lockOverlay { padding-bottom: var(--kb, 0px); }
+        .login-card.sheet { width: 100% !important; max-width: 480px !important; max-height: calc(90dvh - var(--kb, 0px)) !important; margin: 0 !important; border-radius: 28px 28px 0 0 !important; border-bottom: none; padding: 26px 18px calc(18px + env(safe-area-inset-bottom)) !important; overflow-y: auto; animation: sheet-up 0.32s cubic-bezier(0.32, 0.72, 0, 1); position: relative; }
         .login-card.sheet::before { content: ''; position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; border-radius: 3px; background: var(--border); }
         [data-theme="dark"] .login-card.sheet::before { background: rgba(255,255,255,0.18); }
         .login-card.sheet h2 { text-align: left !important; font-size: 1.3rem !important; margin-bottom: 14px !important; }
@@ -381,7 +384,7 @@
         .sheet-close svg { width: 18px; height: 18px; }
         .sheet-sub { font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin: -6px 0 14px; }
         .sheet-body { display: flex; flex-direction: column; gap: 8px; }
-        .login-card.sheet.tall { height: 90dvh; display: flex; flex-direction: column; }
+        .login-card.sheet.tall { height: calc(90dvh - var(--kb, 0px)); display: flex; flex-direction: column; }
         .login-card.sheet.tall .sheet-body { flex: 1; min-height: 0; overflow-y: auto; }
         .sheet-foot { display: flex; gap: 10px; margin-top: 14px; }
         .sheet-foot > * { flex: 1; }
@@ -525,9 +528,9 @@
             .input-section { bottom: calc(var(--tabbar-h) + 22px); }
             #notifCard { bottom: calc(var(--tabbar-h) + 32px) !important; }
             .sheet-overlay { align-items: center; }
-            .login-card.sheet { border-radius: 28px !important; border-bottom: 1px solid var(--border); max-height: 86dvh !important; padding-bottom: 18px !important; animation: pop-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+            .login-card.sheet { border-radius: 28px !important; border-bottom: 1px solid var(--border); max-height: calc(86dvh - var(--kb, 0px)) !important; padding-bottom: 18px !important; animation: pop-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
             .login-card.sheet::before { display: none; }
-            .login-card.sheet.tall { height: 86dvh; }
+            .login-card.sheet.tall { height: calc(86dvh - var(--kb, 0px)); }
         }
     </style>
 </head>
@@ -1017,7 +1020,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.18.0";
+    const APP_VERSION = "7.18.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1046,7 +1049,10 @@
     function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
     function vapidKeyBytes() { const s = VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); }
     function swReady() { return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('sw_timeout')), 8000))]); }
-    function setNotifLabel(on) { ['notifState', 'inboxPushState'].forEach(id => { const el = document.getElementById(id); if (el) { el.innerText = on ? 'On' : 'Off'; el.style.color = on ? 'var(--success)' : 'var(--text-muted)'; } }); }
+    function setNotifLabel(on) {
+        ['notifState', 'inboxPushState'].forEach(id => { const el = document.getElementById(id); if (el) { el.innerText = on ? 'On' : 'Off'; el.style.color = on ? 'var(--success)' : 'var(--text-muted)'; } });
+        if (on) hideNotifCard(); // turned on from the bell or the menu: the "turn on notifications" banner has done its job
+    }
 
     // Tell the Worker "this browser belongs to <user>" (skipped if nothing changed since the last time)
     async function registerWebPush(sub) {
@@ -1063,7 +1069,14 @@
         if (!webPushSupported() || Notification.permission !== 'granted') { setNotifLabel(false); return; }
         try { const reg = await swReady(); const sub = await reg.pushManager.getSubscription(); setNotifLabel(!!sub); if (sub) registerWebPush(sub); } catch (e) {}
     }
-    async function toggleNotifications() {
+    /** mode 'toggle' = the bell / menu switch (on <-> off); 'on' = the banner's "Turn on", which never turns them off */
+    let notifBusy = false;
+    async function toggleNotifications(mode = 'toggle') {
+        if (notifBusy) return false; // a second tap while the browser is still signing up must not undo the first
+        notifBusy = true;
+        try { return await switchNotifications(mode); } finally { notifBusy = false; }
+    }
+    async function switchNotifications(mode) {
         // Android app: its own notifications (Firebase, native-shim.js), not the browser's
         if (isNativeApp()) {
             if (!window.nativePush) { showToast("UPDATE THE APP TO CHANGE NOTIFICATIONS HERE", 3000); return false; }
@@ -1082,6 +1095,7 @@
             // Already granted (e.g. turning off) = no popup.
             const permPromise = Notification.permission === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
             const reg = await swReady(); let sub = await reg.pushManager.getSubscription();
+            if (sub && mode === 'on') { setNotifLabel(true); registerWebPush(sub); showToast("NOTIFICATIONS ARE ALREADY ON", 2000); return true; }
             if (sub) { // turn off
                 fetch(`${API_URL}/unregister`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ token: JSON.stringify(sub) }) }).catch(() => {});
                 await sub.unsubscribe(); try { sessionStorage.removeItem('hx_wreg'); } catch (e) {}
@@ -1126,7 +1140,7 @@
     async function notifCardTurnOn() {
         if (notifCardBusy) return; notifCardBusy = true; // ignore double taps while the browser signs up
         const btn = document.getElementById('notifCardOn'); btn.disabled = true; btn.style.opacity = '0.6';
-        try { if (await toggleNotifications()) hideNotifCard(); }
+        try { if (await toggleNotifications('on')) hideNotifCard(); }
         finally { notifCardBusy = false; btn.disabled = false; btn.style.opacity = '1'; }
     }
     function unlockApp() {
@@ -1294,8 +1308,12 @@
             const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
             full = Math.max(full, window.innerHeight, h);
             document.body.classList.toggle('kb-open', h < full - 120);
+            // How much of the window the keyboard covers (its password / autofill bar included): sheets and dialogs end above it
+            const vv = window.visualViewport;
+            const kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+            document.documentElement.style.setProperty('--kb', kb + 'px');
         };
-        if (window.visualViewport) window.visualViewport.addEventListener('resize', check);
+        if (window.visualViewport) { window.visualViewport.addEventListener('resize', check); window.visualViewport.addEventListener('scroll', check); }
         window.addEventListener('resize', check);
         window.addEventListener('orientationchange', () => { full = 0; setTimeout(check, 400); });
     })();
@@ -3702,6 +3720,19 @@
             } else { el.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'; el.style.transform = ''; ov.style.background = ''; setTimeout(() => reset(el), 260); }
         };
         document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
+    })();
+    // ---- Tap the dimmed background around a sheet to close it, like Back (the question boxes already do this themselves).
+    //      Only for the sheet on top, and only when the tap both started and ended on the background: a drag that began
+    //      inside the sheet (selecting text, scrolling) must not close it. The name picker and the PIN lock are not sheets.
+    (function () {
+        let downOn = null;
+        document.addEventListener('pointerdown', (e) => { downOn = e.target; }, true);
+        document.addEventListener('click', (e) => {
+            const ov = e.target;
+            if (!ov || !ov.classList || !ov.classList.contains('sheet-overlay') || ov.classList.contains('ask-overlay')) return;
+            if (downOn !== ov || navTop() !== ov.id) return;
+            triggerHaptic(); navBack();
+        });
     })();
     try { const c = localStorage.getItem('house_currency'); if (c && curSymbols[c]) document.getElementById('currency').value = c; } catch (e) {} // before the first render
     navInstall(); // after every function above exists
