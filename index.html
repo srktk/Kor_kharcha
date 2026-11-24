@@ -21,40 +21,20 @@
         const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
         let themeTimeout;
 
+        // Theme: 'system' (default, follows the phone's dark mode live) or a fixed 'light' / 'dark' (Settings → Display)
+        function themeMode() { try { const m = localStorage.getItem('house_theme_mode'); return m === 'light' || m === 'dark' ? m : 'system'; } catch (e) { return 'system'; } }
         function applyTheme() {
-            localStorage.removeItem('house_theme'); 
-            const savedTime = sessionStorage.getItem('house_theme_time');
-            let savedTheme = sessionStorage.getItem('house_theme');
-
-            if (savedTime && (Date.now() - parseInt(savedTime) > 600000)) { 
-                sessionStorage.removeItem('house_theme');
-                sessionStorage.removeItem('house_theme_time');
-                savedTheme = null;
-            }
-
-            const theme = savedTheme || (themeQuery.matches ? 'dark' : 'light');
+            try { sessionStorage.removeItem('house_theme'); sessionStorage.removeItem('house_theme_time'); } catch (e) {} // old 10-minute override
+            const mode = themeMode(); const theme = mode === 'system' ? (themeQuery.matches ? 'dark' : 'light') : mode;
             document.documentElement.setAttribute('data-theme', theme);
             try { const acc = localStorage.getItem('house_accent'); if (acc && acc !== 'teal') document.documentElement.setAttribute('data-accent', acc); else document.documentElement.removeAttribute('data-accent'); } catch (e) {}
-            
             const metaTheme = document.querySelector('meta[name="theme-color"]');
             if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0a0e17' : '#f2f4f7');
-
-            if (savedTheme) {
-                clearTimeout(themeTimeout);
-                const timeLeft = 600000 - (Date.now() - parseInt(savedTime));
-                themeTimeout = setTimeout(() => {
-                    sessionStorage.removeItem('house_theme');
-                    sessionStorage.removeItem('house_theme_time');
-                    applyTheme();
-                }, Math.max(timeLeft, 0));
-            }
+            document.querySelectorAll('[data-theme-mode]').forEach((b) => b.classList.toggle('active', b.dataset.themeMode === mode));
+            const st = document.getElementById('themeState'); if (st) st.innerText = { system: 'System', light: 'Light', dark: 'Dark' }[mode];
         }
-
         applyTheme();
-        
-        themeQuery.addEventListener('change', () => {
-            if (!sessionStorage.getItem('house_theme')) applyTheme();
-        });
+        themeQuery.addEventListener('change', applyTheme);
 
         // Service worker (sw.js): offline copy of the page + web push. Not used inside the Android app,
         // which has its own offline files and Firebase notifications.
@@ -277,18 +257,10 @@
         .owed-head .amt { color: var(--accent-strong); font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
         .settle-row { display: flex; align-items: flex-start; gap: 10px; }
 
-        /* ---- Big title that shrinks into the top bar on scroll ---- */
-        .glass-nav { transition: background-color 0.2s, box-shadow 0.2s; }
-        .glass-nav:not(.scrolled) { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
-        .glass-nav.scrolled { box-shadow: 0 1px 0 var(--border); }
-        .nav-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.3px; color: var(--text-main); opacity: 0; transform: translateY(6px); transition: opacity 0.2s, transform 0.2s; background: none; border: none; cursor: pointer; padding: 0; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .glass-nav.scrolled .nav-title { opacity: 1; transform: none; }
-        .big-title { padding: 0 20px 12px; margin-top: -6px; }
-        .big-title .greet-sub { display: block; margin-bottom: 2px; }
-        .big-title h1 { font-size: 1.85rem; font-weight: 800; letter-spacing: -0.8px; line-height: 1.15; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .big-title #topUserName { font-size: inherit !important; letter-spacing: inherit; }
-
         /* ---- Past cycles link on the home screen ---- */
+        .card.unread { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent), var(--shadow); }
+        .card.inbox-item { cursor: default; }
+        .card.inbox-item.tappable { cursor: pointer; }
         .past-link { margin: 12px 16px 0; background: var(--surface); border: none; border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left; color: var(--text-main); font: inherit; }
         .past-link:active { transform: scale(0.99); }
         .past-link .pl-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -581,6 +553,20 @@
     </div>
 </div>
 
+<div id="inboxOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>Notifications</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeInbox()" data-ic="x"></button></div>
+        <div class="sheet-body">
+            <div class="group" style="flex-shrink:0;">
+                <button class="row-item interactive-btn" onclick="triggerHaptic(); toggleNotifications()"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">Phone notifications<span class="ri-sub">A push when something changes</span></span><span id="inboxPushState" class="ri-end">Off</span></button>
+                <button class="row-item interactive-btn" onclick="triggerHaptic(); openNotifPrefs()"><span class="ri-icon" data-ic="gear"></span><span class="ri-label">What Notifies Me</span><span class="ic" data-ic="chev"></span></button>
+            </div>
+            <div class="group-label">Recent</div>
+            <div id="inboxList" class="stack"></div>
+        </div>
+    </div>
+</div>
+
 <div id="expenseOverlay" class="sheet-overlay" style="display:none;">
     <div class="login-card sheet">
         <div class="sheet-head"><h2>Expense</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeExpense()" data-ic="x"></button></div>
@@ -610,6 +596,10 @@
 
         <div class="group-label">Display</div>
         <div class="group">
+            <div class="row-item" style="cursor:default; flex-wrap:wrap;">
+                <span class="ri-icon" data-ic="moon"></span><span class="ri-label">Theme<span class="ri-sub">System follows your phone's dark mode</span></span>
+                <div class="seg" role="tablist" aria-label="Theme" style="width:100%; margin:8px 0 0;"><button data-theme-mode="system" class="interactive-btn" onclick="setThemeMode('system')">System</button><button data-theme-mode="light" class="interactive-btn" onclick="setThemeMode('light')">Light</button><button data-theme-mode="dark" class="interactive-btn" onclick="setThemeMode('dark')">Dark</button></div>
+            </div>
             <div class="row-item" style="cursor:default;">
                 <span class="ri-icon" data-ic="palette"></span><span class="ri-label">Accent colour<span class="ri-sub">Only on this phone</span></span>
                 <span class="swatches"><button class="swatch interactive-btn" data-accent="teal" aria-label="Teal" style="--sw:#0d9488;" onclick="setAccent('teal')"></button><button class="swatch interactive-btn" data-accent="blue" aria-label="Blue" style="--sw:#2563eb;" onclick="setAccent('blue')"></button><button class="swatch interactive-btn" data-accent="purple" aria-label="Purple" style="--sw:#7c3aed;" onclick="setAccent('purple')"></button><button class="swatch interactive-btn" data-accent="orange" aria-label="Orange" style="--sw:#ea580c;" onclick="setAccent('orange')"></button></span>
@@ -630,7 +620,7 @@
 
         <div class="group-label">You</div>
         <div class="group">
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); setPayLink();"><span class="ri-icon" data-ic="card"></span><span class="ri-label">My Payment Link<span class="ri-sub">Monzo or PayPal link for the Pay button</span></span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); setPayLink();"><span class="ri-icon" data-ic="card"></span><span class="ri-label">My Payment Link<span class="ri-sub">Monzo or PayPal link for the Pay button</span></span><span class="ri-end" data-ic="chev"></span></button>
             <button class="row-item interactive-btn" onclick="triggerHaptic(); openNotifPrefs();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">What Notifies Me</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
 
@@ -648,9 +638,9 @@
 
         <div class="group-label">Export</div>
         <div class="group">
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); downloadPDF();"><span class="ri-icon" data-ic="file"></span><span class="ri-label">Export PDF</span><span class="ri-end" data-ic="chev"></span></button>
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); exportCSV();"><span class="ri-icon" data-ic="file"></span><span class="ri-label">Export CSV</span><span class="ri-end" data-ic="chev"></span></button>
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); closeSettings(); downloadZIP();"><span class="ri-icon" data-ic="download"></span><span class="ri-label">Download All Receipts (.ZIP)</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); downloadPDF();"><span class="ri-icon" data-ic="file"></span><span class="ri-label">Export PDF</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); exportCSV();"><span class="ri-icon" data-ic="file"></span><span class="ri-label">Export CSV</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); downloadZIP();"><span class="ri-icon" data-ic="download"></span><span class="ri-label">Download All Receipts (.ZIP)</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
 
         <div class="sheet-foot"><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeSettings()">Done</button></div>
@@ -760,7 +750,7 @@
     <div class="group-label">App</div>
     <div class="group">
         <a href="#" id="notifMenuLink" class="row-item interactive-btn" onclick="triggerHaptic(); toggleNotifications(); event.preventDefault();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">Notifications</span><span id="notifState" class="ri-end">Off</span></a>
-        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();"><span class="ri-icon" data-ic="moon"></span><span class="ri-label">Toggle Theme</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); toggleTheme(); event.preventDefault();"><span class="ri-icon" data-ic="moon"></span><span class="ri-label">Theme</span><span id="themeState" class="ri-end">System</span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openSettings(); event.preventDefault();"><span class="ri-icon" data-ic="gear"></span><span class="ri-label">Settings</span></a>
     </div>
 
@@ -772,8 +762,15 @@
 
 <main class="wrapper">
     <nav class="glass-nav" id="topNav" aria-label="Top Navigation">
-        <button id="navTitle" class="nav-title interactive-btn" onclick="goHome()" aria-hidden="true" tabindex="-1">House Expenses</button>
+        <div class="greet">
+            <span class="greet-sub">House Expenses</span>
+            <button id="topUserName" aria-label="Toggle My View" class="interactive-btn" onclick="triggerHaptic(); toggleMyView()" title="Tap to see only your own expenses"></button>
+        </div>
         <div style="display:flex; align-items:center; gap:10px;">
+            <div style="position:relative;">
+                <button id="bellBtn" class="icon-btn interactive-btn" aria-label="Notifications" onclick="triggerHaptic(); openInbox()" data-ic="bell"></button>
+                <div id="bellBadge" class="offline-badge" style="display:none;">0</div>
+            </div>
             <button class="icon-btn interactive-btn" aria-label="Help Guide" onclick="triggerHaptic(); openHelp()" data-ic="help"></button>
             <div style="position:relative;">
                 <button class="icon-btn interactive-btn" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
@@ -783,11 +780,6 @@
             </div>
         </div>
     </nav>
-
-    <div class="big-title">
-        <span class="greet-sub">House Expenses</span>
-        <h1>Hi, <button id="topUserName" aria-label="Toggle My View" class="interactive-btn" onclick="triggerHaptic(); toggleMyView()" title="Tap to see only your own expenses"></button></h1>
-    </div>
 
     <header class="hero-section" id="heroSection">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -860,7 +852,6 @@
 
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
     <div id="hashtagAutocomplete"></div>
-    <div id="editBar"><span>Editing expense</span><button class="btn-pill interactive-btn" onclick="triggerHaptic(); closeAddBox(true)">Cancel</button></div>
     <div id="optionsMenu" style="display:none; padding:14px; margin-bottom:4px;">
         <label class="field-label" for="groupNote">Note for this expense</label>
         <input type="text" id="groupNote" aria-label="General Note" class="chat-note wipe-trigger" style="margin-bottom:10px;" placeholder="General Note / Description" autocomplete="off" data-1p-ignore="true" data-lpignore="true" oninput="handleTagInput(event)">
@@ -874,7 +865,7 @@
             <textarea id="amtInput" aria-label="Expense Details" class="chat-textarea wipe-trigger" placeholder="Add expense, e.g. 12.50 milk" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('mainAddBtn').click(); }" oninput="this.style.height = '40px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; handleTagInput(event);" spellcheck="false"></textarea>
             <input type="file" id="receiptInput" aria-label="Upload Receipt" accept="image/*" multiple style="display:none;">
             <input type="file" id="cameraInput" aria-label="Take Photo" accept="image/*" capture="environment" style="display:none;">
-            <button class="chat-btn interactive-btn" aria-label="More Options" onclick="triggerHaptic(); toggleOptionsMenu()" title="Note and receipt photo">
+            <button class="chat-btn interactive-btn" aria-label="More Options" onmousedown="event.preventDefault()" onclick="triggerHaptic(); toggleOptionsMenu()" title="Note and receipt photo">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
         </div>
@@ -949,7 +940,7 @@
     function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
     function vapidKeyBytes() { const s = VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); }
     function swReady() { return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('sw_timeout')), 8000))]); }
-    function setNotifLabel(on) { const el = document.getElementById('notifState'); if (el) { el.innerText = on ? 'On' : 'Off'; el.style.color = on ? 'var(--success)' : 'var(--text-muted)'; } }
+    function setNotifLabel(on) { ['notifState', 'inboxPushState'].forEach(id => { const el = document.getElementById(id); if (el) { el.innerText = on ? 'On' : 'Off'; el.style.color = on ? 'var(--success)' : 'var(--text-muted)'; } }); }
 
     // Tell the Worker "this browser belongs to <user>" (skipped if nothing changed since the last time)
     async function registerWebPush(sub) {
@@ -1082,13 +1073,13 @@
     // and remembers it; Back (phone button / gesture) or the ✕ then returns to it, with its scroll position, instead of home.
     // One history entry ({nav:true}) sits above the page while anything is open, so Back on the home screen leaves the app.
     const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
-        historyOverlay: 'closeHistory', expenseOverlay: 'closeExpense', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
+        historyOverlay: 'closeHistory', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
         manageUsersOverlay: 'closeManageUsers', helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
         insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast' };
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay' };
+        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navBackPending = false, navUserBack = false, navClickAttr = '';
@@ -1578,14 +1569,45 @@
     }
     function closeInsights() { document.getElementById('insightsOverlay').style.display = 'none'; document.body.style.overflow = ''; }
     function pickInsightsCycle(i) { insightsCycle = i; renderInsights(); }
+    let insightsMode = 'month', insightsYear = null;
+    function setInsightsMode(m) { triggerHaptic(); insightsMode = m; renderInsights(); document.getElementById('insightsBody').scrollTop = 0; }
+    function pickInsightsYear(y) { triggerHaptic(); insightsYear = y; renderInsights(); }
+    /** Calendar-year view: every expense (cycles + hashtag bills) dated in that year */
+    function yearInsightsHtml() {
+        const { fmt } = viewMoney(); const h = (t) => `<div class="group-label">${t}</div>`;
+        const when = (ex) => { const p = (ex.date || '').split('/'); if (p.length === 3) { const d = new Date(+p[2], +p[1] - 1, +p[0]); if (!isNaN(d)) return d.getTime(); } return ex.timestamp || 0; };
+        const rows = []; settlementLedgers().forEach(L => L.expenses.forEach(ex => { const t = when(ex); if (t) rows.push({ ex, t, active: L.active || db.users }); }));
+        const years = [...new Set(rows.map(r => new Date(r.t).getFullYear()))].sort((a, b) => b - a);
+        if (!years.length) return emptyState('chart', 'No expenses yet.');
+        if (!years.includes(insightsYear)) insightsYear = years[0];
+        const months = Array(12).fill(0), paid = {}, share = {}; let total = 0; const yr = rows.filter(r => new Date(r.t).getFullYear() === insightsYear);
+        yr.forEach(({ ex, t, active }) => {
+            months[new Date(t).getMonth()] += ex.amount; total += ex.amount; paid[ex.name] = (paid[ex.name] || 0) + ex.amount;
+            const inv = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : active;
+            inv.forEach(u => { share[u] = (share[u] || 0) + ex.amount / Math.max(inv.length, 1); });
+        });
+        const used = months.filter(m => m > 0).length || 1; const mmax = Math.max(...months, 0.01); const now = new Date();
+        let html = years.length > 1 ? `<div class="seg" role="tablist" aria-label="Year">${years.map(y => `<button class="interactive-btn${y === insightsYear ? ' active' : ''}" onclick="pickInsightsYear(${y})">${y}</button>`).join('')}</div>` : '';
+        html += `<div class="tiles"><div class="tile"><div class="k">House total ${insightsYear}</div><div class="v">${fmt(total)}</div></div><div class="tile"><div class="k">Average month</div><div class="v">${fmt(total / used)}</div></div></div>`;
+        if (currentUser) { const mp = paid[currentUser] || 0, ms = share[currentUser] || 0; html += `<div class="tiles" style="margin-top:8px;"><div class="tile"><div class="k">You paid</div><div class="v">${fmt(mp)}</div></div><div class="tile"><div class="k">Your fair share</div><div class="v">${fmt(ms)}</div></div></div><div class="card-meta" style="margin:8px 4px 0;">${Math.abs(mp - ms) < 1 ? 'You paid almost exactly your share.' : mp > ms ? `You paid ${fmt(mp - ms)} more than your share.` : `You paid ${fmt(ms - mp)} less than your share.`} Includes hashtag bills.</div>`; }
+        html += h('Spending per month') + `<div class="month-chart">${months.map((m, i) => `<i title="${fmt(m)}" class="${insightsYear === now.getFullYear() && i === now.getMonth() ? 'now' : ''}" style="height:${Math.max(m > 0 ? 4 : 1, m / mmax * 100).toFixed(1)}%;"></i>`).join('')}</div><div class="month-labels">${months.map((m, i) => `<span>${new Date(2000, i, 1).toLocaleString('default', { month: 'narrow' })}</span>`).join('')}</div>`;
+        const people = Object.keys({ ...paid, ...share }).filter(u => (paid[u] || 0) > 0 || (share[u] || 0) > 0).sort((a, b) => (paid[b] || 0) - (paid[a] || 0));
+        const pmax = Math.max(...people.map(u => Math.max(paid[u] || 0, share[u] || 0)), 0.01);
+        if (people.length) html += h('Who paid what') + `<div class="legend"><span><i style="background:var(--accent);"></i>Paid</span><span><i style="background:var(--text-muted); opacity:0.45;"></i>Their share</span></div><div class="card stack" style="gap:12px;">` + people.map(u => `<div><div class="card-row" style="font-size:0.82rem; margin-bottom:5px;"><span style="display:flex; align-items:center; gap:8px; font-weight:600;">${avatarHTML(u, 'sm')}${escapeHTML(u)}</span><span style="color:var(--text-muted);">paid <b style="color:var(--text-main);">${fmt(paid[u] || 0)}</b> · share ${fmt(share[u] || 0)}</span></div><div class="bar"><i style="width:${((paid[u] || 0) / pmax * 100).toFixed(1)}%;"></i></div><div class="bar thin"><i style="width:${((share[u] || 0) / pmax * 100).toFixed(1)}%;"></i></div></div>`).join('') + '</div>';
+        const top = yr.map(r => r.ex).sort((a, b) => b.amount - a.amount).slice(0, 5);
+        if (top.length) html += h('Biggest expenses') + '<div class="group">' + top.map(ex => `<div class="health-row"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(ex.name)}</b> · ${formatDescDisplay(ex.desc, ex.originalSym || viewMoney().sym)}</span><span class="hv">${fmt(ex.amount)}</span></div>`).join('') + '</div>';
+        return html;
+    }
     function renderInsights() {
         const { fmt } = viewMoney(); const { cycles, tags } = insightCycles();
         const h = (t) => `<div class="group-label">${t}</div>`;
+        const segHtml = `<div class="seg" role="tablist" aria-label="Insights period"><button role="tab" class="interactive-btn${insightsMode === 'month' ? ' active' : ''}" onclick="setInsightsMode('month')">Month</button><button role="tab" class="interactive-btn${insightsMode === 'year' ? ' active' : ''}" onclick="setInsightsMode('year')">Year</button></div>`;
+        if (insightsMode === 'year') { document.getElementById('insightsBody').innerHTML = segHtml + yearInsightsHtml(); return; }
         const shown = cycles.slice(0, 12); if (insightsCycle >= shown.length) insightsCycle = 0;
         const max = Math.max(...shown.map(c => c.total), 0.01);
         const pastTotals = cycles.slice(1).map(c => c.total).filter(t => t > 0);
         const avg = pastTotals.length ? pastTotals.reduce((a, b) => a + b, 0) / pastTotals.length : 0;
-        let html = myYearHtml(h, fmt) + h('Total per cycle') + `<div class="card-meta" style="margin:-4px 4px 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
+        let html = segHtml + h('Total per cycle') + `<div class="card-meta" style="margin:-4px 4px 8px;">Tap a cycle to see its details${avg ? ` · past average ${fmt(avg)}` : ''}</div>`;
         html += shown.map((c, i) => `<div class="cycle-bar interactive-btn${i === insightsCycle ? ' selected' : ''}" role="button" onclick="triggerHaptic(); pickInsightsCycle(${i})"><span class="lbl">${escapeHTML(c.label)}</span><div class="bar"><i style="width:${Math.max(2, c.total / max * 100).toFixed(1)}%;"></i></div><span class="amt">${fmt(c.total)}</span></div>`).join('');
         if (cycles.length > shown.length) html += `<div class="card-meta" style="text-align:center;">Showing the latest ${shown.length} of ${cycles.length} cycles</div>`;
 
@@ -2116,7 +2138,7 @@
         if (receipts) html += `<div class="row-item interactive-btn" role="button" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptArg})"><span class="ri-icon">${ico('image')}</span><span class="ri-label">Receipt${receipts > 1 ? 's' : ''}<span class="ri-sub">${receipts} photo${receipts > 1 ? 's' : ''}</span></span><span class="ic">${ico('chev')}</span></div>`;
         if (ex.edited) html += `<div class="row-item interactive-btn" role="button" onclick="triggerHaptic(); showEditHistory('${ex.id}')"><span class="ri-icon">${ico('clock')}</span><span class="ri-label">Edited<span class="ri-sub">${Array.isArray(ex.history) && ex.history.length ? 'See earlier versions' : 'No earlier versions saved'}</span></span><span class="ic">${ico('chev')}</span></div>`;
         html += `</div><div class="ex-actions"><button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">${ico('share')}Share</button>`;
-        if (ex.name === currentUser) html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">${ico('edit')}Edit</button><button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">${ico('trash')}Delete</button>`;
+        if (ex.name === currentUser) html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); startExpenseEdit('${ex.id}')">${ico('edit')}Edit</button><button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">${ico('trash')}Delete</button>`;
         return html + '</div>';
     }
     function openExpense(id) {
@@ -2125,10 +2147,10 @@
         openExpenseId = id; document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex);
         navEnsureEntry(); document.getElementById('expenseOverlay').style.display = 'flex';
     }
-    function closeExpense() { openExpenseId = null; document.getElementById('expenseOverlay').style.display = 'none'; }
+    function closeExpense() { openExpenseId = null; expenseEditing = false; document.querySelector('#expenseOverlay h2').innerText = 'Expense'; document.getElementById('expenseOverlay').style.display = 'none'; }
     /** After any change (sync, edit, delete) keep the open detail sheet in step, or close it if the expense is gone */
     function refreshExpenseSheet() {
-        if (!openExpenseId || document.getElementById('expenseOverlay').style.display !== 'flex') return;
+        if (!openExpenseId || expenseEditing || document.getElementById('expenseOverlay').style.display !== 'flex') return; // never wipe an edit in progress
         const ex = (db.expenses || []).find(e => e.id === openExpenseId);
         if (ex) document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex); else closeExpense();
     }
@@ -2161,13 +2183,11 @@
         const menu = document.getElementById('optionsMenu');
         const isOpening = forceOpen || menu.style.display === 'none';
         menu.style.display = isOpening ? 'block' : 'none';
-        if (isOpening) document.getElementById('amtInput').focus();
+        if (isOpening || document.body.classList.contains('adding')) document.getElementById('amtInput').focus(); // closing it must not drop the keyboard
     }
 
-    function toggleTheme() {
-        let current = document.documentElement.getAttribute('data-theme'); let next = current === 'dark' ? 'light' : 'dark';
-        sessionStorage.setItem('house_theme', next); sessionStorage.setItem('house_theme_time', Date.now().toString()); if (typeof applyTheme === 'function') applyTheme();
-    }
+    function setThemeMode(m) { triggerHaptic(); safeSetStorage('house_theme_mode', m); applyTheme(); }
+    function toggleTheme() { const order = ['system', 'light', 'dark']; setThemeMode(order[(order.indexOf(themeMode()) + 1) % order.length]); } // More menu: System → Light → Dark
 
     function toggleMenu() {
         if(document.activeElement) document.activeElement.blur();
@@ -2306,11 +2326,53 @@
         } catch (e) { showToast("Copy manually.", 3000); }
     }
 
+    /** Nudge: a push notification to `name` only (the worker sends kind:'nudge' entries to their "to" person). Max one per person per hour. */
     function sendNudge(name, amount, sym) {
-        triggerHaptic(); const text = `Hey ${name}, just a heads up you owe ${sym}${amount.toFixed(2)} for the current house cycle. Catch you later!`;
-        if (navigator.share) { navigator.share({ title: 'House Expenses', text: text }).catch(e => { copyToClipboard(text); showToast("Nudge Copied!", 2000); }); } 
-        else { copyToClipboard(text); showToast("Nudge Copied!", 2000); }
+        triggerHaptic(); const amt = `${sym}${Number(amount).toFixed(2)}`;
+        const recent = (db.auditLog || []).find(a => a && a.kind === 'nudge' && a.by === currentUser && a.to === name && Date.now() - a.t < 3600000);
+        if (recent) { showToast(`You reminded ${name} ${Math.max(1, Math.round((Date.now() - recent.t) / 60000))} min ago`, 2500); return; }
+        customConfirm(`Send <b>${escapeHTML(name)}</b> a reminder that they owe you <b>${escapeHTML(amt)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get a notification on their phone.</span>`, () => {
+            logAudit(`Reminded ${name} about ${amt}`, null, false, 'nudge');
+            Object.assign(db.auditLog[0], { to: name, msg: `Friendly reminder, you owe me ${amt}` });
+            executeActionWithSave(); showToast(`REMINDER SENT TO ${name.toUpperCase()}`, 2000);
+        });
     }
+
+    // ---- Bell: recent changes by others (and reminders sent to you); unread = newer than the last time you opened it ----
+    function inboxSeenKey() { return 'house_inbox_seen_' + currentUser; }
+    function inboxEntries() { return (db.auditLog || []).filter(a => a && a.by !== currentUser && !a.quiet && (a.kind !== 'nudge' || a.to === currentUser)).slice(0, 60); }
+    function inboxSeen() {
+        let v = null; try { v = localStorage.getItem(inboxSeenKey()); } catch (e) {}
+        if (v === null) { const first = inboxEntries()[0]; v = String(first ? first.t : Date.now()); safeSetStorage(inboxSeenKey(), v); } // first run: start with nothing unread
+        return Number(v) || 0;
+    }
+    function updateInboxBadge() {
+        const b = document.getElementById('bellBadge'); if (!b || !currentUser) return;
+        const seen = inboxSeen(); const n = inboxEntries().filter(a => a.t > seen).length;
+        b.innerText = n > 99 ? '99+' : n; b.style.display = n ? 'flex' : 'none';
+        document.getElementById('bellBtn').setAttribute('aria-label', n ? `Notifications, ${n} new` : 'Notifications');
+    }
+    function timeAgo(t) {
+        const m = Math.round((Date.now() - t) / 60000);
+        if (m < 1) return 'Just now'; if (m < 60) return `${m} min ago`; const h = Math.round(m / 60); if (h < 24) return `${h} h ago`;
+        const d = Math.round(h / 24); return d < 7 ? `${d} day${d === 1 ? '' : 's'} ago` : new Date(t).toLocaleDateString();
+    }
+    function openInbox() {
+        if (!currentUser) return; if (document.activeElement) document.activeElement.blur();
+        const seen = inboxSeen(); const list = inboxEntries();
+        document.getElementById('inboxList').innerHTML = list.length ? list.map(a => {
+            const ex = typeof a.trg === 'string' ? (db.expenses || []).find(e => e.id === a.trg) : null;
+            const nudge = a.kind === 'nudge';
+            return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${ex ? ' tappable interactive-btn' : ''}" ${ex ? `role="button" onclick="triggerHaptic(); openExpense('${ex.id}')"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
+                <div class="card-text">${nudge ? `<span class="tag danger">Reminder</span> <b>${escapeHTML(a.by)}</b>: ${escapeHTML(a.msg || a.act)}` : `<b>${escapeHTML(a.by)}</b> ${escapeHTML(a.act)}`}</div>
+                ${a.trg && !nudge ? `<div class="card-meta" style="color:var(--accent-strong);">${auditTargetLabel(a.trg)}</div>` : ''}
+                <div class="card-meta">${timeAgo(a.t)}</div></div></div></div>`;
+        }).join('') : emptyState('bell', 'Nothing new. Changes your housemates make show up here.');
+        if (list[0]) safeSetStorage(inboxSeenKey(), String(Math.max(seen, list[0].t)));
+        updateInboxBadge();
+        navEnsureEntry(); document.getElementById('inboxOverlay').style.display = 'flex';
+    }
+    function closeInbox() { document.getElementById('inboxOverlay').style.display = 'none'; }
 
     function viewImg(urlArrayRaw) { 
         triggerHaptic(); let urls = [];
@@ -2477,7 +2539,7 @@
 
     function generateActionPills(ex) {
         let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense('${ex.id}')">Share</button>`;
-        if (ex.name === currentUser) { html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); editEx('${ex.id}')">Edit</button> <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`; }
+        if (ex.name === currentUser) { html += `<button class="btn-pill interactive-btn" aria-label="Edit Expense" onclick="triggerHaptic(); startExpenseEdit('${ex.id}')">Edit</button> <button class="btn-pill danger interactive-btn" aria-label="Delete Expense" onclick="triggerHaptic(); deleteEx('${ex.id}')">Delete</button>`; }
         return html;
     }
 
@@ -2549,7 +2611,6 @@
             list.innerHTML = listHtml + `</div>`;
         }
         if (localDbLoaded) seenExpenseIds = new Set((db.expenses || []).map(e => e.id)); // rows added after the first load slide in
-        document.getElementById('navTitle').textContent = currentUser ? `Hi, ${currentUser}` : 'House Expenses';
 
         let totalLocal = Math.round(totalBase * rate * 100) / 100; let activeCount = Math.max(db.activeUsers.length, 1); let avgPerHead = Math.round((totalLocal / activeCount) * 100) / 100;
         
@@ -2588,7 +2649,7 @@
             return payCardHTML(t.from, t.to, 'pays', money((isS ? t.amt : tr) * rate), meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
         }).join('');
         document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
-        renderArchives(sym, rate); refreshExpenseSheet();
+        renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
         updateNoticeCount(); updateShopCount(); updateHomeWidget();
         const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') : '';
     }
@@ -2860,14 +2921,58 @@
         finally { addBtn.disabled = false; addBtn.style.opacity = '1'; isSubmitting = false; }
     }
 
-    function editEx(id) {
-        const ex = db.expenses.find(e => e.id === id); if (!ex) return;
+    function editEx(id) { startExpenseEdit(id); }
+
+    // ---- Inline edit in the expense sheet: details, note and who it's split between ----
+    let expenseEditing = false;
+    /** The currency an expense was typed in (its numbers are read in that currency, whatever the screen shows) */
+    function expenseCurrency(ex) {
+        const sym = ex.originalSym || viewMoney().sym; const code = Object.keys(curSymbols).find(c => curSymbols[c] === sym);
+        const rate = code && rates[code] > 0 ? rates[code] : (code ? 1 : viewMoney().rate); return { sym, rate };
+    }
+    function startExpenseEdit(id) {
+        const ex = (db.expenses || []).find(e => e.id === id); if (!ex) return;
         if (ex.name !== currentUser) { showToast("Cannot edit others' expenses.", 3000); return; }
-        let rawDesc = ex.desc, note = ""; const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/);
-        if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
-        document.getElementById('amtInput').value = rawDesc; if (note) document.getElementById('groupNote').value = note;
-        pendingShopIds = []; editingId = id; if (document.getElementById('expenseOverlay').style.display === 'flex') closeExpense();
-        document.getElementById('optionsMenu').style.display = 'block'; render(); openAddBox();
+        if (document.getElementById('expenseOverlay').style.display !== 'flex') openExpense(id);
+        expenseEditing = true; openExpenseId = id;
+        let rawDesc = ex.desc || '', note = ''; const noteMatch = rawDesc.match(/^\[(.*?)\] \n (.*)/); if (noteMatch) { note = noteMatch[1]; rawDesc = noteMatch[2]; }
+        const exCur = expenseCurrency(ex); if (!(extractAmount(rawDesc) > 0)) rawDesc = `${(ex.amount * exCur.rate).toFixed(2)} ${rawDesc}`.trim(); // no number in the text: start from the amount
+        const active = db.activeUsers && db.activeUsers.length ? db.activeUsers : db.users;
+        const inv = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : active;
+        document.querySelector('#expenseOverlay h2').innerText = 'Edit expense';
+        document.getElementById('expenseDetail').innerHTML = `<label class="field-label" for="edAmt">Amount and details</label>
+            <textarea id="edAmt" class="chat-note" rows="2" style="resize:none; min-height:76px; line-height:1.4;"></textarea>
+            <div class="card-meta" style="margin:5px 2px 12px;">Numbers are added up, like when adding an expense (in ${escapeHTML(exCur.sym)}).</div>
+            <label class="field-label" for="edNote">Note</label>
+            <input id="edNote" class="chat-note" placeholder="Optional" autocomplete="off">
+            <div class="field-label" style="margin-top:12px;">Split between</div>
+            <div id="edSplit" style="display:flex; flex-wrap:wrap; gap:8px;">${db.users.map(u => { const on = inv.includes(u); return `<button type="button" class="btn-pill interactive-btn${on ? ' primary' : ''}" data-u="${escapeHTML(u)}" aria-pressed="${on}" onclick="triggerHaptic(); this.classList.toggle('primary'); this.setAttribute('aria-pressed', this.classList.contains('primary'))">${escapeHTML(u)}</button>`; }).join('')}</div>
+            <div class="ex-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); cancelExpenseEdit()">Cancel</button><button class="btn-pill primary interactive-btn" aria-label="Save Expense" onclick="triggerHaptic(); saveExpenseEdit('${ex.id}')">${ico('check')}Save</button></div>`;
+        const ta = document.getElementById('edAmt'); ta.value = rawDesc; document.getElementById('edNote').value = note;
+        ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+    function cancelExpenseEdit() { expenseEditing = false; document.querySelector('#expenseOverlay h2').innerText = 'Expense'; refreshExpenseSheet(); }
+    function saveExpenseEdit(id) {
+        const ex = (db.expenses || []).find(e => e.id === id); if (!ex || ex.name !== currentUser) return;
+        const raw = document.getElementById('edAmt').value.substring(0, 500); const note = document.getElementById('edNote').value.trim();
+        const { sym, rate } = expenseCurrency(ex); const extracted = extractAmount(raw);
+        if (!raw.trim() || !(extracted > 0)) { showToast("No valid amount found.", 3000); return; }
+        const baseAmt = Math.round((extracted / rate) * 100) / 100; if (!isFinite(baseAmt) || baseAmt > 9999999999999) { showToast("Amount exceeds safe limits.", 3000); return; }
+        const picked = Array.from(document.querySelectorAll('#edSplit [data-u]')).filter(b => b.classList.contains('primary')).map(b => b.dataset.u);
+        if (!picked.length) { showToast("Pick at least one person.", 3000); return; }
+        const active = db.activeUsers && db.activeUsers.length ? db.activeUsers : db.users;
+        const involved = (picked.length === active.length && active.every(u => picked.includes(u))) ? [] : picked; // everyone active = the default split
+        const desc = note ? `[${note}] \n ${raw}` : raw;
+        const sameSplit = JSON.stringify((Array.isArray(ex.involved) && ex.involved.length < db.users.length ? ex.involved : []).slice().sort()) === JSON.stringify(involved.slice().sort());
+        if (Math.abs(ex.amount - baseAmt) < 0.005 && ex.desc === desc && sameSplit) { cancelExpenseEdit(); return; }
+        // Keep the previous version (newest first, last 5) so anyone can see what was changed
+        if (!Array.isArray(ex.history)) ex.history = [];
+        ex.history.unshift({ t: Date.now(), by: currentUser, amount: ex.amount, desc: ex.desc, involved: Array.isArray(ex.involved) ? [...ex.involved] : [] });
+        if (ex.history.length > 5) ex.history.length = 5;
+        ex.amount = baseAmt; ex.desc = desc; ex.involved = involved; ex.originalSym = sym; ex.edited = true; ex.timestamp = Date.now();
+        expenseEditing = false; document.querySelector('#expenseOverlay h2').innerText = 'Expense';
+        logAudit("Edited Expense", id); render(); executeActionWithSave(); showToast("SAVED", 1500);
+        flashDone(document.querySelector('#expenseDetail .ex-hero'));
     }
 
     // CSV cell: quote anything containing commas, quotes or line breaks (Excel/Sheets-safe), and defuse formula injection
@@ -3053,7 +3158,7 @@
         fetchLiveRates(); checkForUpdates();
     };
     navInstall(); // after every function above exists
-    (function () { const nav = document.getElementById('topNav'); const upd = () => nav.classList.toggle('scrolled', window.scrollY > 44); window.addEventListener('scroll', upd, { passive: true }); upd(); })();
+    applyTheme(); // again now the Settings / menu controls exist
 </script>
 </body>
 </html>
