@@ -127,8 +127,6 @@
         .hero-section > * { position: relative; z-index: 1; }
         .hero-label { font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.85); display: block; transition: 0.3s; }
         .hero-value { font-size: 2.7rem; font-weight: 800; color: #fff; letter-spacing: -1.5px; margin: 4px 0 14px; line-height: 1.05; font-variant-numeric: tabular-nums; word-break: break-all; overflow-wrap: anywhere; }
-        #heroSection select { color: #fff !important; background-color: rgba(255,255,255,0.16) !important; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem !important; font-weight: 700; }
-        #heroSection select option { color: #0d1321; background: #fff; }
         .hero-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-block { display: flex; flex-direction: column; gap: 3px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.14); border-radius: 16px; padding: 10px 12px; }
         .stat-block .label { font-size: 0.7rem; color: rgba(255,255,255,0.8); font-weight: 600; }
@@ -155,6 +153,13 @@
         .avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; color: #fff; letter-spacing: 0; }
         .avatar.sm { width: 28px; height: 28px; font-size: 0.75rem; }
         .avatar.lg { width: 48px; height: 48px; font-size: 1.1rem; }
+        .avatar.xl { width: 60px; height: 60px; font-size: 1.4rem; }
+        .avatar.xxl { width: 88px; height: 88px; font-size: 2rem; }
+        .menu-avatar { position: relative; background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; }
+        .menu-avatar .ma-edit { position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); border: 2px solid var(--surface); display: flex; align-items: center; justify-content: center; }
+        .menu-avatar .ma-edit svg { width: 11px; height: 11px; }
+        .avatar.photo { background: var(--surface-2) !important; overflow: hidden; }
+        .avatar.photo img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
 
         /* ---- Expense list ---- */
         #currentExpensesWrapper .collapsible-content { padding-top: 0; }
@@ -331,6 +336,11 @@
         .user-select-btn { display: flex; align-items: center; gap: 14px; background: var(--surface-2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 18px; color: var(--text-main); font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.15s; width: 100%; text-align: left; margin-bottom: 10px; }
         @media (hover: hover) { .user-select-btn:hover { border-color: var(--accent); } }
         .user-select-btn:active { transform: scale(0.98); border-color: var(--accent); background: var(--accent-soft); }
+        .user-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .user-tile { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 6px 12px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-main); font: inherit; font-weight: 600; font-size: 0.88rem; cursor: pointer; min-width: 0; transition: transform 0.15s, border-color 0.15s; }
+        .user-tile:active { transform: scale(0.96); border-color: var(--accent); background: var(--accent-soft); }
+        @media (hover: hover) { .user-tile:hover { border-color: var(--accent); } }
+        .user-tile .ut-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 1rem; }
         .lock-logo { width: 76px; height: 76px; border-radius: 50%; margin-bottom: 14px; }
 
@@ -453,24 +463,79 @@
         .dialog-icon { width: 52px; height: 52px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--danger-soft); color: var(--danger); margin-bottom: 14px; }
         .dialog-icon svg { width: 24px; height: 24px; }
         .field-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin: 0 2px 6px; text-align: left; }
-        #lightboxOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10005; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); touch-action: none; overflow: hidden; }
-        #lightboxImg { max-width: 95vw; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.1s ease-out; transform-origin: center center; }
-        .lightbox-close, .lightbox-rotate { position: absolute; top: max(25px, env(safe-area-inset-top)); background: rgba(255,255,255,0.2); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2; }
-        .lightbox-close { right: 20px; } .lightbox-rotate { left: 20px; }
-        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 40px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; border-radius: 8px; }
-        #lightboxPrev { left: 10px; }
-        #lightboxNext { right: 10px; }
+        /* Confirm / text-entry questions: small bottom sheets */
+        .ask-sheet { text-align: left; }
+        .ask-sheet h3 { margin: 4px 2px 16px; font-size: 1.05rem; font-weight: 600; color: var(--text-main); line-height: 1.45; }
+        .ask-head { display: flex; align-items: flex-start; gap: 14px; }
+        .ask-head .dialog-icon { width: 44px; height: 44px; margin: 0; flex-shrink: 0; }
+        .ask-head .dialog-icon svg { width: 22px; height: 22px; }
+        .ask-head h3 { margin-top: 10px; }
+        .ask-sheet .sheet-foot { margin-top: 18px; }
+
+        /* Receipt photo viewer */
+        #lightboxOverlay { position: fixed; inset: 0; background: #000; z-index: 10005; display: none; align-items: center; justify-content: center; flex-direction: column; touch-action: none; overflow: hidden; animation: fade-in 0.2s; }
+        #lightboxImg { max-width: 100vw; max-height: 78dvh; object-fit: contain; border-radius: 6px; transform-origin: center center; will-change: transform; -webkit-user-drag: none; }
+        .lb-btn { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; transition: opacity 0.2s, transform 0.15s; }
+        .lb-btn:active { transform: scale(0.92); }
+        .lb-btn svg { width: 22px; height: 22px; }
+        .lightbox-close { top: max(16px, env(safe-area-inset-top)); right: 16px; }
+        .lightbox-rotate { top: max(16px, env(safe-area-inset-top)); left: 16px; }
+        .lightbox-nav { top: 50%; margin-top: -22px; }
+        .lightbox-nav:active { transform: scale(0.92); }
+        #lightboxPrev { left: 12px; }
+        #lightboxNext { right: 12px; }
+        #lightboxPagination { position: absolute; top: calc(max(16px, env(safe-area-inset-top)) + 11px); left: 50%; transform: translateX(-50%); color: #fff; font-size: 0.8rem; font-weight: 600; background: rgba(255, 255, 255, 0.14); padding: 5px 12px; border-radius: 20px; pointer-events: none; font-variant-numeric: tabular-nums; }
+        .lb-spinner { position: absolute; top: 50%; left: 50%; width: 36px; height: 36px; margin: -18px 0 0 -18px; border: 3px solid rgba(255, 255, 255, 0.18); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; pointer-events: none; }
+        .lb-error { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); text-align: center; color: rgba(255, 255, 255, 0.75); font-size: 0.9rem; pointer-events: none; display: none; }
+        .lb-hint { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; color: rgba(255, 255, 255, 0.55); font-size: 0.75rem; pointer-events: none; transition: opacity 0.2s; }
+        #lightboxOverlay.zoomed .lightbox-nav, #lightboxOverlay.zoomed .lb-hint { opacity: 0; pointer-events: none; }
+
+        /* ---- Loading placeholders (body.booting until the first load finishes) ---- */
+        body.booting #totalExp, body.booting #perPerson, body.booting #startDateDisplay { color: transparent !important; background: rgba(255,255,255,0.22); border-radius: 10px; animation: skel-pulse 1.5s infinite ease-in-out; }
+        body.booting #totalExp { width: 62%; }
+        body.booting #perPerson, body.booting #startDateDisplay { display: inline-block; min-width: 76px; border-radius: 6px; }
+        body.booting #monthlyTrendText { visibility: hidden; }
+        .pay-card.skel { display: flex; align-items: center; gap: 12px; }
+
+        /* ---- Pull down to refresh ---- */
+        #ptr { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 6px); left: 50%; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: var(--surface); color: var(--text-muted); box-shadow: var(--shadow-lg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; z-index: 99; opacity: 0; pointer-events: none; transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s; }
+        #ptr svg { width: 19px; height: 19px; }
+        #ptr.dragging { transition: none; }
+        #ptr.ready { color: var(--accent); }
+        #ptr.loading svg { animation: spin 0.9s linear infinite; }
+        /* The sync button only shows when changes are waiting to be saved (pull down to refresh instead); always on a computer */
+        #syncWrap { display: none; }
+        #syncWrap.unsaved { display: block; }
+        @media (hover: hover) and (pointer: fine) { #syncWrap { display: block; } }
+
+        /* ---- Computer / tablet: two columns, sheets as centred cards ---- */
+        @media (min-width: 960px) {
+            .wrapper { max-width: 1100px; display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 1fr); grid-template-rows: auto auto auto auto 1fr; align-items: start; padding-bottom: calc(var(--tabbar-h) + 48px); }
+            .wrapper > #topNav { grid-column: 1 / -1; grid-row: 1; }
+            #heroSection { grid-column: 1; grid-row: 2; }
+            #settlementsWrapper { grid-column: 1; grid-row: 3; }
+            #pastLink { grid-column: 1; grid-row: 4; }
+            #currentExpensesWrapper { grid-column: 2; grid-row: 2 / 6; margin-top: 6px; }
+            #tabBar { bottom: 16px; height: var(--tabbar-h); padding-bottom: 6px; border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
+            .input-section { bottom: calc(var(--tabbar-h) + 22px); }
+            #notifCard { bottom: calc(var(--tabbar-h) + 32px) !important; }
+            .sheet-overlay { align-items: center; }
+            .login-card.sheet { border-radius: 28px !important; border-bottom: 1px solid var(--border); max-height: 86dvh !important; padding-bottom: 18px !important; animation: pop-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+            .login-card.sheet::before { display: none; }
+            .login-card.sheet.tall { height: 86dvh; }
+        }
     </style>
 </head>
-<body>
+<body class="booting">
+<div id="ptr" aria-hidden="true"></div>
 
 <div id="loading" aria-live="polite">SYNCING...</div>
 
 <div id="loginOverlay" class="dialog-overlay" style="display:none;">
-    <div class="login-card dialog" style="width:calc(100% - 40px); max-width:360px;">
+    <div class="login-card dialog" style="width:calc(100% - 32px); max-width:400px;">
         <h2 style="margin:0 0 4px; font-size:1.35rem; text-align:center;">Who's using this phone?</h2>
         <p class="sheet-sub" style="text-align:center; margin:0 0 18px;">Pick your name. You can switch later from More.</p>
-        <div id="userButtons" class="stack" style="gap:0;"></div>
+        <div id="userButtons" class="user-grid"></div>
     </div>
 </div>
 
@@ -604,6 +669,16 @@
                 <span class="ri-icon" data-ic="palette"></span><span class="ri-label">Accent colour<span class="ri-sub">Only on this phone</span></span>
                 <span class="swatches"><button class="swatch interactive-btn" data-accent="teal" aria-label="Teal" style="--sw:#0d9488;" onclick="setAccent('teal')"></button><button class="swatch interactive-btn" data-accent="blue" aria-label="Blue" style="--sw:#2563eb;" onclick="setAccent('blue')"></button><button class="swatch interactive-btn" data-accent="purple" aria-label="Purple" style="--sw:#7c3aed;" onclick="setAccent('purple')"></button><button class="swatch interactive-btn" data-accent="orange" aria-label="Orange" style="--sw:#ea580c;" onclick="setAccent('orange')"></button></span>
             </div>
+            <div class="row-item" style="cursor:default;">
+                <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Show amounts in<span class="ri-sub">Only on this phone</span></span>
+                <select id="currency" aria-label="Currency" class="interactive-btn" onchange="triggerHaptic(); safeSetStorage('house_currency', this.value); render()">
+                    <option value="GBP">£ GBP</option>
+                    <option value="PKR">Rs PKR</option>
+                    <option value="USD">$ USD</option>
+                    <option value="EUR">€ EUR</option>
+                    <option value="AED">AED</option>
+                </select>
+            </div>
             <div id="smartRoundingContainer" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); toggleSmartRounding()">
                 <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Smart rounding<span class="ri-sub">Round settle-up amounts to 10p</span></span>
                 <span class="toggle-switch"><input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
@@ -620,6 +695,7 @@
 
         <div class="group-label">You</div>
         <div class="group">
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); openPhoto();"><span class="ri-icon" data-ic="user"></span><span class="ri-label">My Photo<span class="ri-sub">Shown next to your name</span></span><span id="myPhotoState" class="ri-end"></span><span class="ri-end" data-ic="chev"></span></button>
             <button class="row-item interactive-btn" onclick="triggerHaptic(); setPayLink();"><span class="ri-icon" data-ic="card"></span><span class="ri-label">My Payment Link<span class="ri-sub">Monzo or PayPal link for the Pay button</span></span><span class="ri-end" data-ic="chev"></span></button>
             <button class="row-item interactive-btn" onclick="triggerHaptic(); openNotifPrefs();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">What Notifies Me</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
@@ -647,6 +723,24 @@
     </div>
 </div>
 
+<div id="photoOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>My photo</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closePhoto()" data-ic="x"></button></div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:4px 0 18px; text-align:center;">
+            <div id="photoPreview"></div>
+            <p id="photoSub" class="sheet-sub" style="margin:0; max-width:300px;"></p>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="onAvatarPicked(this)">
+        <input type="file" id="avatarCamInput" accept="image/*" capture="user" style="display:none;" onchange="onAvatarPicked(this)">
+        <div class="group">
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); document.getElementById('avatarInput').click()"><span class="ri-icon" data-ic="image"></span><span class="ri-label">Choose a photo</span><span class="ri-end" data-ic="chev"></span></button>
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); document.getElementById('avatarCamInput').click()"><span class="ri-icon" data-ic="camera"></span><span class="ri-label">Take a selfie</span><span class="ri-end" data-ic="chev"></span></button>
+            <button id="photoRemoveBtn" class="row-item danger interactive-btn" onclick="triggerHaptic(); removeAvatar()"><span class="ri-icon" data-ic="trash"></span><span class="ri-label">Remove photo</span></button>
+        </div>
+        <p class="card-meta" style="text-align:center; margin-top:12px;">The middle of the photo is cut to a square.</p>
+    </div>
+</div>
+
 <div id="trashOverlay" class="sheet-overlay" style="display:none;">
     <div class="login-card sheet">
         <div class="sheet-head"><h2>Recovery Vault</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeTrash()" data-ic="x"></button></div>
@@ -667,26 +761,25 @@
     </div>
 </div>
 
-<div id="confirmOverlay" class="dialog-overlay" style="display:none; z-index:10000;">
-    <div class="login-card dialog" style="width:calc(100% - 40px); max-width:340px; text-align:center;">
-        <span class="dialog-icon" data-ic="alert"></span>
-        <h3 id="confirmMessage" style="margin:0 0 20px; font-size:1.02rem; font-weight:600; color:var(--text-main); line-height:1.45;">Are you sure?</h3>
-        <div style="display:flex; gap:10px;">
+<div id="confirmOverlay" class="sheet-overlay ask-overlay" style="display:none; z-index:10000;" onclick="if (event.target === this) { triggerHaptic(); closeConfirm(); }">
+    <div class="login-card sheet ask-sheet" role="alertdialog" aria-labelledby="confirmMessage">
+        <div class="ask-head"><span class="dialog-icon" data-ic="alert"></span><h3 id="confirmMessage">Are you sure?</h3></div>
+        <div class="sheet-foot">
             <button class="btn-glowing interactive-btn" onclick="triggerHaptic(); closeConfirm()">Cancel</button>
             <button class="btn-glowing danger interactive-btn" onclick="triggerHaptic(); executeConfirm()">Confirm</button>
         </div>
     </div>
 </div>
 
-<div id="promptOverlay" class="dialog-overlay" style="display:none; z-index:10000;">
-    <div class="login-card dialog" style="width:calc(100% - 40px); max-width:340px; text-align:center;">
-        <h3 id="promptMessage" style="margin:0 0 16px; font-size:1.02rem; font-weight:600; color:var(--text-main); line-height:1.45;"></h3>
-        <input type="text" id="promptInput" aria-label="Input field" class="chat-note wipe-trigger" style="margin-bottom:18px; text-align:center; font-size:1.1rem; font-weight:600;" autocomplete="off">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-glowing interactive-btn" onclick="triggerHaptic(); closePrompt()">Cancel</button>
-            <button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); executePrompt()">OK</button>
+<div id="promptOverlay" class="sheet-overlay ask-overlay" style="display:none; z-index:10000;" onclick="if (event.target === this) { triggerHaptic(); closePrompt(); }">
+    <form class="login-card sheet ask-sheet" role="dialog" aria-labelledby="promptMessage" onsubmit="event.preventDefault(); triggerHaptic(); executePrompt();">
+        <h3 id="promptMessage"></h3>
+        <input type="text" id="promptInput" aria-label="Input field" class="chat-note wipe-trigger" style="font-weight:600;" autocomplete="off" enterkeyhint="done">
+        <div class="sheet-foot">
+            <button type="button" class="btn-glowing interactive-btn" onclick="triggerHaptic(); closePrompt()">Cancel</button>
+            <button type="submit" class="btn-glowing primary interactive-btn">OK</button>
         </div>
-    </div>
+    </form>
 </div>
 
 <div id="notifCard" class="login-card" role="dialog" aria-label="Turn on notifications" style="display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:96px; width:calc(100% - 32px); max-width:400px; padding:18px; border-radius:24px; z-index:9000;">
@@ -713,20 +806,22 @@
     </form>
 </div>
 
-<div id="lightboxOverlay" class="interactive-btn" onclick="closeLightbox(event)">
-    <button class="lightbox-close interactive-btn" aria-label="Close image" onclick="closeLightbox(event)">×</button>
-    <button class="lightbox-rotate interactive-btn" aria-label="Rotate image" onclick="rotateLightboxImg(event)">↻</button>
-    <button id="lightboxPrev" class="lightbox-nav interactive-btn" style="display:none;" onclick="changeLightboxImage(event, -1)">❮</button>
-    <button id="lightboxNext" class="lightbox-nav interactive-btn" style="display:none;" onclick="changeLightboxImage(event, 1)">❯</button>
-    <div id="lightboxLoader" style="color:white; font-size:0.8rem; font-weight:700; letter-spacing:1px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">LOADING PHOTO...</div>
-    <div id="lightboxPagination" style="position:absolute; bottom:25px; color:white; font-size:0.8rem; font-weight:700; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; display:none; pointer-events:none;">1/1</div>
-    <img id="lightboxImg" src="" alt="Receipt" crossorigin="anonymous" style="display:none;" onload="document.getElementById('lightboxLoader').style.display='none'; this.style.display='block';">
+<div id="lightboxOverlay" role="dialog" aria-label="Receipt photo" onclick="lbBackdropTap(event)">
+    <button class="lb-btn lightbox-close interactive-btn" aria-label="Close photo" onclick="closeLightbox(event)" data-ic="x"></button>
+    <button class="lb-btn lightbox-rotate interactive-btn" aria-label="Rotate photo" onclick="rotateLightboxImg(event)" data-ic="rotate"></button>
+    <button id="lightboxPrev" class="lb-btn lightbox-nav interactive-btn" aria-label="Previous photo" style="display:none;" onclick="changeLightboxImage(event, -1)" data-ic="chevl"></button>
+    <button id="lightboxNext" class="lb-btn lightbox-nav interactive-btn" aria-label="Next photo" style="display:none;" onclick="changeLightboxImage(event, 1)" data-ic="chev"></button>
+    <div id="lightboxLoader" class="lb-spinner" role="status" aria-label="Loading photo"></div>
+    <div id="lightboxError" class="lb-error">Couldn't load this photo</div>
+    <div id="lightboxPagination" style="display:none;">1 of 1</div>
+    <img id="lightboxImg" src="" alt="Receipt" crossorigin="anonymous" style="display:none;" onload="document.getElementById('lightboxLoader').style.display='none'; this.style.display='block';" onerror="if (this.getAttribute('src')) { document.getElementById('lightboxLoader').style.display='none'; document.getElementById('lightboxError').style.display='block'; }">
+    <div class="lb-hint">Pinch or double-tap to zoom</div>
 </div>
 
 <div id="menuOverlay" class="interactive-btn" onclick="toggleMenu()"></div>
 <nav id="sideMenu" aria-label="Main Menu">
     <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 2px 18px;">
-        <div style="display:flex; align-items:center; gap:12px;"><span id="menuAvatar"></span><div><div class="card-meta" style="margin:0;">Signed in as</div><h2 id="menuUserName" style="margin:0;"></h2></div></div>
+        <div style="display:flex; align-items:center; gap:12px;"><button id="menuAvatar" class="menu-avatar interactive-btn" aria-label="Change my photo" onclick="triggerHaptic(); openPhoto()"></button><div><div class="card-meta" style="margin:0;">Signed in as</div><h2 id="menuUserName" style="margin:0;"></h2></div></div>
         <button class="sheet-close interactive-btn" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()" data-ic="x"></button>
     </div>
 
@@ -772,7 +867,7 @@
                 <div id="bellBadge" class="offline-badge" style="display:none;">0</div>
             </div>
             <button class="icon-btn interactive-btn" aria-label="Help Guide" onclick="triggerHaptic(); openHelp()" data-ic="help"></button>
-            <div style="position:relative;">
+            <div id="syncWrap" style="position:relative;">
                 <button class="icon-btn interactive-btn" aria-label="Manual Sync" onclick="triggerHaptic(); loadData(true)">
                     <svg id="syncIconElement" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                 </button>
@@ -782,16 +877,7 @@
     </nav>
 
     <header class="hero-section" id="heroSection">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="heroTotalLabel" class="hero-label">Total House Bill</span>
-            <select id="currency" aria-label="Select Currency" class="interactive-btn" onchange="render()">
-                <option value="GBP">£ GBP</option>
-                <option value="PKR">Rs PKR</option>
-                <option value="USD">$ USD</option>
-                <option value="EUR">€ EUR</option>
-                <option value="AED">AED</option>
-            </select>
-        </div>
+        <span id="heroTotalLabel" class="hero-label">Total House Bill</span>
         <div id="totalExp" class="hero-value" aria-live="polite">0</div>
         <div class="hero-stats-grid">
             <div class="stat-block">
@@ -813,7 +899,7 @@
 
     <section class="content-section" id="settlementsWrapper">
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
-            <h3 class="flow-title" style="cursor:pointer;" onmousedown="startPress(event)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchstart="startPress(event)" ontouchend="cancelPress()" ontouchcancel="cancelPress()">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
+            <h3 class="flow-title" style="cursor:pointer;">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
             <div style="display:flex; align-items:center; gap:12px;">
                 <button class="btn-pill interactive-btn" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
                 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -825,6 +911,7 @@
                 <div id="cycleSplitCheckboxes" style="display:none; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
             </div>
             <div id="settleList"></div>
+            <button id="markAllBtn" class="btn-glowing small interactive-btn" style="display:none; margin-bottom:4px;" onclick="triggerHaptic(); markAllSettled()"><span class="ic" data-ic="check"></span>Mark all as settled</button>
             <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="triggerHaptic(); openPast()">
                 <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span>Unpaid debts from past cycles</span><span class="ic" data-ic="chev"></span></div>
             </div>
@@ -883,7 +970,8 @@
 
     // ---- Line icons (24x24, stroke) used across the app: <span data-ic="name"> is filled on load, ico(name) in templates ----
     const ICONS = {
-        x: '<path d="M18 6 6 18M6 6l12 12"/>', arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>', edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+        x: '<path d="M18 6 6 18M6 6l12 12"/>', chevl: '<path d="m15 6-6 6 6 6"/>', rotate: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', refresh: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>', arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>', edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
         palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>', chev: '<path d="m9 6 6 6-6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
         home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
         swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>', list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
@@ -1073,16 +1161,16 @@
     // and remembers it; Back (phone button / gesture) or the ✕ then returns to it, with its scroll position, instead of home.
     // One history entry ({nav:true}) sits above the page while anything is open, so Back on the home screen leaves the app.
     const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
-        historyOverlay: 'closeHistory', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
+        historyOverlay: 'closeHistory', photoOverlay: 'closePhoto', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
         manageUsersOverlay: 'closeManageUsers', helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
         insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast' };
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay' };
+        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
-    let navBusy = false, navBackPending = false, navUserBack = false, navClickAttr = '';
+    let navBusy = false, navUserBack = false, navClickAttr = '';
     function navBack() { navUserBack = true; try { return navCloseTop(); } finally { navUserBack = false; } }
     function navShown(id) {
         if (id === 'menu') return document.getElementById('sideMenu').classList.contains('open');
@@ -1090,7 +1178,22 @@
     }
     function navTopPage() { return Object.keys(NAV_SHEETS).find(navShown) || (navShown('menu') ? 'menu' : null); }
     function navTop() { return Object.keys(NAV_DIALOGS).find(navShown) || (document.body.classList.contains('adding') ? 'addBox' : null) || navTopPage(); }
-    function navEnsureEntry() { if (!(history.state && history.state.nav)) history.pushState({ nav: true }, '', location.href); }
+    // One history entry per open layer (each screen in the stack, the add box, a dialog), all pushed while the tap
+    // that opened them is still fresh. Chrome skips history entries that a page adds without a tap, so re-adding an
+    // entry after Back (the old way) made the NEXT Back jump straight out of the app (e.g. Settings → What notifies me → Back → Back).
+    let navGoPending = false;
+    function navLayers() {
+        const page = navTopPage();
+        return (page ? 1 + navStack.length : 0) + (document.body.classList.contains('adding') ? 1 : 0) + (Object.keys(NAV_DIALOGS).some(navShown) ? 1 : 0);
+    }
+    function navDepth() { const s = history.state; return s && typeof s.nav === 'number' ? s.nav : (s && s.nav ? 1 : 0); }
+    function navSyncHistory() {
+        if (navGoPending) return;
+        const want = navLayers(); let have = navDepth();
+        if (want > have) { while (have < want) history.pushState({ nav: ++have }, '', location.href); }
+        else if (want < have) { navGoPending = true; history.go(want - have); }
+    }
+    function navEnsureEntry() { navSyncHistory(); }
     function navCloseTop() {
         const top = navTop(); if (!top) return false;
         if (top === 'menu') toggleMenu(); else if (top === 'addBox') closeAddBox(true); else window[NAV_DIALOGS[top] || NAV_SHEETS[top]]();
@@ -1143,12 +1246,15 @@
     function navSync() {
         const open = !!navTop();
         document.documentElement.classList.toggle('scroll-lock', open || navShown('loginOverlay'));
-        if (!open) { navStack = []; if (history.state && history.state.nav && !navBackPending) { navBackPending = true; history.back(); } }
+        if (!open) navStack = [];
+        navSyncHistory();
     }
     function navCloseAll() { navStack = []; let guard = 30; while (navTop() && guard--) navCloseTop(); }
     window.addEventListener('popstate', () => {
-        if (navBackPending) { navBackPending = false; if (navTop()) navEnsureEntry(); return; }
-        if (navBack() && navTop()) navEnsureEntry();
+        if (navGoPending) { navGoPending = false; navSyncHistory(); return; } // our own history.go() finished
+        // The phone's Back took one entry away: close the top layer to match (closing a layer never needs a new entry)
+        if (navLayers() > navDepth()) navBack();
+        if (navDepth() > navLayers()) navSyncHistory();
     });
 
     // ---- On-screen keyboard: body.kb-open while the visible viewport is clearly shorter than the full window ----
@@ -1282,6 +1388,7 @@
         const badge = document.getElementById('offlineBadge');
         if (offlineActionsCount > 0 && (!navigator.onLine || needsSync)) { badge.innerText = offlineActionsCount; badge.style.display = 'flex'; } 
         else { badge.style.display = 'none'; }
+        const sw = document.getElementById('syncWrap'); if (sw) sw.classList.toggle('unsaved', badge.style.display === 'flex');
     }
 
     window.addEventListener('storage', (e) => {
@@ -1292,17 +1399,19 @@
     
     function animateValue(obj, start, end, duration, prefix) {
         let startTimestamp = null; let animationFrameId = null;
+        if (obj._countUp) cancelAnimationFrame(obj._countUp); // a newer change replaces a count-up still running
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) duration = 1;
         const step = (timestamp) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
             const ease = 1 - Math.pow(1 - progress, 4); 
             const current = start + (end - start) * ease;
             obj.innerText = prefix + current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            if (progress < 1) { animationFrameId = window.requestAnimationFrame(step); } 
+            if (progress < 1) { animationFrameId = obj._countUp = window.requestAnimationFrame(step); } 
             else { obj.innerText = prefix + end.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
         };
         if(animationFrameId) cancelAnimationFrame(animationFrameId);
-        animationFrameId = window.requestAnimationFrame(step);
+        animationFrameId = obj._countUp = window.requestAnimationFrame(step);
     }
 
     async function checkForUpdates() {
@@ -2195,13 +2304,10 @@
         if(!isOpen) navEnsureEntry(); menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block';
     }
 
-    let pressTimer; let isLongPress = false;
-    function startPress(e) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; triggerHaptic(); markAllSettled(); }, 1000); }
-    function cancelPress() { clearTimeout(pressTimer); }
 
     function markAllSettled() {
         if (isSettling) return;
-        customConfirm("Mark ALL displayed debts as Settled?", () => {
+        customConfirm("Mark every payment in Settlements as settled?", () => {
             isSettling = true; let totalBase = 0; let allValid = db.expenses || []; let contextExpenses = allValid.filter(e => { let hasTags = /#([\w-]+)/.test(e.desc || ""); return activeHashtag ? (e.desc || "").includes(activeHashtag) : !hasTags; });
             contextExpenses.forEach(e => totalBase += e.amount); const txs = getSettlements(contextExpenses, totalBase, db.activeUsers, db.mathV);
             txs.forEach(t => { const key = activeHashtag ? `${t.from}_${t.to}_${activeHashtag}` : `${t.from}_${t.to}`; if (!db.paidStatus) db.paidStatus = {}; db.paidStatus[key] = t.amt; });
@@ -2210,7 +2316,6 @@
     }
 
     function toggleSection(headerEl) {
-        if (isLongPress) { isLongPress = false; return; }
         const parent = headerEl.parentElement;
         if (parent.classList.contains('content-section')) { document.querySelectorAll('.content-section.expanded').forEach(el => { if (el !== parent && !(el.id === 'currentExpensesWrapper' && (db.expenses||[]).length > 0)) el.classList.remove('expanded'); }); } 
         else if (parent.classList.contains('archive-item')) { document.querySelectorAll('.archive-item.expanded').forEach(el => { if (el !== parent) el.classList.remove('expanded'); }); }
@@ -2259,6 +2364,7 @@
             });
             let newPaid = {}; for (let key in db.paidStatus) { let parts = key.split('_'); let from = parts[0]; let to = parts[1]; let tagPart = parts.slice(2).join('_'); if (from === oldName) from = n; if (to === oldName) to = n; let newKey = tagPart ? `${from}_${to}_${tagPart}` : `${from}_${to}`; newPaid[newKey] = db.paidStatus[key]; } db.paidStatus = newPaid;
             if (db.payLinks && db.payLinks[oldName]) { db.payLinks[n] = db.payLinks[oldName]; delete db.payLinks[oldName]; }
+            if (db.avatars && db.avatars[oldName]) { db.avatars[n] = db.avatars[oldName]; delete db.avatars[oldName]; }
             logAudit(`Renamed ${oldName} to`, n);
             if (currentUser === oldName) { currentUser = n; localStorage.setItem('house_user', n); document.getElementById('topUserName').innerText = n; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = n; }
             renderUsers(); openManageUsers(); render(); executeActionWithSave();
@@ -2279,10 +2385,12 @@
         customConfirm(`Remove ${escapeHTML(name)} from housemates? Past expenses are kept.`, () => {
             const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1); const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
             if (db.payLinks) delete db.payLinks[name];
+            if (db.avatars) delete db.avatars[name];
             logAudit("Removed User", name); if (currentUser === name) { closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
 
+    function userTileHTML(name) { return `<button class="user-tile interactive-btn" onclick="triggerHaptic(); login(${jsArg(name)})">${avatarHTML(name, 'xl')}<span class="ut-name">${escapeHTML(name)}</span></button>`; }
     function renderUsers() {
         const btns = document.getElementById('userButtons'); if (!btns) return; btns.innerHTML = '';
         let usersList = defaultUsers; if (db && Array.isArray(db.users) && db.users.length > 0) usersList = db.users;
@@ -2291,10 +2399,10 @@
             try {
                 let nameStr = ""; if (typeof u === 'string') nameStr = u; else if (u && typeof u === 'object' && u.name) nameStr = String(u.name); else if (u) nameStr = String(u);
                 nameStr = nameStr.trim(); if (!nameStr) return; validUsersFound = true;
-                btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login(${jsArg(nameStr)})">${avatarHTML(nameStr)}${escapeHTML(nameStr)}</button>`;
+                btns.innerHTML += userTileHTML(nameStr);
             } catch (e) {}
         });
-        if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += `<button class="user-select-btn interactive-btn" onclick="triggerHaptic(); login(${jsArg(u)})">${avatarHTML(u)}${escapeHTML(u)}</button>`; }); }
+        if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += userTileHTML(u); }); }
     }
 
     function formatDescDisplay(desc, origSym = '') {
@@ -2380,25 +2488,75 @@
         if(!urls || urls.length === 0) { showToast("Invalid receipt link.", 3000); return; }
         currentLightboxImages = urls.map(u => sanitizeURL(u.trim())).filter(u => u !== null);
         if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
-        currentLightboxIndex = 0; lightboxRotation = 0; scale = 1; updateLightboxDOM();
-        const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; initPinchZoom();
+        currentLightboxIndex = 0; lightboxRotation = 0; lbReset(); updateLightboxDOM();
+        const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; lbBind();
     }
-    
+
     function updateLightboxDOM() {
         const loader = document.getElementById('lightboxLoader'), img = document.getElementById('lightboxImg'), prev = document.getElementById('lightboxPrev'), next = document.getElementById('lightboxNext'), pag = document.getElementById('lightboxPagination');
-        loader.style.display = 'block'; img.style.display = 'none'; img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; img.src = currentLightboxImages[currentLightboxIndex];
-        if(currentLightboxImages.length > 1) { prev.style.display = 'flex'; next.style.display = 'flex'; pag.style.display = 'block'; pag.innerText = `${currentLightboxIndex + 1}/${currentLightboxImages.length}`; } else { prev.style.display = 'none'; next.style.display = 'none'; pag.style.display = 'none'; }
+        loader.style.display = 'block'; document.getElementById('lightboxError').style.display = 'none'; img.style.display = 'none'; lbApply(false); img.src = currentLightboxImages[currentLightboxIndex];
+        if(currentLightboxImages.length > 1) { prev.style.display = 'flex'; next.style.display = 'flex'; pag.style.display = 'block'; pag.innerText = `${currentLightboxIndex + 1} of ${currentLightboxImages.length}`; } else { prev.style.display = 'none'; next.style.display = 'none'; pag.style.display = 'none'; }
     }
-    
-    function changeLightboxImage(e, dir) { e.stopPropagation(); triggerHaptic(); currentLightboxIndex += dir; if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1; if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0; lightboxRotation = 0; scale = 1; updateLightboxDOM(); }
-    function rotateLightboxImg(e) { e.stopPropagation(); triggerHaptic(); lightboxRotation += 90; document.getElementById('lightboxImg').style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; }
-    function closeLightbox(e) { if(e) e.stopPropagation(); triggerHaptic(); document.getElementById('lightboxOverlay').style.display = 'none'; document.getElementById('lightboxImg').src = ''; document.body.style.overflow = ''; currentLightboxImages = []; scale = 1; lightboxRotation = 0; }
-    
-    function initPinchZoom() {
-        const img = document.getElementById('lightboxImg'); let initialDist = 0;
-        img.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { initialDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); } }, { passive: true });
-        img.addEventListener('touchmove', (e) => { if (e.touches.length === 2) { const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); const delta = currentDist - initialDist; scale = Math.max(1, Math.min(scale + (delta * 0.01), 4)); initialDist = currentDist; img.style.transform = `rotate(${lightboxRotation}deg) scale(${scale})`; } }, { passive: true });
+
+    function changeLightboxImage(e, dir) { if (e) e.stopPropagation(); if (currentLightboxImages.length < 2) return; triggerHaptic(); currentLightboxIndex += dir; if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1; if(currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0; lightboxRotation = 0; lbReset(); updateLightboxDOM(); }
+    function rotateLightboxImg(e) { e.stopPropagation(); triggerHaptic(); lightboxRotation += 90; lbApply(true); }
+    function closeLightbox(e) { if(e) e.stopPropagation(); triggerHaptic(); document.getElementById('lightboxOverlay').style.display = 'none'; document.getElementById('lightboxImg').src = ''; document.body.style.overflow = ''; currentLightboxImages = []; lightboxRotation = 0; lbReset(); }
+
+    // Photo viewer gestures (pointer events, so fingers and a mouse both work): pinch / wheel / double-tap to zoom,
+    // drag a zoomed photo around, swipe sideways for the next photo, swipe down to close
+    const lb = { pts: new Map(), tx: 0, ty: 0, g: null, lastTap: 0, bound: false, movedAt: 0 };
+    function lbReset() { scale = 1; lb.tx = 0; lb.ty = 0; }
+    function lbApply(animate, ox = 0, oy = 0) {
+        const img = document.getElementById('lightboxImg');
+        img.style.transition = animate ? 'transform 0.22s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s' : 'none';
+        img.style.transform = `translate(${lb.tx + ox}px, ${lb.ty + oy}px) rotate(${lightboxRotation}deg) scale(${scale})`;
+        img.style.opacity = oy > 0 ? String(Math.max(0.35, 1 - oy / 400)) : '';
+        document.getElementById('lightboxOverlay').classList.toggle('zoomed', scale > 1.01);
     }
+    function lbBind() {
+        if (lb.bound) return; lb.bound = true;
+        const ov = document.getElementById('lightboxOverlay');
+        const dist = () => { const [a, b] = [...lb.pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+        ov.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('button')) return;
+            lb.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (lb.pts.size === 2) lb.g = { kind: 'pinch', d: dist(), s: scale };
+            else if (lb.pts.size === 1) lb.g = { kind: 'drag', x: e.clientX, y: e.clientY, tx: lb.tx, ty: lb.ty, dx: 0, dy: 0, moved: false, onImg: e.target.id === 'lightboxImg' };
+        });
+        ov.addEventListener('pointermove', (e) => {
+            if (!lb.pts.has(e.pointerId) || !lb.g) return;
+            lb.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            const g = lb.g;
+            if (g.kind === 'pinch') { if (lb.pts.size >= 2) { scale = Math.max(1, Math.min(5, g.s * dist() / g.d)); lbApply(false); } return; }
+            g.dx = e.clientX - g.x; g.dy = e.clientY - g.y; if (Math.abs(g.dx) + Math.abs(g.dy) > 8) g.moved = true;
+            if (!g.moved) return;
+            if (scale > 1.01) { lb.tx = g.tx + g.dx; lb.ty = g.ty + g.dy; lbApply(false); }
+            else if (Math.abs(g.dx) > Math.abs(g.dy)) lbApply(false, g.dx, 0); else lbApply(false, 0, Math.max(0, g.dy));
+        });
+        const up = (e) => {
+            if (!lb.pts.has(e.pointerId)) return; lb.pts.delete(e.pointerId);
+            const g = lb.g; if (!g) return;
+            if (lb.pts.size === 1) { const p = [...lb.pts.values()][0]; lb.g = { kind: 'drag', x: p.x, y: p.y, tx: lb.tx, ty: lb.ty, dx: 0, dy: 0, moved: true }; return; } // pinch → the finger left keeps dragging
+            if (lb.pts.size > 0) return;
+            lb.g = null;
+            if (g.moved || g.kind === 'pinch') lb.movedAt = Date.now();
+            if (g.kind === 'pinch') { if (scale <= 1.01) lbReset(); lbApply(true); return; }
+            if (e.type !== 'pointercancel' && scale <= 1.01 && g.moved) {
+                if (Math.abs(g.dx) > 60 && Math.abs(g.dx) > Math.abs(g.dy) && currentLightboxImages.length > 1) { changeLightboxImage(null, g.dx < 0 ? 1 : -1); return; }
+                if (g.dy > 110 && g.dy > Math.abs(g.dx)) { closeLightbox(); return; }
+            }
+            if (!g.moved && g.onImg && e.type !== 'pointercancel') { // double-tap the photo: zoom in / back out
+                const now = Date.now();
+                if (now - lb.lastTap < 320) { lb.lastTap = 0; if (scale > 1.01) lbReset(); else scale = 2.5; triggerHaptic(); }
+                else lb.lastTap = now;
+            }
+            lbApply(true);
+        };
+        ov.addEventListener('pointerup', up); ov.addEventListener('pointercancel', up);
+        ov.addEventListener('wheel', (e) => { e.preventDefault(); scale = Math.max(1, Math.min(5, scale * (e.deltaY < 0 ? 1.15 : 1 / 1.15))); if (scale <= 1.01) lbReset(); lbApply(false); }, { passive: false });
+        document.addEventListener('keydown', (e) => { if (!navShown('lightboxOverlay')) return; if (e.key === 'ArrowLeft') changeLightboxImage(null, -1); else if (e.key === 'ArrowRight') changeLightboxImage(null, 1); });
+    }
+    function lbBackdropTap(e) { if (e.target === e.currentTarget && scale <= 1.01 && Date.now() - lb.movedAt > 350) closeLightbox(e); }
 
     async function downloadPDF() {
         showToast("GENERATING PDF...", 0);
@@ -2439,6 +2597,7 @@
         if (!db.archives || !Array.isArray(db.archives)) db.archives = [];
         if (!db.paidStatus || typeof db.paidStatus !== 'object') db.paidStatus = {};
         if (!db.payLinks || typeof db.payLinks !== 'object' || Array.isArray(db.payLinks)) db.payLinks = {};
+        if (!db.avatars || typeof db.avatars !== 'object' || Array.isArray(db.avatars)) db.avatars = {};
         if (!Array.isArray(db.shopping)) db.shopping = [];
         if (!db.startDate) { const today = new Date(); db.startDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`; }
         if (!db.users || !Array.isArray(db.users) || db.users.length === 0) db.users = [...defaultUsers];
@@ -2453,6 +2612,7 @@
         const list = document.getElementById('expenseList'); let html = `<div class="timeline-wrapper">`;
         for (let i = 0; i < 4; i++) { html += `<div class="linear-row"><div class="skel-block" style="width:40px; height:40px; border-radius:50%; flex-shrink:0;"></div><div style="flex:1;"><div class="skel-block" style="width:60%; height:14px; margin-bottom:8px;"></div><div class="skel-block" style="width:35%; height:11px;"></div></div><div class="skel-block" style="width:56px; height:14px;"></div></div>`; }
         html += `</div>`; list.innerHTML = html; document.getElementById('currentExpensesWrapper').classList.add('expanded');
+        if (document.body.classList.contains('booting')) document.getElementById('settleList').innerHTML = [0, 1].map(() => `<div class="pay-card skel"><div class="skel-block" style="width:62px; height:34px; border-radius:17px;"></div><div style="flex:1;"><div class="skel-block" style="width:70%; height:13px;"></div></div><div class="skel-block" style="width:60px; height:18px;"></div></div>`).join('');
     }
 
     function checkPayloadSize() {
@@ -2534,7 +2694,61 @@
     // Round coloured initial for a housemate; the colour is picked from the name so it stays the same everywhere
     const AVATAR_COLOURS = ["#0d9488", "#6366f1", "#f59e0b", "#ec4899", "#0ea5e9", "#8b5cf6", "#ef4444", "#64748b", "#f97316", "#3b82f6"]; // distinct hues (no second green next to teal)
     function avatarColour(name) { let n = 0; for (const ch of String(name || "")) n = (n * 31 + ch.codePointAt(0)) >>> 0; return AVATAR_COLOURS[n % AVATAR_COLOURS.length]; }
-    function avatarHTML(name, size = "") { const s = String(name || "?"); return `<span class="avatar ${size}" aria-hidden="true" style="background:${avatarColour(s)}">${escapeHTML(Array.from(s.trim())[0] || "?").toUpperCase()}</span>`; }
+    // A housemate's own photo (db.avatars[name], a small square JPEG kept in the house data) replaces the initial
+    const AVATAR_RE = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
+    function avatarPhoto(name) { const a = db && db.avatars && db.avatars[name]; return typeof a === 'string' && a.length < 60000 && AVATAR_RE.test(a) ? a : null; }
+    function avatarHTML(name, size = "") {
+        const s = String(name || "?"); const photo = avatarPhoto(s);
+        if (photo) return `<span class="avatar ${size} photo" aria-hidden="true"><img src="${photo}" alt="" draggable="false"></span>`;
+        return `<span class="avatar ${size}" aria-hidden="true" style="background:${avatarColour(s)}">${escapeHTML(Array.from(s.trim())[0] || "?").toUpperCase()}</span>`;
+    }
+
+    // ---- My photo (Settings → You, or tap your picture in More) ----
+    function openPhoto() {
+        if (!currentUser) return;
+        renderPhotoSheet(); document.getElementById('photoOverlay').style.display = 'flex';
+    }
+    function closePhoto() { document.getElementById('photoOverlay').style.display = 'none'; }
+    function renderPhotoSheet() {
+        const has = !!avatarPhoto(currentUser);
+        document.getElementById('photoPreview').innerHTML = avatarHTML(currentUser, 'xxl');
+        document.getElementById('photoRemoveBtn').style.display = has ? 'flex' : 'none';
+        document.getElementById('photoSub').innerText = has ? 'Everyone in the house sees this next to your name.' : 'Add a photo so housemates can spot your expenses at a glance.';
+        const set = document.getElementById('myPhotoState'); if (set) set.innerHTML = avatarHTML(currentUser, 'sm');
+    }
+    /** Centre-square crop to 128 px JPEG (~5 KB) */
+    function makeAvatar(file) {
+        return new Promise((resolve) => {
+            if (!file || !/^image\//.test(file.type || 'image/')) { resolve(null); return; }
+            const url = URL.createObjectURL(file); const img = new Image();
+            img.onload = () => {
+                try {
+                    const side = Math.min(img.naturalWidth, img.naturalHeight); const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
+                    const c = document.createElement('canvas'); c.width = c.height = 128; const ctx = c.getContext('2d');
+                    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 128, 128); ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, sx, sy, side, side, 0, 0, 128, 128);
+                    let out = c.toDataURL('image/jpeg', 0.82); if (out.length > 30000) out = c.toDataURL('image/jpeg', 0.6);
+                    resolve(AVATAR_RE.test(out) ? out : null);
+                } catch (e) { resolve(null); } finally { URL.revokeObjectURL(url); }
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+        });
+    }
+    async function onAvatarPicked(input) {
+        const file = input.files && input.files[0]; input.value = ''; if (!file || !currentUser) return;
+        const data = await makeAvatar(file);
+        if (!data) { showToast("COULDN'T USE THAT PHOTO", 2500); return; }
+        db.avatars[currentUser] = data;
+        logAudit("Updated profile photo", null, true);
+        renderUsers(); render(); renderPhotoSheet(); executeActionWithSave(); showToast("PHOTO SAVED", 1500);
+    }
+    function removeAvatar() {
+        customConfirm("Remove your photo? Your initial will show instead.", () => {
+            delete db.avatars[currentUser]; logAudit("Removed profile photo", null, true);
+            renderUsers(); render(); renderPhotoSheet(); executeActionWithSave(); showToast("PHOTO REMOVED", 1500);
+        });
+    }
     function goHome() { navCloseAll(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
     function generateActionPills(ex) {
@@ -2649,9 +2863,11 @@
             return payCardHTML(t.from, t.to, 'pays', money((isS ? t.amt : tr) * rate), meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
         }).join('');
         document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
+        document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
         renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
         updateNoticeCount(); updateShopCount(); updateHomeWidget();
-        const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') : '';
+        const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '';
+        const mps = document.getElementById('myPhotoState'); if (mps) mps.innerHTML = currentUser ? avatarHTML(currentUser, 'sm') : '';
     }
 
     /** "From → To" payment card used in Settlements and Past cycles */
@@ -3141,9 +3357,11 @@
     window.onload = async () => {
         initializeDB(); renderUsers();
         if (isNativeApp()) { const nl = document.getElementById('notifMenuLink'); if (nl) nl.style.display = 'none'; } // the app has its own notifications
-        document.getElementById('loading').style.display = 'block'; document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'none';
+        if (!db.expenses || db.expenses.length === 0) renderSkeletons(); // grey placeholders until the first load
         
         await loadData(true);
+        document.body.classList.remove('booting');
         
         // PWA Quick Actions URL Handler
         const urlParams = new URLSearchParams(window.location.search);
@@ -3157,7 +3375,33 @@
         
         fetchLiveRates(); checkForUpdates();
     };
+    // ---- Pull down to refresh (home screen, at the top, nothing open) ----
+    (function () {
+        const el = document.getElementById('ptr'); el.innerHTML = ico('refresh');
+        let startY = null, pull = 0, active = false;
+        const can = () => window.scrollY <= 0 && !navTop() && !document.body.classList.contains('adding') && !navShown('loginOverlay') && document.getElementById('lockOverlay').style.display !== 'flex';
+        const reset = () => { active = false; pull = 0; el.classList.remove('ready', 'loading', 'dragging'); el.style.transform = ''; el.style.opacity = '0'; };
+        window.addEventListener('touchstart', (e) => { startY = e.touches.length === 1 && can() && !el.classList.contains('loading') ? e.touches[0].clientY : null; }, { passive: true });
+        window.addEventListener('touchmove', (e) => {
+            if (startY === null) return;
+            const dy = e.touches[0].clientY - startY;
+            if (dy <= 0 || window.scrollY > 0) { if (active) reset(); if (window.scrollY > 0) startY = null; return; }
+            active = true; pull = Math.min(120, dy * 0.5);
+            el.classList.add('dragging'); el.style.opacity = String(Math.min(1, pull / 50)); el.style.transform = `translateY(${pull}px) rotate(${pull * 3}deg)`;
+            const ready = pull >= 70; if (ready && !el.classList.contains('ready')) triggerHaptic(); el.classList.toggle('ready', ready);
+        }, { passive: true });
+        const end = () => {
+            if (startY === null) return; startY = null; if (!active) return;
+            if (pull >= 70) {
+                el.classList.remove('dragging'); el.classList.add('loading'); el.style.opacity = '1'; el.style.transform = 'translateY(64px)';
+                Promise.resolve(loadData(true)).catch(() => {}).finally(() => setTimeout(reset, 350));
+            } else reset();
+        };
+        window.addEventListener('touchend', end); window.addEventListener('touchcancel', end);
+    })();
+    try { const c = localStorage.getItem('house_currency'); if (c && curSymbols[c]) document.getElementById('currency').value = c; } catch (e) {} // before the first render
     navInstall(); // after every function above exists
+    navSyncHistory(); // drop history entries left over from before a reload
     applyTheme(); // again now the Settings / menu controls exist
 </script>
 </body>
