@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="app-version" content="7.18.1">
+    <meta name="app-version" content="7.18.2">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -1020,7 +1020,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.18.1";
+    const APP_VERSION = "7.18.2";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1150,6 +1150,12 @@
     }
     const curSymbols = { GBP: '£', PKR: 'Rs ', USD: '$', EUR: '€', AED: 'AED ' };
     let rates = { GBP: 1, PKR: 355, USD: 1.26, EUR: 1.17, AED: 4.65 };
+    // Formatting numbers and dates with options (toLocaleString(..., {...})) builds a new formatter on every call, which is slow
+    // on phones: it was most of the time spent redrawing the screen, so taps made meanwhile felt laggy. Built once, reused.
+    const FMT_MONEY = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const FMT_MONTH = new Intl.DateTimeFormat('default', { month: 'short' });
+    const FMT_MONTH_YEAR = new Intl.DateTimeFormat('default', { month: 'short', year: 'numeric' });
+    function money2(n) { return FMT_MONEY.format(n); } // 1234.5 -> "1,234.50"
     const defaultUsers = ["Shahzeb", "Samad", "Abubakar", "Sohail", "Mansoor"];
 
     let db = { startDate: "", expenses: [], archives: [], paidStatus: {}, users: [], activeUsers: [], trash: [], auditLog: [] };
@@ -1303,7 +1309,7 @@
 
     // ---- On-screen keyboard: body.kb-open while the visible viewport is clearly shorter than the full window ----
     (function () {
-        let full = window.innerHeight;
+        let full = window.innerHeight, lastKb = -1;
         const check = () => {
             const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
             full = Math.max(full, window.innerHeight, h);
@@ -1311,7 +1317,7 @@
             // How much of the window the keyboard covers (its password / autofill bar included): sheets and dialogs end above it
             const vv = window.visualViewport;
             const kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
-            document.documentElement.style.setProperty('--kb', kb + 'px');
+            if (kb !== lastKb) { lastKb = kb; document.documentElement.style.setProperty('--kb', kb + 'px'); } // only on a change: it restyles the whole page
         };
         if (window.visualViewport) { window.visualViewport.addEventListener('resize', check); window.visualViewport.addEventListener('scroll', check); }
         window.addEventListener('resize', check);
@@ -1465,9 +1471,9 @@
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
             const ease = 1 - Math.pow(1 - progress, 4); 
             const current = start + (end - start) * ease;
-            obj.innerText = prefix + current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            obj.innerText = prefix + money2(current);
             if (progress < 1) { animationFrameId = obj._countUp = window.requestAnimationFrame(step); } 
-            else { obj.innerText = prefix + end.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+            else { obj.innerText = prefix + money2(end); }
         };
         if(animationFrameId) cancelAnimationFrame(animationFrameId);
         animationFrameId = obj._countUp = window.requestAnimationFrame(step);
@@ -1605,18 +1611,20 @@
     // ---- Shared helpers for search / insights / edit history ----
     function viewMoney() {
         const cur = document.getElementById('currency').value; const sym = curSymbols[cur] || '£'; const rate = (rates[cur] && rates[cur] > 0) ? rates[cur] : 1;
-        return { sym, rate, fmt: (base) => sym + (base * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
+        return { sym, rate, fmt: (base) => sym + money2(base * rate) };
     }
     function cycleLabel(arc) { return `${arc.tag ? arc.tag + ' · ' : ''}${formatNiceDate(arc.start)} → ${formatNiceDate(arc.end)}`; }
     /** Every expense with where it lives: current cycle first, then archives newest first. */
     function allExpenseEntries() {
         const out = (db.expenses || []).map(ex => ({ ex, cycle: 'Current cycle', fallbackDate: db.startDate }));
-        (db.archives || []).forEach(arc => (Array.isArray(arc.details) ? arc.details : []).forEach(ex => out.push({ ex, cycle: cycleLabel(arc), fallbackDate: arc.start })));
+        (db.archives || []).forEach(arc => { const cycle = cycleLabel(arc); (Array.isArray(arc.details) ? arc.details : []).forEach(ex => out.push({ ex, cycle, fallbackDate: arc.start })); });
         return out;
     }
     function findExpenseAnywhere(id) {
-        const hit = allExpenseEntries().find(e => e.ex && e.ex.id === id); if (hit) return hit.ex;
-        return (db.trash || []).find(e => e && e.id === id) || null;
+        const find = (list) => (Array.isArray(list) ? list.find(e => e && e.id === id) : undefined);
+        let ex = find(db.expenses); if (ex) return ex; // this cycle first, then past cycles (newest first), then the Vault
+        for (const arc of (db.archives || [])) { ex = arc && find(arc.details); if (ex) return ex; }
+        return find(db.trash) || null;
     }
     function auditTargetLabel(trg) {
         const ex = typeof trg === 'string' ? findExpenseAnywhere(trg) : null;
@@ -1980,7 +1988,7 @@
         out.push({ label: 'This cycle', expenses: cur.filter(e => !primaryTag(e)), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '' });
         [...new Set(cur.map(primaryTag).filter(Boolean))].forEach(tag => out.push({ label: `${tag} (this cycle)`, expenses: cur.filter(e => primaryTag(e) === tag), active: db.activeUsers, mathV: db.mathV, paid: db.paidStatus || {}, suffix: '_' + tag }));
         (db.archives || []).forEach(a => {
-            const p = (a.start || '').split('/'); const when = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]).toLocaleString('default', { month: 'short', year: 'numeric' }) : (a.start || '');
+            const p = (a.start || '').split('/'); const when = p.length === 3 ? FMT_MONTH_YEAR.format(new Date(+p[2], +p[1] - 1, +p[0])) : (a.start || '');
             out.push({ label: a.tag ? `${a.tag} (${when})` : when, expenses: Array.isArray(a.details) ? a.details : [], active: a.activeUsers || db.users, mathV: a.mathV, paid: a.paidStatus || {}, suffix: '' });
         });
         return out;
@@ -2331,7 +2339,7 @@
     let openExpenseId = null;
     function expenseDetailHTML(ex) {
         const { sym, rate } = viewMoney(); const exSym = ex.originalSym || sym;
-        const amt = sym + (ex.amount * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const amt = sym + money2(ex.amount * rate);
         const when = ex.timestamp ? new Date(ex.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const receipts = ex.receipt ? (Array.isArray(ex.receipt) ? ex.receipt.length : 1) : 0;
         const receiptArg = typeof ex.receipt === 'string' ? jsArg(ex.receipt) : jsArg(JSON.stringify(ex.receipt));
@@ -2576,7 +2584,7 @@
         dateStr = String(dateStr); const parts = dateStr.split('/'); if (parts.length !== 3) return escapeHTML(dateStr);
         const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
         const dateObj = new Date(y, m, d); if (isNaN(dateObj.getTime())) return escapeHTML(dateStr);
-        const day = dateObj.getDate(), month = dateObj.toLocaleString('default', { month: 'short' }), year = dateObj.getFullYear();
+        const day = dateObj.getDate(), month = FMT_MONTH.format(dateObj), year = dateObj.getFullYear();
         const nth = (day > 3 && day < 21) ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] || 'th'; return `${day}${nth} ${month} ${year}`;
     }
 
@@ -2610,7 +2618,8 @@
         const users = db.users || []; const active = (db.activeUsers && db.activeUsers.length) ? db.activeUsers : users;
         const involves = (e) => [...new Set([e.name, ...(Array.isArray(e.involved) && e.involved.length > 0 && e.involved.length < users.length ? e.involved : active)])];
         const wants = (who, amount) => !(p.scope === 'mine' && who && !who.includes(currentUser)) && !(min > 0 && typeof amount === 'number' && amount < min);
-        const byId = new Map(); allExpenseEntries().forEach(x => x.ex && x.ex.id && byId.set(x.ex.id, x.ex)); (db.trash || []).forEach(e => e && e.id && byId.set(e.id, e));
+        const byId = new Map(); const add = (e) => { if (e && e.id) byId.set(e.id, e); };
+        (db.expenses || []).forEach(add); (db.archives || []).forEach(a => (Array.isArray(a && a.details) ? a.details : []).forEach(add)); (db.trash || []).forEach(add);
         const out = [];
         (db.expenses || []).forEach(e => {
             if (!e || !e.id || e.name === currentUser || !wants(involves(e), Number(e.amount) || 0)) return;
@@ -3063,7 +3072,7 @@
                 if (exDate !== currentGroupDate) { let mt = (renderIndex === 0) ? '0px' : '20px'; listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`; currentGroupDate = exDate; }
 
 
-                const amtStr = `${sym}${(ex.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                const amtStr = `${sym}${money2(ex.amount * rate)}`;
                 const flags = (ex.receipt ? `<span title="Has receipt">${ico('image')}</span>` : '') + (ex.edited ? '<span>· Edited</span>' : '');
                 const rowInfo = `<div class="item-top"><div class="item-title">${displayDesc || escapeHTML(ex.name)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${escapeHTML(ex.name)}${flags}</div>${splitNote}`;
                 const isNew = seenExpenseIds && !seenExpenseIds.has(ex.id);
@@ -3077,11 +3086,11 @@
         
         const totalEl = document.getElementById('totalExp');
         if (Math.abs(prevTotalAmount - totalLocal) > 0.01) { animateValue(totalEl, prevTotalAmount, totalLocal, 800, sym); prevTotalAmount = totalLocal; } 
-        else { totalEl.innerText = sym + totalLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+        else { totalEl.innerText = sym + money2(totalLocal); }
         
         const perPersonEl = document.getElementById('perPerson');
         if (Math.abs(prevPerHeadAmount - avgPerHead) > 0.01) { animateValue(perPersonEl, prevPerHeadAmount, avgPerHead, 800, sym); prevPerHeadAmount = avgPerHead; } 
-        else { perPersonEl.innerText = sym + avgPerHead.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+        else { perPersonEl.innerText = sym + money2(avgPerHead); }
         
         const txs = getSettlements(contextExpenses, totalBase, db.activeUsers, db.mathV);
         let credMap = {};
@@ -3093,7 +3102,7 @@
         });
 
         // One card per payment: yours first, then unpaid before settled
-        const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const money = (v) => sym + money2(v);
         const pays = []; for (const c in credMap) credMap[c].txs.forEach(t => { if (!myViewActive || t.from === currentUser || t.to === currentUser) pays.push(t); });
         const mineFirst = (t) => (t.from === currentUser || t.to === currentUser) ? 0 : 1;
         pays.sort((a, b) => ((a.amt - a.paid <= 0.01) - (b.amt - b.paid <= 0.01)) || (mineFirst(a) - mineFirst(b)) || (b.amt - a.amt));
@@ -3135,7 +3144,7 @@
         return null;
     }
     function archiveLabel(a) {
-        const p = String((a && a.start) || '').split('/'); const when = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]).toLocaleString('default', { month: 'short', year: 'numeric' }) : 'an old cycle';
+        const p = String((a && a.start) || '').split('/'); const when = p.length === 3 ? FMT_MONTH_YEAR.format(new Date(+p[2], +p[1] - 1, +p[0])) : 'an old cycle';
         return a && a.tag ? `${a.tag}, ${when}` : when;
     }
     /** Past-cycle payments go only to the two people in them (bell + phone notifications, kind 'pastpay') */
@@ -3194,7 +3203,7 @@
                         hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
                         const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
                         
-                        const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const money = (v) => sym + money2(v);
                         const acts = canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(key)}, ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase);
                         cycleUnpaidHtml += payCardHTML(t.from, t.to, 'owes', money(remLocal), amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(pdLocal)} paid` : '', false, acts, canMarkGlobal ? claimBanner(key, idx) : '', key);
                     }
@@ -3210,7 +3219,7 @@
                         if (txRemainingBase > 0.01) {
                             if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
                             hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            const money = (v) => sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            const money = (v) => sym + money2(v);
                             const acts = canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(t.key)}, ${remainingLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(t.key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase);
                             archiveSettleHtml += payCardHTML(t.from, t.to, 'owes', money(remainingLocal), t.amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(paidLocal)} paid` : '', false, acts, canMark ? claimBanner(t.key, idx) : '', t.key);
                         }
@@ -3226,12 +3235,12 @@
                 let logsHtml = validArcEx.map((d, dIdx) => {
                     if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
                     hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `${jsArg(d.receipt)}` : jsArg(JSON.stringify(d.receipt));
-                    return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.88rem;">${displayDesc || escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${sym}${(d.amount * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div class="item-sub">${escapeHTML(d.name)}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`
+                    return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.88rem;">${displayDesc || escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${sym}${money2(d.amount * rate)}</div></div><div class="item-sub">${escapeHTML(d.name)}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`
                 }).join('');
 
                 if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
 
-                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div style="min-width:0;"><div class="cycle-dates">${displayStart} → ${displayEnd}</div><div class="cycle-total">${sym}${(a.total * rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div><div style="display:flex; gap:8px; align-items:center;">${hasUnpaidInArchive ? `<span class="tag danger">${archiveUnpaidCount} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '')}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div class="card-actions" style="margin:0 0 14px;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${adminActionHtml}</div>${finalUnpaidBlock}<div class="sub-title" style="margin-top:${hasUnpaidInArchive ? '16px' : '0'};">Expenses</div><div>${logsHtml || '<div class="card-meta">No logs.</div>'}</div></div></div>`;
+                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div style="min-width:0;"><div class="cycle-dates">${displayStart} → ${displayEnd}</div><div class="cycle-total">${sym}${money2(a.total * rate)}</div></div><div style="display:flex; gap:8px; align-items:center;">${hasUnpaidInArchive ? `<span class="tag danger">${archiveUnpaidCount} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '')}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div class="card-actions" style="margin:0 0 14px;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${adminActionHtml}</div>${finalUnpaidBlock}<div class="sub-title" style="margin-top:${hasUnpaidInArchive ? '16px' : '0'};">Expenses</div><div>${logsHtml || '<div class="card-meta">No logs.</div>'}</div></div></div>`;
             }).join('');
         }
 
