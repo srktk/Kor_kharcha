@@ -639,6 +639,14 @@
     </div>
 </div>
 
+<div id="debtsOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet tall">
+        <div class="sheet-head"><h2>All Debts</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeDebts()" data-ic="x"></button></div>
+        <p class="sheet-sub">Everything still unpaid between you and each housemate: this cycle, hashtag bills and every past cycle, minus payments already marked.</p>
+        <div id="debtsList" class="sheet-body"></div>
+    </div>
+</div>
+
 <div id="pastOverlay" class="sheet-overlay" style="display:none;">
     <div class="login-card sheet tall">
         <div class="sheet-head"><h2>Past cycles</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closePast()" data-ic="x"></button></div>
@@ -835,6 +843,7 @@
 
     <div class="group-label">House</div>
     <div class="group">
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openDebts(); event.preventDefault();"><span class="ri-icon" data-ic="coins"></span><span class="ri-label">All Debts</span><span id="debtsState" class="ri-end"></span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openNotices(); event.preventDefault();"><span class="ri-icon" data-ic="pin"></span><span class="ri-label">Noticeboard</span><span id="noticeCount" class="count-badge" style="display:none;"></span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openShopping(); event.preventDefault();"><span class="ri-icon" data-ic="cart"></span><span class="ri-label">Shopping List</span><span id="shopCount" class="count-badge" style="display:none;"></span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();"><span class="ri-icon" data-ic="search"></span><span class="ri-label">Search</span></a>
@@ -1007,7 +1016,11 @@
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
-    function apiHeaders(extra) { return Object.assign({ 'X-House-Key': houseKey() }, extra || {}); }
+    // Trusted phone: once this phone has the right PIN, the server hands it a device token. Phones with one are never
+    // caught by the wrong-PIN lockout, which covers a whole connection (a guest guessing on the home wifi).
+    function deviceToken() { try { return localStorage.getItem('house_device') || ''; } catch (e) { return ''; } }
+    function apiHeaders(extra) { const t = deviceToken(); return Object.assign({ 'X-House-Key': houseKey() }, t ? { 'X-Device-Token': t } : { 'X-Want-Device': '1' }, extra || {}); }
+    function noteDeviceToken(res) { try { const t = res && res.headers.get('X-Device-Token'); if (t && /^[0-9a-f]{64}$/.test(t)) localStorage.setItem('house_device', t); } catch (e) {} return res; }
     // Full-screen lock: nothing in the app is usable or visible until the house PIN is accepted by the server.
     let appLocked = false;
     function forgetHouseKey() { try { localStorage.removeItem('house_key'); } catch (e) {} }
@@ -1036,7 +1049,7 @@
         const token = JSON.stringify(sub); const sig = [token, currentUser, houseKey()].join('|');
         try { if (sessionStorage.getItem('hx_wreg') === sig) return; } catch (e) {}
         try {
-            const r = await fetch(`${API_URL}/register`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ token, user: currentUser, platform: 'web' }) });
+            const r = noteDeviceToken(await fetch(`${API_URL}/register`, { method: 'POST', headers: apiHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ token, user: currentUser, platform: 'web' }) }));
             if (r.ok) { try { sessionStorage.setItem('hx_wreg', sig); } catch (e) {} }
         } catch (e) {}
     }
@@ -1163,11 +1176,11 @@
     const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
         historyOverlay: 'closeHistory', photoOverlay: 'closePhoto', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', settingsOverlay: 'closeSettings',
         manageUsersOverlay: 'closeManageUsers', helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
-        insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast' };
+        insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast', debtsOverlay: 'closeDebts' };
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay' };
+        showMoveOut: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navUserBack = false, navClickAttr = '';
@@ -1491,6 +1504,7 @@
             const missing = (db.users || []).filter(u => !withPush.has(u));
             html += healthRow(missing.length ? 'warn' : 'ok', 'Notifications on', `${(db.users || []).length - missing.length} / ${(db.users || []).length}`);
             if (missing.length) html += `<div class="health-row card-meta" style="margin:0;">Not set up: ${escapeHTML(missing.join(', '))}</div>`;
+            if (typeof s.trustedPhones === 'number') html += healthRow('ok', 'Trusted phones', `${s.trustedPhones}${deviceToken() ? ' · this one too' : ''}`);
             rows.innerHTML = html;
         } catch (e) { rows.innerHTML = healthRow('bad', 'Server', "Couldn't check"); }
     }
@@ -2144,7 +2158,7 @@
     async function secureFetch(url, options = {}, timeoutMs = 8000) {
         const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeoutMs);
         try {
-            const response = await fetch(url, { ...options, signal: controller.signal, cache: 'no-store', headers: { ...options.headers, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } }); clearTimeout(id);
+            const response = await fetch(url, { ...options, signal: controller.signal, cache: 'no-store', headers: { ...options.headers, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } }); clearTimeout(id); noteDeviceToken(response);
             const contentType = response.headers.get("content-type"); if (contentType && contentType.indexOf("text/html") !== -1 && !url.includes('api.imgbb')) { throw new Error("CAPTIVE_PORTAL_DETECTED"); } return response;
         } catch (error) { clearTimeout(id); throw error; }
     }
@@ -2153,8 +2167,8 @@
         if (!houseKey()) { showLock(); return; }
         if (isSyncing) return; if (!force && Date.now() - lastSyncTime < 2500) return;
         lastSyncTime = Date.now(); isSyncing = true;
-        const isReallyOnline = await checkTrueNetwork();
-        if (!isReallyOnline) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); isSyncing = false; return; }
+        // No separate "are we online" check first (it cost up to 3 s on every open); a failed fetch below means offline
+        if (!navigator.onLine) { showToast("OFFLINE - LOCAL MODE", 2000); loadLocalBackup(); isSyncing = false; return; }
         if (!db.expenses || db.expenses.length === 0) renderSkeletons();
         const syncIcon = document.getElementById('syncIconElement'); if(syncIcon) syncIcon.classList.add('spin');
         try {
@@ -2271,6 +2285,44 @@
         navEnsureEntry(); document.getElementById('pastOverlay').style.display = 'flex';
     }
     function closePast() { document.getElementById('pastOverlay').style.display = 'none'; }
+
+    // ---- All Debts: who you owe and who owes you, across everything (same sums as the Move-out total) ----
+    function openDebts() {
+        if (!currentUser) return;
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        renderDebts(); navEnsureEntry(); document.getElementById('debtsOverlay').style.display = 'flex';
+    }
+    function closeDebts() { document.getElementById('debtsOverlay').style.display = 'none'; }
+    function renderDebts() {
+        const el = document.getElementById('debtsList'); if (!el || !currentUser) return;
+        const { fmt, sym, rate } = viewMoney(); const o = outstandingFor(currentUser);
+        const names = Object.keys(o.people).filter(n => Math.abs(o.people[n].net) > 0.01).sort((a, b) => Math.abs(o.people[b].net) - Math.abs(o.people[a].net));
+        const owe = names.filter(n => o.people[n].net < 0), owed = names.filter(n => o.people[n].net > 0);
+        const sum = (list) => list.reduce((a, n) => a + Math.abs(o.people[n].net), 0);
+        const parts = (n) => o.people[n].parts.length > 1 || o.people[n].parts[0].label !== 'This cycle'
+            ? escapeHTML(o.people[n].parts.map(x => `${x.label} ${x.amt < 0 ? '−' : '+'}${fmt(Math.abs(x.amt))}`).join(' · ')) : 'This cycle';
+        const card = (n) => {
+            const v = Math.abs(o.people[n].net), mine = o.people[n].net < 0;
+            const actions = mine
+                ? `<button class="btn-pill primary interactive-btn" aria-label="Pay ${escapeHTML(n)}" onclick="triggerHaptic(); payNow(${jsArg(n)}, ${(v * rate).toFixed(2)})">Pay</button>`
+                : `<button class="btn-pill interactive-btn" aria-label="Nudge ${escapeHTML(n)}" onclick="sendNudge(${jsArg(n)}, ${v * rate}, ${jsArg(sym)})">Nudge</button>`;
+            return mine ? payCardHTML(currentUser, n, 'owes', fmt(v), parts(n), false, actions, '', '') : payCardHTML(n, currentUser, 'owes', fmt(v), parts(n), false, actions, '', '');
+        };
+        const verdict = Math.abs(o.total) <= 0.01 ? (names.length ? "Overall you're all square." : "You're all square with everyone.") : o.total < 0 ? `Overall you pay ${fmt(-o.total)}` : `Overall you get back ${fmt(o.total)}`;
+        let html = `<div class="tiles" style="margin-bottom:6px;"><div class="tile"><div class="k">You owe</div><div class="v">${fmt(sum(owe))}</div></div><div class="tile"><div class="k">Owed to you</div><div class="v">${fmt(sum(owed))}</div></div></div>`;
+        html += `<div class="card-meta" style="text-align:center; margin:6px 0 4px;">${escapeHTML(verdict)}</div>`;
+        if (!names.length) html += emptyState('check', 'Nothing outstanding.');
+        if (owe.length) html += `<div class="group-label" style="margin-top:12px;">You owe</div><div class="stack">${owe.map(card).join('')}</div>`;
+        if (owed.length) html += `<div class="group-label" style="margin-top:12px;">Owed to you</div><div class="stack">${owed.map(card).join('')}</div>`;
+        if (names.length) html += `<div class="card-meta" style="text-align:center; margin-top:12px;">To mark something as paid, use Settlements on the home screen or Past cycles.</div>`;
+        el.innerHTML = html;
+    }
+    function updateDebtsState() {
+        const el = document.getElementById('debtsState'); if (!el || !currentUser || !localDbLoaded) return;
+        try { const { fmt } = viewMoney(); const t = outstandingFor(currentUser).total; el.textContent = Math.abs(t) <= 0.01 ? 'All square' : t < 0 ? `−${fmt(-t)}` : `+${fmt(t)}`; el.style.color = Math.abs(t) <= 0.01 ? '' : t < 0 ? 'var(--danger)' : 'var(--success)'; } catch (e) {}
+        if (navShown('debtsOverlay')) renderDebts();
+    }
 
     // ---- Accent colour (this phone only) ----
     function setAccent(name) {
@@ -2865,7 +2917,7 @@
         document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
         document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
         renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
-        updateNoticeCount(); updateShopCount(); updateHomeWidget();
+        updateNoticeCount(); updateShopCount(); updateHomeWidget(); updateDebtsState();
         const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '';
         const mps = document.getElementById('myPhotoState'); if (mps) mps.innerHTML = currentUser ? avatarHTML(currentUser, 'sm') : '';
     }
@@ -3358,6 +3410,9 @@
         initializeDB(); renderUsers();
         if (isNativeApp()) { const nl = document.getElementById('notifMenuLink'); if (nl) nl.style.display = 'none'; } // the app has its own notifications
         document.getElementById('loginOverlay').style.display = 'none';
+        // Fast open: draw the copy saved on this phone straight away, then fetch the latest in the background.
+        // Placeholders only show on a phone that has never loaded the house before.
+        if (readLocalBackup()) { loadLocalBackup(); if (localDbLoaded) document.body.classList.remove('booting'); }
         if (!db.expenses || db.expenses.length === 0) renderSkeletons(); // grey placeholders until the first load
         
         await loadData(true);
@@ -3398,6 +3453,41 @@
             } else reset();
         };
         window.addEventListener('touchend', end); window.addEventListener('touchcancel', end);
+    })();
+    // ---- Swipe down to close: drag a sheet by its grab handle / title bar (phones; wide screens show centred cards) ----
+    (function () {
+        const ZONE = 64; // px from the top of the sheet: the grab handle and the title row
+        let sheet = null, overlay = null, startY = 0, startT = 0, dy = 0, active = false;
+        const sheetFor = (e) => {
+            if (e.touches.length !== 1 || window.matchMedia('(min-width: 960px)').matches) return null;
+            const sh = e.target.closest && e.target.closest('.sheet-overlay .login-card.sheet, .dialog-overlay .login-card.sheet'); if (!sh) return null;
+            const ov = sh.parentElement; if (!ov || ov.id === 'loginOverlay' || ov.id !== navTop()) return null; // only the screen on top, never the name picker
+            if (sh.scrollTop > 0 || e.touches[0].clientY - sh.getBoundingClientRect().top > ZONE) return null; // scrolled down: a pull scrolls back up
+            if (e.target.closest('input, textarea, select')) return null;
+            return sh;
+        };
+        const reset = (el) => { el.style.transition = ''; el.style.transform = ''; el.parentElement.style.background = ''; };
+        document.addEventListener('touchstart', (e) => {
+            sheet = sheetFor(e); if (!sheet) return;
+            overlay = sheet.parentElement; startY = e.touches[0].clientY; startT = Date.now(); dy = 0; active = false;
+        }, { passive: true });
+        document.addEventListener('touchmove', (e) => {
+            if (!sheet) return;
+            dy = e.touches[0].clientY - startY;
+            if (!active && dy < 6) { if (dy < -6) sheet = null; return; } // moving up: let the sheet scroll as normal
+            active = true; if (e.cancelable) e.preventDefault();
+            sheet.style.transition = 'none'; sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
+            overlay.style.background = `rgba(5, 10, 20, ${0.5 * Math.max(0.2, 1 - dy / 400)})`;
+        }, { passive: false });
+        const end = () => {
+            if (!sheet) return; const el = sheet, ov = overlay; sheet = null; if (!active) return;
+            const fast = dy > 40 && dy / Math.max(1, Date.now() - startT) > 0.6; // a quick flick also closes
+            if (dy > 110 || fast) {
+                triggerHaptic(); el.style.transition = 'transform 0.2s ease-in'; el.style.transform = 'translateY(110%)';
+                setTimeout(() => { if (navTop() === ov.id) navBack(); reset(el); }, 190);
+            } else { el.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'; el.style.transform = ''; ov.style.background = ''; setTimeout(() => reset(el), 260); }
+        };
+        document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
     })();
     try { const c = localStorage.getItem('house_currency'); if (c && curSymbols[c]) document.getElementById('currency').value = c; } catch (e) {} // before the first render
     navInstall(); // after every function above exists
