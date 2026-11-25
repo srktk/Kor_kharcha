@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.32.0">
+    <meta name="app-version" content="7.32.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -859,9 +859,7 @@
         /* ---- Press-down: tappable cards and rows sink a little under the finger ---- */
         .row-item.interactive-btn, .card.tappable, .past-link, .choice, .ex-row { transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.15s; }
         .row-item.interactive-btn:active, .card.tappable:active, .past-link:active, .choice:active, .ex-row:active { transform: scale(0.975); }
-        .gs-list > .archive-item { transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
-        .gs-list > .archive-item:has(> .archive-header:active) { transform: scale(0.985); }
-        @media (prefers-reduced-motion: reduce) { .row-item.interactive-btn:active, .card.tappable:active, .past-link:active, .choice:active, .ex-row:active, .gs-list > .archive-item:has(> .archive-header:active) { transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .row-item.interactive-btn:active, .card.tappable:active, .past-link:active, .choice:active, .ex-row:active { transform: none; } }
         /* ---- Balance card: this cycle's running total, day by day ---- */
         #heroSpark { position: absolute; top: 14px; right: 16px; width: 96px; height: 40px; pointer-events: none; }
         #heroSpark svg { width: 100%; height: 100%; overflow: visible; display: block; }
@@ -940,13 +938,21 @@
         .gs-list > .settle-diagram { padding: 10px 10px 12px; }
         .sd-box { position: relative; width: 100%; aspect-ratio: 320 / 210; }
         .sd-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-        .sd-arrow { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; opacity: 0.85; }
+        .sd-arrow { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; opacity: 0.85; transition: stroke-width 0.2s, opacity 0.2s; }
+        .sd-arrow.done { stroke: var(--text-muted); stroke-dasharray: 4 5; opacity: 0.45; }
+        .sd-arrow.sel { stroke-width: 3.2; opacity: 1; }
         .sd-person { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 1; }
         .sd-person .avatar { width: 40px; height: 40px; box-shadow: 0 0 0 3px var(--gs-bg); }
         .sd-person small { font-size: 0.66rem; font-weight: 700; color: var(--text-muted); max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sd-person.square .avatar { opacity: 0.5; }
         .sd-person.up { flex-direction: column-reverse; } /* top row: name above, so arrows coming up reach the picture, not the name */
-        .sd-amt { position: absolute; z-index: 2; transform: translate(-50%, -50%); padding: 2px 8px; border-radius: 10px; background: var(--gs-bg); border: 1px solid var(--accent); color: var(--accent-strong); font-size: 0.7rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .sd-amt { position: absolute; z-index: 2; transform: translate(-50%, -50%); padding: 2px 8px; border-radius: 10px; background: var(--gs-bg); border: 1px solid var(--accent); color: var(--accent-strong); font-size: 0.7rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; font-family: inherit; line-height: 1.4; cursor: pointer; transition: background 0.2s, color 0.2s, transform 0.2s; }
+        .sd-amt::after { content: ''; position: absolute; inset: -10px -6px; } /* bigger tap area */
+        .sd-amt.done { border-color: var(--border); color: var(--text-muted); }
+        .sd-amt.sel { background: var(--accent); border-color: var(--accent); color: #fff; transform: translate(-50%, -50%) scale(1.08); }
+        .sd-amt.claim::before { content: ''; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--gs-bg); }
+        .settle-diagram > .pay-card { background: none; border: 0; border-top: 1px solid var(--gs-border); border-radius: 0; margin: 10px 2px 0; padding: 12px 4px 2px; }
+        .settle-diagram > .pay-card.settled { opacity: 0.8; }
         /* ---- Notices: @mentions and "seen by" ---- */
         .mention { color: var(--accent-strong); background: var(--accent-soft); border-radius: 6px; padding: 0 4px; font-weight: 700; }
         .seen-by { display: flex; align-items: center; margin-top: 8px; padding-left: 5px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
@@ -1021,7 +1027,7 @@
                 <button id="noticeCancelEdit" type="button" class="add-chip interactive-btn" style="display:none;" onclick="triggerHaptic(); cancelNoticeEdit()"><span class="ic" data-ic="x"></span>Cancel edit</button>
             </div>
             <div id="noticeComposer" class="composer">
-                <textarea id="noticeInput" aria-label="New note" class="composer-input" rows="1" maxlength="1000" placeholder="Wi-Fi password, bin day... (@name to tell someone)" oninput="growBox(this); mentionSuggest()"></textarea>
+                <textarea id="noticeInput" aria-label="New note" class="composer-input" rows="1" maxlength="1000" placeholder="Write a note... type @ to tag someone" oninput="growBox(this); mentionSuggest()"></textarea>
                 <button id="noticeSaveBtn" class="chat-btn primary interactive-btn" aria-label="Add note" onclick="triggerHaptic(); saveNotice()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
             </div>
         </div>
@@ -1503,7 +1509,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.32.0";
+    const APP_VERSION = "7.32.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1859,7 +1865,7 @@
         tabLeaveDock(); open();
     }
     /** + and More from the bar while a panel (or a sheet opened from it) is up: close those first */
-    function tabLeaveDock() { const p = navTopPage(); if (p && p !== 'menu') navCloseAll(); }
+    function tabLeaveDock() { if (navTopPage()) navCloseAll(); } // More too: left open, it counted as a screen on top and shut the add box at once
     // ---- Sliding tab pill: the glass pill moves to the tab you're on (the screen at the bottom of the stack decides) ----
     const TAB_FOR = { shoppingOverlay: 1, noticeOverlay: 3, menu: 4 }; // tab positions: Home 0, Shopping 1, + 2, Notices 3, More 4
     function activeTabIndex() {
@@ -4407,26 +4413,41 @@
     })();
 
     // ---- Settlements: who pays whom, drawn as arrows between everyone's pictures ----
-    function settleDiagramHTML(open) {
+    // Each payment's buttons sit under the diagram: tap an amount to pick which one (yours comes first)
+    let sdSelKey = null, sdCards = {};
+    function settleDiagramHTML(list, cards) {
         const base = db.activeUsers && db.activeUsers.length ? db.activeUsers : (db.users || []);
-        const people = [...new Set([...base, ...open.flatMap(t => [t.from, t.to])])].slice(0, 8);
-        if (!open.length || people.length < 2) return '';
+        const people = [...new Set([...base, ...list.flatMap(t => [t.from, t.to])])].slice(0, 8);
+        if (!list.length || people.length < 2) return '';
         const { fmt } = viewMoney(); const W = 320, H = 210, cx = W / 2, cy = H / 2 - 4, rx = 118, ry = 70;
         const pos = {}; people.forEach((p, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / people.length; pos[p] = [cx + rx * Math.cos(a), cy + ry * Math.sin(a)]; });
-        const busy = new Set(open.flatMap(t => [t.from, t.to]));
+        if (list.some(t => !pos[t.from] || !pos[t.to])) return ''; // too many people to draw: the plain cards show instead
+        if (!list.some(t => t.key === sdSelKey)) sdSelKey = list[0].key;
+        sdCards = cards;
+        const busy = new Set(list.filter(t => !t.settled).flatMap(t => [t.from, t.to]));
         let paths = '', labels = '';
-        open.forEach(t => {
-            const a = pos[t.from], b = pos[t.to]; if (!a || !b) return;
+        list.forEach(t => {
+            const a = pos[t.from], b = pos[t.to], sel = t.key === sdSelKey ? ' sel' : '';
             const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, r = 24;
             const s = [a[0] + ux * r, a[1] + uy * r], e = [b[0] - ux * (r + 3), b[1] - uy * (r + 3)];
             const mx = (s[0] + e[0]) / 2 - uy * 16, my = (s[1] + e[1]) / 2 + ux * 16;
-            paths += `<path class="sd-arrow" d="M${s[0].toFixed(1)} ${s[1].toFixed(1)} Q${mx.toFixed(1)} ${my.toFixed(1)} ${e[0].toFixed(1)} ${e[1].toFixed(1)}" marker-end="url(#sdHead)"/>`;
+            paths += `<path class="sd-arrow${t.settled ? ' done' : ''}${sel}" data-key="${escapeHTML(t.key)}" d="M${s[0].toFixed(1)} ${s[1].toFixed(1)} Q${mx.toFixed(1)} ${my.toFixed(1)} ${e[0].toFixed(1)} ${e[1].toFixed(1)}" marker-end="url(#${t.settled ? 'sdHeadDone' : 'sdHead'})"/>`;
             const lx = (s[0] + 2 * mx + e[0]) / 4, ly = (s[1] + 2 * my + e[1]) / 4;
-            labels += `<span class="sd-amt" style="left:${(lx / W * 100).toFixed(2)}%; top:${(ly / H * 100).toFixed(2)}%;">${escapeHTML(fmt(t.left))}</span>`;
+            const claim = !t.settled && getClaim(t.key, -1) ? ' claim' : '';
+            labels += `<button class="sd-amt interactive-btn${t.settled ? ' done' : ''}${claim}${sel}" data-key="${escapeHTML(t.key)}" aria-label="${escapeHTML(t.from)} to ${escapeHTML(t.to)}" style="left:${(lx / W * 100).toFixed(2)}%; top:${(ly / H * 100).toFixed(2)}%;" onclick="sdPick(${jsArg(t.key)})">${t.settled ? '✓ ' : ''}${escapeHTML(fmt(t.left))}</button>`;
         });
         const avs = people.map(p => `<span class="sd-person${busy.has(p) ? '' : ' square'}${pos[p][1] < cy - 1 ? ' up' : ''}" style="left:${(pos[p][0] / W * 100).toFixed(2)}%; top:${(pos[p][1] / H * 100).toFixed(2)}%;">${avatarHTML(p)}<small>${escapeHTML(p)}</small></span>`).join('');
-        return `<div class="gs-card settle-diagram"><div class="sd-box"><svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="sdHead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--accent)"/></marker></defs>${paths}</svg>${avs}${labels}</div><div class="card-meta" style="text-align:center; margin:2px 0 0;">Arrows point to who gets paid</div></div>`;
+        const hint = list.length > 1 ? 'Arrows point to who gets paid · tap an amount' : 'Arrows point to who gets paid';
+        return `<div class="gs-card settle-diagram"><div class="sd-box"><svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="sdHead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--accent)"/></marker><marker id="sdHeadDone" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--text-muted); opacity:0.6"/></marker></defs>${paths}</svg>${avs}${labels}</div><div class="card-meta" style="text-align:center; margin:2px 0 0;">${hint}</div>${cards[sdSelKey] || ''}</div>`;
     }
+    function sdPick(key) {
+        const box = document.querySelector('#settleList .settle-diagram'); if (!box || !sdCards[key]) return;
+        triggerHaptic(); sdSelKey = key;
+        box.querySelectorAll('.sd-amt, .sd-arrow').forEach(el => el.classList.toggle('sel', el.dataset.key === key));
+        const old = box.querySelector(':scope > .pay-card'); if (old) old.remove();
+        box.insertAdjacentHTML('beforeend', sdCards[key]); countUps(box);
+    }
+
 
     // ---- Private IOUs (Settle Up): money between two people, kept out of the house split ----
     function iouSectionHTML() {
@@ -4710,7 +4731,9 @@
         // Open payments (yours first), then everything already settled under its own label
         const isOpen = (t) => t.amt - t.paid > 0.01;
         const gOpen = pays.filter(isOpen), gDone = pays.filter(t => !isOpen(t));
-        const sHtml = settleDiagramHTML(gOpen.map(t => ({ from: t.from, to: t.to, left: t.amt - t.paid }))) + gOpen.map(cardFor).join('') + gDone.map(cardFor).join('');
+        const sdList = [...gOpen, ...gDone], sdCardMap = {}; sdList.forEach(t => { sdCardMap[t.key] = cardFor(t); });
+        const sHtml = settleDiagramHTML(sdList.map(t => ({ from: t.from, to: t.to, key: t.key, settled: !isOpen(t), left: isOpen(t) ? t.amt - t.paid : t.amt })), sdCardMap)
+            || sdList.map(t => sdCardMap[t.key]).join(''); // can't draw it (too many people): the plain cards
         setHTML(document.getElementById('settleList'), sHtml || `<div class="gs-card">${emptyState('check', 'Nothing to settle yet.')}</div>`);
         countUps(document.getElementById('settleList'));
         document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
