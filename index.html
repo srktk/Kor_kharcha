@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.27.0">
+    <meta name="app-version" content="7.28.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -273,7 +273,6 @@
         .st-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
         .st-tools .add-chip { background: var(--surface-2); }
         .st-tools .add-chip.on { background: var(--accent-soft); }
-        .pay-card.mine:not(.settled) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
         .pay-card.settled .card-actions { margin-top: 8px; }
         .st-markall { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; margin: 2px 0 4px; border: 1px dashed var(--border); border-radius: 16px; background: none; color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
         .st-markall svg { width: 16px; height: 16px; color: var(--success); }
@@ -735,9 +734,10 @@
            card is the title card (title, collapse arrow, and the section's search / tools); then one card per day, payment
            or cycle; big outer corners at the very top and the very bottom, small ones between. --gs-bg: the card colour
            (a shade lighter inside pop-ups, whose own background is the surface colour). ---- */
-        :root { --gs-bg: var(--surface); }
+        :root { --gs-bg: var(--surface); --gs-border: #d5d9e0; }
+        [data-theme="dark"] { --gs-border: #3a3e46; }
         .login-card { --gs-bg: var(--surface-2); }
-        .gs-card, .gs-list > .pay-card { background: var(--gs-bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; margin: 0; box-shadow: none; }
+        .gs-card, .gs-list > .pay-card { background: var(--gs-bg); border: 1px solid var(--gs-border); border-radius: 6px; padding: 14px 16px; margin: 0; box-shadow: none; }
         .gs-list { display: flex; flex-direction: column; gap: 3px; }
         .gs-head { border-radius: 22px 22px 6px 6px; }
         .gs-list > .gs-card:last-child, .gs-list > .pay-card:last-child { border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
@@ -752,18 +752,45 @@
         .stack-section:not(.expanded) .head-extra { display: none; }
         .stack-section > .collapsible-content { padding: 0 !important; margin-top: 3px; }
         .stack-section .ex-search { margin: 0; }
-        .head-extra .st-tools { margin-bottom: 0; }
-        .head-extra #cycleSplitCheckboxes { margin: 12px 0 0 !important; }
-        .head-extra .st-markall, .head-extra #unpaidDebtsNoticeWrapper { margin: 12px 0 0; }
+        .stack-section .head-extra:has(> #cycleSplitCheckboxes) { padding: 0; }
+        .head-extra #cycleSplitCheckboxes { margin: 0 14px 14px !important; }
+        /* Settlements: Who's in and Copy summary as icons beside the arrow */
+        .title-tools { display: flex; align-items: center; gap: 6px; }
+        .icon-chip { position: relative; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--text-main); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: background-color 0.2s, color 0.2s, transform 0.15s; }
+        .icon-chip svg { width: 17px; height: 17px; }
+        .icon-chip:active { transform: scale(0.92); }
+        .icon-chip.on { background: var(--accent-soft); color: var(--accent-strong); }
+        .icon-chip .ic-badge { position: absolute; top: -4px; right: -6px; min-width: 18px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: var(--on-accent); font-size: 0.6rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+        .icon-chip .ic-badge:empty { display: none; }
+        .title-tools .chevron { margin-left: 4px; }
+        /* Settlements: Mark all and the past-cycles button share one line at the end of the last card (the foot continues
+           that card: same colour and sides, the big bottom corners move down to it) */
+        .st-foot { display: none; gap: 8px; background: var(--gs-bg); border: 1px solid var(--gs-border); border-top: 0; border-radius: 0 0 22px 22px; padding: 4px 14px 14px; margin-top: 0; position: relative; }
+        .st-foot.on { display: flex; }
+        .st-foot::before { content: ''; position: absolute; left: 14px; right: 14px; top: 0; border-top: 1px solid var(--border); }
+        .st-foot > * { flex: 1 1 0; min-width: 0; margin: 10px 0 0 !important; }
+        .st-foot .st-markall { height: 44px; font-size: 0.8rem; }
+        .st-foot .warn-banner { height: 44px; margin: 0; padding: 0 12px; font-size: 0.8rem; }
+        .st-foot .warn-banner > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #settleList:has(+ .st-foot.on) > :last-child { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; border-bottom: 0; }
+        .gs-list > .pay-card.settled { opacity: 1; }
+        .gs-list > .pay-card.settled > * { opacity: 0.55; }
         /* A day of expenses (or a past cycle's open debts): the date / cycle sits inside the card, at its top */
         .ex-day { padding: 12px 14px 4px; }
         .ex-day-date { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 2px 2px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
         .ex-day .linear-row:last-child { border-bottom: none; }
-        /* Past cycles: the Cycles | Unpaid switch is the title card */
-        .past-head { padding: 6px; }
-        .past-head .seg { margin: 0; background: transparent; }
-        .past-title { padding: 10px 12px; font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
-        #unpaidArchivesSection, #archivesWrapper { margin-top: 3px !important; }
+        /* Past cycles: the open view's title (Cycles / Unpaid) is a tab joined to the first card, its feet curving into the
+           card's top edge; the other title is plain text beside it */
+        .past-tabs { display: flex; align-items: flex-end; gap: 4px; position: relative; z-index: 1; margin-bottom: -1px; }
+        .past-tab { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px 10px; border: 1px solid transparent; border-bottom: 0; border-radius: 20px 20px 0 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: color 0.2s; }
+        .past-tab.active { background: var(--gs-bg); border-color: var(--gs-border); color: var(--text-main); }
+        .past-tab.active::after, .past-tab.active:not(:first-child)::before { content: ''; position: absolute; bottom: 0; width: 20px; height: 20px; pointer-events: none; }
+        .past-tab.active::after { right: -20px; background: radial-gradient(circle at 100% 0, transparent 18.6px, var(--gs-border) 19px, var(--gs-border) 19.6px, var(--gs-bg) 20px); }
+        .past-tab.active:not(:first-child)::before { left: -20px; background: radial-gradient(circle at 0 0, transparent 18.6px, var(--gs-border) 19px, var(--gs-border) 19.6px, var(--gs-bg) 20px); }
+        .past-tab .seg-n { font-size: 0.7rem; }
+        #unpaidArchivesSection, #archivesWrapper { margin-top: 0 !important; }
+        #unpaidArchivesList > .gs-card:first-child, #archiveList > .gs-card:first-child { border-top-left-radius: 22px; border-top-right-radius: 22px; }
+        #pastOverlay[data-past="cycles"] #archiveList > .gs-card:first-child { border-top-left-radius: 0; }
         .gs-list > .archive-item.gs-card { padding: 14px 16px; }
     </style>
 </head>
@@ -905,12 +932,9 @@
         <div class="sheet-body">
             <!-- Past cycles: two views - Cycles (one card per cycle: Snapshot / Delete, who paid what, its expenses) and
                  Unpaid (every debt still open, grouped by cycle; the only place they are listed) -->
-            <div class="gs-card gs-head past-head">
-            <div id="pastTitle" class="past-title">Cycles</div>
-            <div id="pastSeg" class="seg" role="tablist" aria-label="Past cycles view" style="display:none;">
-                <button id="pastSegCycles" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('cycles')">Cycles</button>
-                <button id="pastSegUnpaid" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('unpaid')">Unpaid</button>
-            </div>
+            <div id="pastSeg" class="past-tabs" role="tablist" aria-label="Past cycles view">
+                <button id="pastSegCycles" role="tab" class="past-tab interactive-btn" onclick="triggerHaptic(); setPastTab('cycles')">Cycles</button>
+                <button id="pastSegUnpaid" role="tab" class="past-tab interactive-btn" onclick="triggerHaptic(); setPastTab('unpaid')">Unpaid</button>
             </div>
             <div id="unpaidArchivesSection" style="display:none;">
                 <div id="unpaidArchivesList" class="gs-list"></div>
@@ -1185,22 +1209,24 @@
         <div class="flow-header gs-card gs-head">
             <div class="gs-title-row interactive-btn" onclick="toggleSection(this.parentElement)">
                 <h3 class="flow-title">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
-                <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <div class="title-tools">
+                    <button id="whoInBtn" class="icon-chip interactive-btn" aria-label="Who's in" title="Who's in" onclick="event.stopPropagation(); triggerHaptic(); whoInToggle(this)"><span class="ic" data-ic="users"></span><span id="activeChipLabel" class="ic-badge"></span></button>
+                    <button class="icon-chip interactive-btn" aria-label="Copy summary" title="Copy summary" onclick="event.stopPropagation(); triggerHaptic(); copySummary()"><span class="ic" data-ic="clipboard"></span></button>
+                    <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
             </div>
             <div class="head-extra">
-                <div class="st-tools">
-                    <button class="add-chip interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); toggleShown(el, !isShown(el), 'flex'); this.classList.toggle('on', isShown(el));"><span class="ic" data-ic="users"></span><span id="activeChipLabel">Who's in</span></button>
-                    <button class="add-chip interactive-btn" onclick="triggerHaptic(); copySummary()"><span class="ic" data-ic="clipboard"></span>Copy summary</button>
-                </div>
                 <div id="cycleSplitCheckboxes" style="display:none; flex-wrap:wrap; gap:8px; margin:0 0 12px;"></div>
-                <button id="markAllBtn" class="st-markall interactive-btn" style="display:none;" onclick="triggerHaptic(); markAllSettled()"><span class="ic" data-ic="check"></span>Mark all as settled</button>
-                <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="triggerHaptic(); openPast('unpaid')">
-                    <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span><span id="unpaidNoticeText">Unpaid debts from past cycles</span></span><span class="ic" data-ic="chev"></span></div>
-                </div>
             </div>
         </div>
         <div class="collapsible-content">
             <div id="settleList" class="gs-list"></div>
+            <div id="settleFoot" class="st-foot">
+                <button id="markAllBtn" class="st-markall interactive-btn" style="display:none;" onclick="triggerHaptic(); markAllSettled()"><span class="ic" data-ic="check"></span>Mark all settled</button>
+                <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="triggerHaptic(); openPast('unpaid')">
+                    <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span><span id="unpaidNoticeText">Unpaid debts from past cycles</span></span><span class="ic" data-ic="chev"></span></div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -1298,7 +1324,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.27.0";
+    const APP_VERSION = "7.28.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -2199,7 +2225,7 @@
     function closeInsights() { document.getElementById('insightsOverlay').style.display = 'none'; }
     function pickInsightsCycle(i) { insightsCycle = i; renderInsights(); }
     let insightsMode = 'month', insightsYear = null;
-    function setInsightsMode(m) { triggerHaptic(); insightsMode = m; renderInsights(); document.getElementById('insightsBody').scrollTop = 0; }
+    function setInsightsMode(m) { triggerHaptic(); const from = insightsMode; insightsMode = m; renderInsights(); const body = document.getElementById('insightsBody'); body.scrollTop = 0; if (from !== m) slideIn(body, m === 'year' ? 1 : -1); }
     function pickInsightsYear(y) { triggerHaptic(); insightsYear = y; renderInsights(); }
     /** Calendar-year view: every expense (cycles + hashtag bills) dated in that year */
     function yearInsightsHtml() {
@@ -3946,7 +3972,7 @@
             const isChecked = db.activeUsers.includes(u); const opac = isChecked ? '1' : '0.4';
             return `<button class="btn-pill interactive-btn" onclick="toggleActiveUser(${jsArg(u)})" style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px 4px 4px; opacity:${opac}; ${isChecked ? 'border-color:var(--accent); background:var(--accent-soft);' : ''}">${avatarHTML(u, 'sm')}${escapeHTML(u)}</button>`;
         }).join(''));
-        { const inCount = db.users.filter(u => db.activeUsers.includes(u)).length, l = document.getElementById('activeChipLabel'); if (l) l.textContent = inCount < db.users.length ? `Who's in · ${inCount}/${db.users.length}` : "Who's in · everyone"; }
+        { const inCount = db.users.filter(u => db.activeUsers.includes(u)).length, l = document.getElementById('activeChipLabel'); if (l) l.textContent = inCount < db.users.length ? `${inCount}/${db.users.length}` : ''; const wb = document.getElementById('whoInBtn'); if (wb) wb.setAttribute('aria-label', inCount < db.users.length ? `Who's in: ${inCount} of ${db.users.length}` : "Who's in: everyone"); }
 
         let allValid = db.expenses || [];
         if (activeHashtag) { let tagStillExists = allValid.some(e => { let match = (e.desc || "").match(/#([\w-]+)/); return match && match[0] === activeHashtag; }); if (!tagStillExists) activeHashtag = null; }
@@ -4122,9 +4148,45 @@
     function calTileHTML(a) { const d = arcDate(a.start); return `<span class="cal-tile" aria-hidden="true"><i>${d ? FMT_MONTH.format(d) : '—'}</i><b>${d ? "'" + String(d.getFullYear()).slice(-2) : ''}</b></span>`; }
     function shortDate(s) { const d = arcDate(s); return d ? `${d.getDate()} ${FMT_MONTH.format(d)}` : escapeHTML(String(s || "")); }
     function arcTitle(a) { const d = arcDate(a.start); return (d ? FMT_MONTH_LONG.format(d) : 'Old cycle') + (a.tag ? ` <span class="tag">${escapeHTML(a.tag)}</span>` : ''); }
+    /** Settlements' last line (Mark all, past unpaid) shows when either button does */
+    function stFootSync() {
+        const foot = document.getElementById('settleFoot'); if (!foot) return;
+        foot.classList.toggle('on', Array.from(foot.children).some(c => c.style.display !== 'none'));
+    }
+    /** Who's in (icon beside the arrow): opens the section if needed, then shows / hides the people chips */
+    function whoInToggle(btn) {
+        const sec = document.getElementById('settlementsWrapper'), el = document.getElementById('cycleSplitCheckboxes');
+        if (!sec.classList.contains('expanded')) { setExpanded(sec, true); if (!isShown(el)) toggleShown(el, true, 'flex'); }
+        else toggleShown(el, !isShown(el), 'flex');
+        btn.classList.toggle('on', isShown(el));
+    }
+    /** A swipe left / right across a pop-up's page: go(+1) next view, go(-1) previous. Not from text boxes or from
+        anything that scrolls sideways itself. */
+    function swipeViews(el, go) {
+        if (!el) return; let x0 = 0, y0 = 0, t0 = 0, ok = false;
+        el.addEventListener('touchstart', (e) => {
+            ok = e.touches.length === 1; if (!ok) return;
+            for (let n = e.target; n && n !== el; n = n.parentElement) {
+                if (n.matches && n.matches('input, textarea, select')) { ok = false; return; }
+                if (n.scrollWidth > n.clientWidth + 2) { const cs = getComputedStyle(n); if (/auto|scroll/.test(cs.overflowX) && !/auto|scroll/.test(cs.overflowY)) { ok = false; return; } } // a sideways scroller (not a list that scrolls down)
+            }
+            x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
+        }, { passive: true });
+        el.addEventListener('touchend', (e) => {
+            if (!ok) return; ok = false; const t = e.changedTouches[0]; const dx = t.clientX - x0, dy = t.clientY - y0;
+            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - t0 < 800) go(dx < 0 ? 1 : -1);
+        }, { passive: true });
+        el.addEventListener('touchcancel', () => { ok = false; }, { passive: true });
+    }
+    /** The new view slides in from the side it came from */
+    function slideIn(el, dir) { if (!el || revealMotionOff() || !dir) return; el.animate([{ transform: `translateX(${dir * 36}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' }); }
+    const PAST_VIEWS = ['cycles', 'unpaid'];
+    function pastShownTab() { return document.getElementById('pastOverlay').dataset.past || 'cycles'; }
     function setPastTab(t) {
+        const from = PAST_VIEWS.indexOf(pastShownTab());
         pastTab = t; const { sym, rate } = viewMoney(); renderArchives(sym, rate);
         const card = document.querySelector('#pastOverlay .sheet'); if (card) card.scrollTop = 0;
+        const to = PAST_VIEWS.indexOf(pastShownTab()); if (to !== from && from >= 0) slideIn(document.getElementById(to === 1 ? 'unpaidArchivesSection' : 'archivesWrapper'), to > from ? 1 : -1);
     }
     /** From a cycle's card: show its open debts on the Unpaid side */
     function showCycleUnpaid(idx) {
@@ -4184,8 +4246,7 @@
         // Which side shows: Cycles unless Unpaid was asked for (its tab, or a banner that leads there)
         const hasUnpaid = totalUnpaidCount > 0; const tab = hasUnpaid && pastTab === 'unpaid' ? 'unpaid' : 'cycles';
         const segU = document.getElementById('pastSegUnpaid'), segC = document.getElementById('pastSegCycles');
-        document.getElementById('pastSeg').style.display = hasUnpaid ? 'flex' : 'none';
-        const pt = document.getElementById('pastTitle'); pt.style.display = hasUnpaid ? 'none' : 'flex'; setHTML(pt, `Cycles${arcCount ? ` <span class="count-badge">${arcCount}</span>` : ''}`);
+        segU.style.display = hasUnpaid ? '' : 'none'; document.getElementById('pastOverlay').dataset.past = tab;
         setHTML(segU, `Unpaid<span class="seg-n">${totalUnpaidCount}</span>`); setHTML(segC, `Cycles<span class="seg-n">${arcCount}</span>`);
         segU.classList.toggle('active', tab === 'unpaid'); segC.classList.toggle('active', tab === 'cycles');
         segU.setAttribute('aria-selected', String(tab === 'unpaid')); segC.setAttribute('aria-selected', String(tab === 'cycles'));
@@ -4198,7 +4259,8 @@
         if (plSub) plSub.innerText = arcCount ? `${arcCount} past cycle${arcCount === 1 ? '' : 's'}` : 'None yet';
         if (plTag) { plTag.innerText = `${totalUnpaidCount} unpaid`; plTag.style.display = totalUnpaidCount ? 'inline-flex' : 'none'; }
         const nw = document.getElementById('unpaidDebtsNoticeWrapper'); if (nw) nw.style.display = hasUnpaid ? 'block' : 'none';
-        const nt = document.getElementById('unpaidNoticeText'); if (nt) nt.textContent = `${totalUnpaidCount} unpaid from past cycles · ${money(totalUnpaidBase * rate)}`;
+        const nt = document.getElementById('unpaidNoticeText'); if (nt) nt.textContent = `${totalUnpaidCount} past unpaid · ${money(totalUnpaidBase * rate)}`;
+        stFootSync();
     }
     async function downloadArchive(ev, idx) {
         ev.stopPropagation(); const card = document.getElementById(`archive-card-${idx}`); const wasExpanded = card.classList.contains('expanded');
@@ -4732,6 +4794,8 @@
         });
     })();
     try { const c = localStorage.getItem('house_currency'); if (c && curSymbols[c]) document.getElementById('currency').value = c; } catch (e) {} // before the first render
+    swipeViews(document.querySelector('#pastOverlay .login-card'), (d) => { const i = PAST_VIEWS.indexOf(pastShownTab()) + d; if (i < 0 || i >= PAST_VIEWS.length || (PAST_VIEWS[i] === 'unpaid' && document.getElementById('pastSegUnpaid').style.display === 'none')) return; triggerHaptic(); setPastTab(PAST_VIEWS[i]); });
+    swipeViews(document.querySelector('#insightsOverlay .login-card'), (d) => { const m = d > 0 ? 'year' : 'month'; if (m !== insightsMode) setInsightsMode(m); });
     navInstall(); // after every function above exists
     navSyncHistory(); // drop history entries left over from before a reload
     applyTheme(); // again now the Settings / menu controls exist
