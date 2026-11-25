@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.23.0">
+    <meta name="app-version" content="7.23.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -1167,7 +1167,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.23.0";
+    const APP_VERSION = "7.23.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -2155,8 +2155,9 @@
         if (editingId) { editingId = null; render(); }
         const amtEl = document.getElementById('amtInput'), noteEl = document.getElementById('groupNote');
         // "You paid £12.40 at Tesco" -> 12.40 in the amount box; the whole message goes in the note
-        const m = text.match(/(?:£|\$|€|\bGBP\s?|\bRs\.?\s?|\bPKR\s?|\bAED\s?)\s?(\d{1,6}(?:[.,]\d{1,2})?)\b/i);
-        if (m && !amtEl.value.trim()) amtEl.value = m[1].replace(',', '.') + ' ';
+        // "£1,234.56" has a thousands comma (-> 1234.56); "€12,40" has a decimal comma (-> 12.40)
+        const m = text.match(/(?:£|\$|€|\bGBP\s?|\bRs\.?\s?|\bPKR\s?|\bAED\s?)\s?(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d{1,6}(?:[.,]\d{1,2})?)(?![\d,.]*\d)/i);
+        if (m && !amtEl.value.trim()) amtEl.value = (/^\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/.test(m[1]) ? m[1].replace(/,/g, '') : m[1].replace(',', '.')) + ' ';
         if (text) noteEl.value = text.slice(0, 200);
         if (files.length) {
             try {
@@ -2891,9 +2892,19 @@
     function addAgain(id) {
         const ex = (db.expenses || []).find(e => e.id === id); if (!ex) return;
         if (editingId) { editingId = null; render(); }
-        const desc = String(ex.desc || '').trim(); const amt = Math.round(ex.amount * 100) / 100;
-        const el = document.getElementById('amtInput'); el.value = `${amt} ${desc}`.trim(); el.style.height = '40px'; el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-        openAddBox(); updateAmtPreview(true);
+        // The saved text is what was typed ("12.50 milk"), with the note in front as "[note] \n ". The amount box adds up every
+        // number it sees, so the typed text goes back in as it was; only if its numbers don't add up to the amount (edited,
+        // or another currency) does the amount go in on its own, with the words moved to the note.
+        let desc = String(ex.desc || ''), note = '';
+        const nm = desc.match(/^\[([\s\S]*?)\] \n ([\s\S]*)$/); if (nm) { note = nm[1].trim(); desc = nm[2]; }
+        desc = desc.trim(); const amt = Math.round(ex.amount * 100) / 100;
+        let text;
+        if (!amountParts(desc).length) text = `${amt} ${desc}`.trim();
+        else if (Math.abs(extractAmount(desc) - amt) < 0.005) text = desc;
+        else { text = String(amt); note = [note, desc].filter(Boolean).join(' · ').slice(0, 200); }
+        const el = document.getElementById('amtInput'); el.value = text; el.style.height = '40px'; el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        document.getElementById('groupNote').value = note;
+        openAddBox(); showNow(document.getElementById('optionsMenu'), note ? 'block' : 'none'); setNoteChip(!!note); updateAmtPreview(true);
         el.setSelectionRange(el.value.length, el.value.length);
     }
     (function () {
