@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.28.0">
+    <meta name="app-version" content="7.29.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -109,9 +109,23 @@
         .offline-badge { position: absolute; top: -3px; right: -3px; background: var(--danger); color: white; font-size: 0.55rem; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 
         /* ---- Side menu ("More") ---- */
-        #sideMenu { position: fixed; top: 0; left: -320px; width: 300px; height: 100dvh; background: var(--surface); z-index: 1001; transition: left 0.32s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s; padding: max(22px, env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom)) 16px; border-radius: 0 28px 28px 0; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-lg); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-        #sideMenu.open { left: 0; }
-        #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); z-index: 1000; display: none; animation: dim-in 0.2s ease-out; }
+        /* More grows up out of the tab bar like Shopping / Notices (same panel, the bar stays on top of it) */
+        #sideMenu { --gs-bg: var(--surface-2); position: fixed; z-index: 150; left: 14px; right: 14px; margin: 0 auto; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: calc(100dvh - 24px - max(14px, env(safe-area-inset-top)) - env(safe-area-inset-bottom)); max-height: 760px; background: var(--surface); color: var(--text-main); border: 1px solid var(--glass-rim); border-radius: 32px; box-shadow: var(--glass-shadow); padding: 22px 16px calc(var(--tabbar-h) + 14px); display: none; flex-direction: column; gap: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; transition: background-color 0.3s; }
+        #sideMenu.open, #sideMenu.closing { display: flex; }
+        #sideMenu.open { animation: dock-grow 0.46s cubic-bezier(0.32, 0.72, 0, 1); }
+        #sideMenu.open > * { animation: dock-fade 0.34s 0.1s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
+        #sideMenu.closing { pointer-events: none; animation: dock-shrink 0.34s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        #sideMenu.closing > * { animation: dock-out 0.14s ease-in forwards; }
+        @keyframes dock-shrink { from { clip-path: inset(0 0 0 0 round 32px); } to { clip-path: inset(calc(100% - var(--tabbar-h)) 0 0 0 round 32px); } }
+        @keyframes dock-out { to { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { #sideMenu.open, #sideMenu.open > *, #sideMenu.closing, #sideMenu.closing > * { animation: none; } #sideMenu.closing { display: none; } }
+        /* its groups as stacks of separate cards (big outer corners, small ones between), like Past cycles */
+        #sideMenu .group { background: none; border: 0; border-radius: 0; overflow: visible; display: flex; flex-direction: column; gap: 3px; }
+        #sideMenu .group > .row-item { background: var(--gs-bg); border: 1px solid var(--gs-border); border-radius: 6px; }
+        #sideMenu .group > .row-item:first-child { border-top-left-radius: 22px; border-top-right-radius: 22px; }
+        #sideMenu .group > .row-item:last-child { border-bottom: 1px solid var(--gs-border); border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
+        #sideMenu .group > .row-item:active { background: var(--input-bg); }
+        #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); z-index: 149; display: none; animation: dim-in 0.2s ease-out; }
         #menuUserName { color: var(--text-main) !important; text-transform: none !important; letter-spacing: -0.3px !important; font-size: 1.15rem !important; }
         .menu-link { text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 0.95rem; padding: 13px 14px; border-radius: 14px; transition: background 0.15s; display: block; cursor: pointer; border: none !important; background: transparent; }
         @media (hover: hover) { .menu-link:hover { background: var(--surface-2); } }
@@ -782,15 +796,18 @@
         /* Past cycles: the open view's title (Cycles / Unpaid) is a tab joined to the first card, its feet curving into the
            card's top edge; the other title is plain text beside it */
         .past-tabs { display: flex; align-items: flex-end; gap: 4px; position: relative; z-index: 1; margin-bottom: -1px; }
-        .past-tab { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px 10px; border: 1px solid transparent; border-bottom: 0; border-radius: 20px 20px 0 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: color 0.2s; }
+        .past-tab { flex: 1 1 0; justify-content: center; position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px 10px; border: 1px solid transparent; border-bottom: 0; border-radius: 20px 20px 0 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: color 0.2s; }
         .past-tab.active { background: var(--gs-bg); border-color: var(--gs-border); color: var(--text-main); }
-        .past-tab.active::after, .past-tab.active:not(:first-child)::before { content: ''; position: absolute; bottom: 0; width: 20px; height: 20px; pointer-events: none; }
-        .past-tab.active::after { right: -20px; background: radial-gradient(circle at 100% 0, transparent 18.6px, var(--gs-border) 19px, var(--gs-border) 19.6px, var(--gs-bg) 20px); }
+        .past-tab.active:not(:last-child)::after, .past-tab.active:not(:first-child)::before { content: ''; position: absolute; bottom: 0; width: 20px; height: 20px; pointer-events: none; }
+        .past-tab.active:not(:last-child)::after { right: -20px; background: radial-gradient(circle at 100% 0, transparent 18.6px, var(--gs-border) 19px, var(--gs-border) 19.6px, var(--gs-bg) 20px); }
         .past-tab.active:not(:first-child)::before { left: -20px; background: radial-gradient(circle at 0 0, transparent 18.6px, var(--gs-border) 19px, var(--gs-border) 19.6px, var(--gs-bg) 20px); }
         .past-tab .seg-n { font-size: 0.7rem; }
         #unpaidArchivesSection, #archivesWrapper { margin-top: 0 !important; }
+        #pastOverlay .sheet-body { gap: 0; } /* the joined tab sits flush on the first card */
         #unpaidArchivesList > .gs-card:first-child, #archiveList > .gs-card:first-child { border-top-left-radius: 22px; border-top-right-radius: 22px; }
         #pastOverlay[data-past="cycles"] #archiveList > .gs-card:first-child { border-top-left-radius: 0; }
+        #pastOverlay[data-past="unpaid"] #unpaidArchivesList > .gs-card:first-child { border-top-right-radius: 0; }
+        #pastOverlay:has(#pastSegUnpaid[style*="none"]) #archiveList > .gs-card:first-child { border-top-right-radius: 0; }
         .gs-list > .archive-item.gs-card { padding: 14px 16px; }
     </style>
 </head>
@@ -1324,7 +1341,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.28.0";
+    const APP_VERSION = "7.29.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1669,7 +1686,7 @@
     }
     const DOCKS = ['shoppingOverlay', 'noticeOverlay'];
     function dockSync() {
-        const on = DOCKS.some(id => { const el = document.getElementById(id); return !!el && (el.style.display === 'flex' || el.classList.contains('nav-closing')); });
+        const m = document.getElementById('sideMenu'), on = (!!m && (m.classList.contains('open') || m.classList.contains('closing'))) || DOCKS.some(id => { const el = document.getElementById(id); return !!el && (el.style.display === 'flex' || el.classList.contains('nav-closing')); });
         if (document.body.classList.contains('dock-open') !== on) document.body.classList.toggle('dock-open', on);
     }
     /** Shopping / Notices tab: opens its panel out of the bar; tapped again it closes. Anything else open closes first
@@ -1742,7 +1759,7 @@
     function navShownLayers() {
         return [...Object.keys(NAV_DIALOGS), ...Object.keys(NAV_SHEETS), 'loginOverlay', 'menu'].filter(navShown).concat(document.body.classList.contains('adding') ? ['addBox'] : []);
     }
-    const NAV_ENTRY_MOTION = ['dim-in', 'fade-in', 'sheet-up', 'pop-in', 'dock-grow', 'dock-fade', 'left']; // keyframes, and the menu's slide (a transition on left)
+    const NAV_ENTRY_MOTION = ['dim-in', 'fade-in', 'sheet-up', 'pop-in', 'dock-grow', 'dock-fade', 'dock-shrink', 'dock-out']; // keyframes, and the menu's slide (a transition on left)
     function navSkipMotion(id) {
         const el = document.getElementById(id); if (!el || !el.getAnimations) return;
         el.getAnimations({ subtree: true }).forEach(a => { if (NAV_ENTRY_MOTION.includes(a.animationName || a.transitionProperty)) { try { a.finish(); } catch (e) {} } });
@@ -3264,6 +3281,8 @@
         const menu = document.getElementById('sideMenu'); const overlay = document.getElementById('menuOverlay'); const isOpen = menu.classList.contains('open');
         // Open first, then add its history entry: counted before it was open, Back from a screen opened from the menu saw
         // nothing open, stepped back once more and re-added the entry during Back (Chrome may skip such entries)
+        clearTimeout(menu._closeT); menu.classList.remove('closing');
+        if (isOpen && !revealMotionOff()) { menu.classList.add('closing'); menu._closeT = setTimeout(() => { menu.classList.remove('closing'); dockSync(); }, 340); } // shrinks back into the bar
         menu.classList.toggle('open'); overlay.style.display = isOpen ? 'none' : 'block'; if (!isOpen) navEnsureEntry();
         if (isOpen) navMarkClosing('menuOverlay', true); // its dim fades while the menu slides away
     }
