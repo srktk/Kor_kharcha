@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.24.0">
+    <meta name="app-version" content="7.25.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -90,7 +90,7 @@
         button, .badge, .name-pill, .flow-header, .archive-header, select, input[type="checkbox"] { touch-action: manipulation; -webkit-user-drag: none; }
         .wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; padding-bottom: calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom)); }
 
-        @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, #tabBar, #tabGlass, .sheet-overlay, .dialog-overlay, #menuOverlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } }
+        @media (prefers-reduced-transparency: reduce) { .glass-nav, .login-card, #hashtagAutocomplete, .chat-input-wrapper, #tabBar, #tabGlass, .sheet-overlay, .dialog-overlay, #menuOverlay, #addBackdrop, .ctx-overlay, #jumpTop { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } }
 
         /* ---- Top bar ---- */
         .glass-nav { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); z-index: 100; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; min-height: 60px; }
@@ -111,7 +111,7 @@
         /* ---- Side menu ("More") ---- */
         #sideMenu { position: fixed; top: 0; left: -320px; width: 300px; height: 100dvh; background: var(--surface); z-index: 1001; transition: left 0.32s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s; padding: max(22px, env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom)) 16px; border-radius: 0 28px 28px 0; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-lg); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #sideMenu.open { left: 0; }
-        #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.5); z-index: 1000; display: none; animation: dim-in 0.2s ease-out; }
+        #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); z-index: 1000; display: none; animation: dim-in 0.2s ease-out; }
         #menuUserName { color: var(--text-main) !important; text-transform: none !important; letter-spacing: -0.3px !important; font-size: 1.15rem !important; }
         .menu-link { text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 0.95rem; padding: 13px 14px; border-radius: 14px; transition: background 0.15s; display: block; cursor: pointer; border: none !important; background: transparent; }
         @media (hover: hover) { .menu-link:hover { background: var(--surface-2); } }
@@ -188,11 +188,11 @@
            inside it, options as chips underneath */
         .composer-foot { flex-direction: column; gap: 10px; }
         .composer-foot > * { flex: none; }
-        .composer { display: flex; align-items: flex-end; gap: 8px; width: 100%; background: var(--input-bg); border: 1px solid transparent; border-radius: 26px; padding: 5px 5px 5px 18px; transition: border-color 0.2s, box-shadow 0.2s; }
+        .composer { display: flex; align-items: flex-end; gap: 8px; width: 100%; background: var(--input-bg); border: 1px solid transparent; border-radius: 30px; padding: 6px 6px 6px 20px; transition: border-color 0.2s, box-shadow 0.2s; }
         .composer:focus-within, .composer.editing { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        .composer-input { flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent !important; color: var(--text-main) !important; font-size: 17px !important; line-height: 1.4; padding: 12px 0; height: 48px; min-height: 48px; max-height: 150px; overflow-y: auto; }
+        .composer-input { flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent !important; color: var(--text-main) !important; font-size: 17px !important; line-height: 1.45; padding: 16px 0; height: 58px; min-height: 58px; max-height: 210px; overflow-y: auto; }
         .composer-input::placeholder { color: var(--text-muted); }
-        .composer .chat-btn.primary { width: 48px; height: 48px; flex-shrink: 0; }
+        .composer .chat-btn.primary { width: 52px; height: 52px; flex-shrink: 0; margin-bottom: 1px; }
         .composer-chips { padding-top: 0; }
         .add-chip.on .ic, .add-chip[aria-pressed="true"] .ic { color: inherit; }
         .add-chip[aria-pressed="true"] { color: var(--accent-strong); background: var(--accent-soft); }
@@ -235,7 +235,7 @@
            while it shrinks back into the bar */
         body:not(.adding):not(.add-closing) .input-section { display: none; }
         body.add-closing .input-section, body.add-closing .input-section * { pointer-events: none !important; }
-        #addBackdrop { position: fixed; inset: 0; z-index: 94; background: rgba(5, 10, 20, 0.38); display: none; }
+        #addBackdrop { position: fixed; inset: 0; z-index: 94; background: rgba(5, 10, 20, 0.38); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); display: none; }
         body.adding #addBackdrop { display: block; animation: fade-in 0.2s; }
         body.add-closing #addBackdrop { display: block; pointer-events: none; }
         @keyframes fade-in { from { opacity: 0; } }
@@ -271,14 +271,6 @@
         .ex-row mark { background: var(--accent-soft); color: var(--accent-strong); border-radius: 4px; padding: 0 2px; }
         /* ---- Settlements card ---- */
         .st-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-        .st-sum { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .st-sum:empty { display: none; }
-        .st-sum .owe { color: var(--danger); }
-        .st-sum .owed { color: var(--success); }
-        .st-prog { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
-        .st-prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
-        .st-prog-top b { font-size: 1.05rem; color: var(--text-main); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
-        .st-prog .bar > i { background: var(--success); }
         .st-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
         .st-tools .add-chip { background: var(--surface-2); }
         .st-tools .add-chip.on { background: var(--accent-soft); }
@@ -290,21 +282,9 @@
         .st-markall svg { width: 16px; height: 16px; color: var(--success); }
         .st-markall:active { transform: scale(0.98); background: var(--surface-2); }
         /* ---- Past cycles sheet ---- */
-        .past-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
-        .past-sum > div { background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 10px 12px; min-width: 0; }
-        .past-sum small { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
-        .past-sum b { display: block; font-size: 1.02rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .past-sum .danger b { color: var(--danger); }
-        .past-sum .success b { color: var(--success); }
         .seg .seg-n { display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 4px; border-radius: 9px; font-size: 0.7rem; background: var(--input-bg); }
         .seg button.active .seg-n { background: var(--accent-soft); color: var(--accent-strong); }
         #pastSegUnpaid .seg-n { background: var(--danger-soft); color: var(--danger); }
-        .up-cycle { display: flex; align-items: center; gap: 10px; margin: 18px 4px 10px; }
-        .up-cycle:first-child { margin-top: 2px; }
-        .up-cycle .uc-t { flex: 1; min-width: 0; }
-        .up-cycle .uc-t b { display: block; font-size: 0.95rem; font-weight: 700; }
-        .up-cycle .uc-t small { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
-        .up-cycle .uc-amt { font-weight: 800; color: var(--danger); font-variant-numeric: tabular-nums; }
         .cal-tile { width: 44px; height: 46px; flex-shrink: 0; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; overflow: hidden; }
         .cal-tile i { font-style: normal; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: var(--accent-strong); }
         .cal-tile b { font-size: 1.05rem; font-weight: 800; margin-top: 3px; color: var(--text-main); }
@@ -314,10 +294,6 @@
         .arc-t small { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
         .arc-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
         .arc-r .cycle-total { font-size: 1.05rem; letter-spacing: -0.3px; }
-        .arc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
-        .arc-stats > div { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px 10px; min-width: 0; }
-        .arc-stats small { display: block; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .arc-stats b { display: block; font-size: 0.92rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .arc-who { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
         .arc-who-row { display: flex; align-items: center; gap: 10px; }
         .arc-who-row .aw-main { flex: 1; min-width: 0; }
@@ -325,7 +301,15 @@
         .arc-who-row .aw-top span:last-child { font-variant-numeric: tabular-nums; font-weight: 700; }
         .arc-who-row .bar { height: 6px; }
         .arc-unpaid { margin: 14px 0 0; }
-        .arc-foot { display: flex; gap: 8px; margin-top: 16px; }
+        .arc-foot { display: flex; gap: 8px; margin: 0 0 14px; }
+        .up-head { justify-content: space-between; gap: 10px; }
+        .up-head:first-child { margin-top: 0; }
+        .up-head span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .up-head .tag { font-size: 0.66rem; padding: 1px 6px; }
+        .up-head b { font-size: 0.8rem; font-weight: 800; color: var(--danger); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .up-row .item-amt.owe { color: var(--danger); }
+        .up-row .item-sub b { color: var(--text-main); font-weight: 600; }
+        .up-row.mine .item-title { color: var(--accent-strong); }
         .arc-foot .btn-pill { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; font-size: 0.8rem; border-radius: 14px; }
         .arc-foot .btn-pill svg { width: 15px; height: 15px; }
         .archive-details .linear-row:last-child { border-bottom: none; }
@@ -430,7 +414,7 @@
         .ex-row { cursor: pointer; border-radius: 14px; margin: 0 -8px; padding-left: 8px !important; padding-right: 8px !important; transition: background 0.15s, transform 0.2s; -webkit-touch-callout: none; }
         .ex-row.pressing { transform: scale(0.97); background: var(--surface-2); transition: background 0.15s, transform 0.45s cubic-bezier(0.32, 0.72, 0, 1); }
         /* Long-press (right-click on a computer) an expense: a small menu next to it */
-        .ctx-overlay { position: fixed; inset: 0; z-index: 1500; background: rgba(5, 10, 20, 0.3); animation: dim-in 0.18s ease-out; }
+        .ctx-overlay { position: fixed; inset: 0; z-index: 1500; background: rgba(5, 10, 20, 0.3); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); animation: dim-in 0.18s ease-out; }
         .ctx-menu { position: absolute; width: min(280px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-lg); overflow: hidden; animation: ctx-in 0.24s cubic-bezier(0.32, 0.72, 0, 1); }
         @keyframes ctx-in { from { opacity: 0; transform: scale(0.88); } }
         .ctx-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
@@ -505,7 +489,7 @@
            Same dim and blur on the menu, so swapping one for the other changes nothing behind. A pop-up that replaces another
            (More → Settings, Settings → What notifies me, Back) skips the fade and the slide-up, so the page behind never shows
            for a moment (see navSync) */
-        .sheet-overlay, .dialog-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(5, 10, 20, 0.5); overscroll-behavior-y: contain; animation: dim-in 0.2s ease-out; }
+        .sheet-overlay, .dialog-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); overscroll-behavior-y: contain; animation: dim-in 0.2s ease-out; }
         @keyframes dim-in { from { background-color: transparent; } }
         .sheet-overlay { align-items: flex-end; justify-content: center; }
         .dialog-overlay { align-items: center; justify-content: center; }
@@ -730,6 +714,26 @@
         .sc-add input { flex: 1; min-width: 0; height: 38px; border-radius: 12px; border: 1px solid transparent; padding: 0 12px; outline: none; }
         .sc-add input:focus { border-color: var(--accent); }
         .sc-total { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+        /* ---- Shopping list and Noticeboard grow up out of the tab bar (like the + box) and the bar stays on screen: the
+           panel's bottom is the bar's place, so with body.dock-open the bar's own glass hides and the panel is the glass.
+           Above the top bar (dimmed too), below the More menu and every other pop-up. ---- */
+        .sheet-overlay.dock { z-index: 150; padding: 0 14px calc(10px + env(safe-area-inset-bottom) + var(--kb, 0px)); align-items: flex-end !important; }
+        body.dock-open #tabGlass { z-index: 151; opacity: 0; }
+        body.dock-open #tabBar { z-index: 152; }
+        .sheet-overlay.dock > .login-card.sheet { max-width: 452px !important; height: calc(100dvh - 24px - max(14px, env(safe-area-inset-top)) - env(safe-area-inset-bottom) - var(--kb, 0px)) !important; max-height: 760px !important; border-radius: 32px !important; border: 1px solid var(--glass-rim); box-shadow: var(--glass-shadow); padding: 22px 16px calc(var(--tabbar-h) + 14px) !important; animation: dock-grow 0.46s cubic-bezier(0.32, 0.72, 0, 1); }
+        .sheet-overlay.dock > .login-card.sheet::before { display: none; }
+        .sheet-overlay.dock > .login-card.sheet > * { animation: dock-fade 0.34s 0.1s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
+        html.kb-cover .sheet-overlay.dock > .login-card.sheet { padding-bottom: 16px !important; } /* the keyboard covers the bar */
+        @keyframes dock-grow { from { clip-path: inset(calc(100% - var(--tabbar-h)) 0 0 0 round 32px); } to { clip-path: inset(0 0 0 0 round 32px); } }
+        @keyframes dock-fade { from { opacity: 0; transform: translateY(18px); } }
+        @media (prefers-reduced-motion: reduce) { .sheet-overlay.dock > .login-card.sheet, .sheet-overlay.dock > .login-card.sheet > * { animation: none; } }
+        /* Jump to top: shows once the page is scrolled down a way, hides near the top (jumpTopSync) */
+        #jumpTop { position: fixed; z-index: 90; right: max(18px, calc((100vw - 452px) / 2 + 4px)); bottom: calc(var(--tabbar-h) + 22px + env(safe-area-inset-bottom)); width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--glass-rim); background: var(--glass-bg); box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); color: var(--text-main); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transform: translateY(16px) scale(0.8); pointer-events: none; transition: opacity 0.22s, transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+        #jumpTop.on { opacity: 1; transform: none; pointer-events: auto; }
+        #jumpTop:active { transform: scale(0.92); }
+        #jumpTop svg { width: 20px; height: 20px; }
+        body.adding #jumpTop, body.dock-open #jumpTop { opacity: 0; pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { #jumpTop { transition: opacity 0.15s; transform: none; } }
     </style>
 </head>
 <body class="booting">
@@ -777,13 +781,13 @@
     </div>
 </div>
 
-<div id="noticeOverlay" class="sheet-overlay" style="display:none;">
+<div id="noticeOverlay" class="sheet-overlay dock" style="display:none;">
     <div class="login-card sheet tall">
         <div class="sheet-head"><h2>Noticeboard</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeNotices()" data-ic="x"></button></div>
         <div id="noticeList" class="sheet-body"></div>
         <div class="sheet-foot composer-foot">
             <div id="noticeComposer" class="composer">
-                <textarea id="noticeInput" aria-label="New note" class="composer-input" rows="1" maxlength="1000" placeholder="Wi-Fi password, bin day, landlord's number..." oninput="growBox(this)"></textarea>
+                <textarea id="noticeInput" aria-label="New note" class="composer-input" rows="1" maxlength="1000" placeholder="Wi-Fi password, bin day..." oninput="growBox(this)"></textarea>
                 <button id="noticeSaveBtn" class="chat-btn primary interactive-btn" aria-label="Add note" onclick="triggerHaptic(); saveNotice()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
             </div>
             <div class="add-chips composer-chips">
@@ -795,7 +799,7 @@
     </div>
 </div>
 
-<div id="shoppingOverlay" class="sheet-overlay" style="display:none;">
+<div id="shoppingOverlay" class="sheet-overlay dock" style="display:none;">
     <div class="login-card sheet tall">
         <div class="sheet-head"><h2>Shopping List</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeShopping()" data-ic="x"></button></div>
         <div id="shopList" class="sheet-body"></div>
@@ -805,7 +809,7 @@
         </div>
         <div class="sheet-foot composer-foot">
             <div class="composer">
-                <textarea id="shopInput" aria-label="New shopping items" class="composer-input" rows="1" maxlength="1000" placeholder="Add items, e.g. milk, eggs, bread" oninput="growBox(this)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addShopItems(); }"></textarea>
+                <textarea id="shopInput" aria-label="New shopping items" class="composer-input" rows="1" maxlength="1000" placeholder="Add items, e.g. milk, eggs" oninput="growBox(this)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addShopItems(); }"></textarea>
                 <button id="shopAddBtn" class="chat-btn primary interactive-btn" aria-label="Add to the list" onclick="triggerHaptic(); addShopItems()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
             </div>
         </div>
@@ -868,12 +872,11 @@
     <div class="login-card sheet tall">
         <div class="sheet-head"><h2>Past cycles</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closePast()" data-ic="x"></button></div>
         <div class="sheet-body">
-            <!-- Past cycles: a summary, then two views - Unpaid (every debt still open, grouped by cycle; the only place
-                 they are listed) and Cycles (one card per cycle: who paid what, its expenses, Snapshot / Delete) -->
-            <div id="pastSummary"></div>
+            <!-- Past cycles: two views - Cycles (one card per cycle: Snapshot / Delete, who paid what, its expenses) and
+                 Unpaid (every debt still open, grouped by cycle; the only place they are listed) -->
             <div id="pastSeg" class="seg" role="tablist" aria-label="Past cycles view" style="display:none;">
-                <button id="pastSegUnpaid" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('unpaid')">Unpaid</button>
                 <button id="pastSegCycles" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('cycles')">Cycles</button>
+                <button id="pastSegUnpaid" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('unpaid')">Unpaid</button>
             </div>
             <div id="unpaidArchivesSection" style="display:none;">
                 <div id="unpaidArchivesList"></div>
@@ -1148,12 +1151,10 @@
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
             <div class="st-head">
                 <h3 class="flow-title" style="cursor:pointer;">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
-                <div id="settleSummary" class="st-sum"></div>
             </div>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
-            <div id="settleProgress"></div>
             <div class="st-tools">
                 <button class="add-chip interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); toggleShown(el, !isShown(el), 'flex'); this.classList.toggle('on', isShown(el));"><span class="ic" data-ic="users"></span><span id="activeChipLabel">Who's in</span></button>
                 <button class="add-chip interactive-btn" onclick="triggerHaptic(); copySummary()"><span class="ic" data-ic="clipboard"></span>Copy summary</button>
@@ -1190,6 +1191,7 @@
 </main>
 <div id="addBackdrop" onclick="triggerHaptic(); navBack()"></div>
 <div id="tabGlass" aria-hidden="true"></div>
+<button id="jumpTop" class="interactive-btn" aria-label="Jump to top" tabindex="-1" onclick="triggerHaptic(); jumpToTop()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
 
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
     <div id="hashtagAutocomplete"></div>
@@ -1214,10 +1216,10 @@
 <nav id="tabBar" aria-label="Tabs">
     <span id="tabPill" aria-hidden="true"></span>
     <button class="tab active interactive-btn" onclick="triggerHaptic(); goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</button>
-    <button class="tab interactive-btn" onclick="triggerHaptic(); openShopping()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"></path></svg>Shopping<span id="tabShopBadge" class="tab-badge"></span></button>
+    <button class="tab interactive-btn" onclick="triggerHaptic(); tabDock('shoppingOverlay', openShopping)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"></path></svg>Shopping<span id="tabShopBadge" class="tab-badge"></span></button>
     <button id="tabAddBtn" class="tab-add interactive-btn" aria-label="Add expense" onclick="triggerHaptic(); toggleAddBox()"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></button>
-    <button class="tab interactive-btn" onclick="triggerHaptic(); openNotices()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"></path><path d="M9 10.8V5h6v5.8l2.4 3.2a.6.6 0 0 1-.5 1H7.1a.6.6 0 0 1-.5-1z"></path><path d="M8 5h8"></path></svg>Notices<span id="tabNoticeBadge" class="tab-badge"></span></button>
-    <button class="tab interactive-btn" onclick="triggerHaptic(); toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>More</button>
+    <button class="tab interactive-btn" onclick="triggerHaptic(); tabDock('noticeOverlay', openNotices)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"></path><path d="M9 10.8V5h6v5.8l2.4 3.2a.6.6 0 0 1-.5 1H7.1a.6.6 0 0 1-.5-1z"></path><path d="M8 5h8"></path></svg>Notices<span id="tabNoticeBadge" class="tab-badge"></span></button>
+    <button class="tab interactive-btn" onclick="triggerHaptic(); tabLeaveDock(); toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>More</button>
 </nav>
 <script>
 
@@ -1256,7 +1258,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.24.0";
+    const APP_VERSION = "7.25.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1597,8 +1599,21 @@
         // Opened again while still sliding away: back in place at once
         added.forEach(l => { const el = document.getElementById(l === 'menu' ? 'menuOverlay' : l); if (el && el.classList.contains('nav-closing')) navEndClosing(el); });
         navPrevLayers = layers;
-        tabPillSync();
+        dockSync(); tabPillSync(); jumpTopSync();
     }
+    const DOCKS = ['shoppingOverlay', 'noticeOverlay'];
+    function dockSync() {
+        const on = DOCKS.some(id => { const el = document.getElementById(id); return !!el && (el.style.display === 'flex' || el.classList.contains('nav-closing')); });
+        if (document.body.classList.contains('dock-open') !== on) document.body.classList.toggle('dock-open', on);
+    }
+    /** Shopping / Notices tab: opens its panel out of the bar; tapped again it closes. Anything else open closes first
+        (one panel replaces the other at once), so a tab never stacks a panel on another screen. */
+    function tabDock(id, open) {
+        if (navTopPage() === id) { navCloseAll(); return; }
+        tabLeaveDock(); open();
+    }
+    /** + and More from the bar while a panel (or a sheet opened from it) is up: close those first */
+    function tabLeaveDock() { const p = navTopPage(); if (p && p !== 'menu') navCloseAll(); }
     // ---- Sliding tab pill: the glass pill moves to the tab you're on (the screen at the bottom of the stack decides) ----
     const TAB_FOR = { shoppingOverlay: 1, noticeOverlay: 3, menu: 4 }; // tab positions: Home 0, Shopping 1, + 2, Notices 3, More 4
     function activeTabIndex() {
@@ -1636,7 +1651,12 @@
         else {
             anims.push(el.animate([{ backgroundColor: getComputedStyle(el).backgroundColor }, { backgroundColor: 'rgba(5, 10, 20, 0)' }], { duration: DUR, easing: 'ease-out', fill: 'forwards' }));
             const card = el.querySelector(':scope > .login-card');
-            if (card) {
+            if (card && el.classList.contains('dock')) {
+                const h = card.getBoundingClientRect().height, bar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabbar-h')) || 64;
+                const cp = card.style.clipPath || 'inset(0px 0px 0px 0px round 32px)';
+                anims.push(card.animate([{ clipPath: cp }, { clipPath: `inset(${Math.max(0, h - bar)}px 0px 0px 0px round 32px)` }], { duration: 340, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' }));
+                Array.from(card.children).forEach(c => anims.push(c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-in', fill: 'forwards' })));
+            } else if (card) {
                 const now = getComputedStyle(card).transform; // from wherever it is (still sliding in, or already swiped away)
                 anims.push(card.classList.contains('sheet') && !window.matchMedia('(min-width: 960px)').matches
                     ? card.animate([{ transform: now === 'none' ? 'translateY(0)' : now }, { transform: 'translateY(110%)' }], { duration: DUR, easing: 'cubic-bezier(0.4, 0, 0.8, 0.6)', fill: 'forwards' })
@@ -1645,7 +1665,7 @@
         }
         el._exit = anims;
         Promise.all(anims.map(a => a.finished)).then(() => { if (el._exit === anims) navEndClosing(el); }, () => {});
-        setTimeout(() => { if (el._exit === anims) navEndClosing(el); }, DUR + 600); // safety net
+        setTimeout(() => { if (el._exit === anims) navEndClosing(el); }, 340 + 600); // safety net
     }
     function navEndClosing(el) {
         const anims = el._exit; el._exit = null;
@@ -1656,7 +1676,7 @@
     function navShownLayers() {
         return [...Object.keys(NAV_DIALOGS), ...Object.keys(NAV_SHEETS), 'loginOverlay', 'menu'].filter(navShown).concat(document.body.classList.contains('adding') ? ['addBox'] : []);
     }
-    const NAV_ENTRY_MOTION = ['dim-in', 'fade-in', 'sheet-up', 'pop-in', 'left']; // keyframes, and the menu's slide (a transition on left)
+    const NAV_ENTRY_MOTION = ['dim-in', 'fade-in', 'sheet-up', 'pop-in', 'dock-grow', 'dock-fade', 'left']; // keyframes, and the menu's slide (a transition on left)
     function navSkipMotion(id) {
         const el = document.getElementById(id); if (!el || !el.getAnimations) return;
         el.getAnimations({ subtree: true }).forEach(a => { if (NAV_ENTRY_MOTION.includes(a.animationName || a.transitionProperty)) { try { a.finish(); } catch (e) {} } });
@@ -1679,7 +1699,7 @@
             // How much of the window the keyboard covers (its password / autofill bar included): sheets and dialogs end above it
             const vv = window.visualViewport;
             const kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
-            if (kb !== lastKb) { lastKb = kb; document.documentElement.style.setProperty('--kb', kb + 'px'); } // only on a change: it restyles the whole page
+            if (kb !== lastKb) { lastKb = kb; document.documentElement.style.setProperty('--kb', kb + 'px'); document.documentElement.classList.toggle('kb-cover', kb > 0); } // only on a change: it restyles the whole page
         };
         if (window.visualViewport) { window.visualViewport.addEventListener('resize', check); window.visualViewport.addEventListener('scroll', check); }
         window.addEventListener('resize', check);
@@ -2389,7 +2409,7 @@
     function expiryChipSync() { const s = document.getElementById('noticeExpiry'), l = document.getElementById('noticeExpiryLabel'); if (s && l && s.selectedIndex >= 0) l.textContent = s.options[s.selectedIndex].text; }
     function setNoticePinChip(on) { const p = document.getElementById('noticePinNew'); if (p) p.setAttribute('aria-pressed', on ? 'true' : 'false'); }
     /** Text boxes that grow with what's typed (Shopping, Notices), up to their max height */
-    function growBox(el) { if (!el) return; el.style.height = ''; if (el.value) el.style.height = Math.min(el.scrollHeight, 150) + 'px'; }
+    function growBox(el) { if (!el) return; el.style.height = ''; if (el.value) el.style.height = Math.min(el.scrollHeight, 210) + 'px'; }
     function toggleNoticePin(id) { const n = (db.notices || []).find(x => x.id === id); if (!n) return; n.pinned = !n.pinned; logAudit(`${n.pinned ? 'Pinned' : 'Unpinned'} a note`, null, true); renderNotices(); executeActionWithSave(); }
     function deleteNotice(id) {
         const n = (db.notices || []).find(x => x.id === id); if (!n) return;
@@ -2910,7 +2930,7 @@
     if (window.ResizeObserver) new ResizeObserver(() => { if (document.body.classList.contains('adding') && !addMotion.some(a => a.playState === 'running')) addGlassFit(); }).observe(document.getElementById('inputSection'));
     // Computers and tablets (768px and wider, either way round): Settlements starts open; phones keep it closed
     if (window.matchMedia('(min-width: 768px)').matches) document.getElementById('settlementsWrapper').classList.add('expanded');
-    function toggleAddBox() { if (document.body.classList.contains('adding')) navBack(); else openAddBox(); }
+    function toggleAddBox() { if (document.body.classList.contains('adding')) navBack(); else { tabLeaveDock(); openAddBox(); } }
 
     // ---- Expense detail sheet (tap a row) ----
     let openExpenseId = null;
@@ -3827,6 +3847,17 @@
         });
     }
     function goHome() { navCloseAll(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    // ---- Jump to top: a round button above the bar once the page is scrolled down a screen's worth; hides near the top ----
+    var jumpTopOn = false, jumpTopRaf = 0; // var: navSync (earlier in the page) may call jumpTopSync first
+    function jumpTopSync() {
+        const b = document.getElementById('jumpTop'); if (!b) return;
+        const cardUp = ['notifCard', 'installCard'].some(id => { const c = document.getElementById(id); return c && c.style.display !== 'none' && c.getClientRects().length > 0; }); // never on top of those banners
+        const on = !cardUp && !document.body.classList.contains('adding') && !navTop() && window.scrollY > Math.max(500, window.innerHeight * 0.8);
+        if (on === jumpTopOn) return; jumpTopOn = on;
+        b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; b.setAttribute('aria-hidden', on ? 'false' : 'true');
+    }
+    window.addEventListener('scroll', () => { if (!jumpTopRaf) jumpTopRaf = requestAnimationFrame(() => { jumpTopRaf = 0; jumpTopSync(); }); }, { passive: true });
+    function jumpToTop() { window.scrollTo({ top: 0, behavior: revealMotionOff() ? 'auto' : 'smooth' }); if (document.activeElement && document.activeElement.id === 'jumpTop') document.activeElement.blur(); }
 
     function generateActionPills(ex) {
         let html = `<button class="btn-pill interactive-btn" aria-label="Share Expense" onclick="triggerHaptic(); copyExpense(${jsArg(ex.id)})">Share</button>`;
@@ -3945,28 +3976,13 @@
             const shown = Math.round((isS ? t.amt : tr) * rate * 100) / 100;
             return payCardHTML(t.from, t.to, 'pays', `<span data-cu="s:${escapeHTML(t.key)}" data-v="${shown}" data-p="${escapeHTML(sym)}">${money(shown)}</span>`, meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
         };
-        // Grouped: your open payments, then the ones between other people, then everything already settled
-        const isOpen = (t) => t.amt - t.paid > 0.01, isMine = (t) => t.from === currentUser || t.to === currentUser;
-        const gMine = pays.filter(t => isOpen(t) && isMine(t)), gOther = pays.filter(t => isOpen(t) && !isMine(t)), gDone = pays.filter(t => !isOpen(t));
-        const grp = (label, arr) => arr.length ? (gMine.length + gOther.length + gDone.length > arr.length ? `<div class="st-group">${label} <span class="count-badge">${arr.length}</span></div>` : '') + arr.map(cardFor).join('') : '';
-        const sHtml = grp('Yours', gMine) + grp('Between others', gOther) + grp('Settled', gDone);
+        // Open payments (yours first), then everything already settled under its own label
+        const isOpen = (t) => t.amt - t.paid > 0.01;
+        const gOpen = pays.filter(isOpen), gDone = pays.filter(t => !isOpen(t));
+        const sHtml = gOpen.map(cardFor).join('') + (gDone.length ? (gOpen.length ? `<div class="st-group">Settled <span class="count-badge">${gDone.length}</span></div>` : '') + gDone.map(cardFor).join('') : '');
         setHTML(document.getElementById('settleList'), sHtml || emptyState('check', 'Nothing to settle yet.'));
         countUps(document.getElementById('settleList'));
         document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
-        // Header line (shows even when the card is closed) and the "settled so far" bar
-        const iOwe = gMine.filter(t => t.from === currentUser).reduce((a, t) => a + (t.amt - t.paid), 0), owedMe = gMine.filter(t => t.to === currentUser).reduce((a, t) => a + (t.amt - t.paid), 0);
-        const allAmt = pays.reduce((a, t) => a + t.amt, 0), paidAmt = pays.reduce((a, t) => a + Math.min(t.paid, t.amt), 0);
-        let sum = '';
-        if (!pays.length) sum = 'Nothing to settle yet';
-        else if (!openCount) sum = `<span class="owed">All settled</span>`;
-        else {
-            if (iOwe > 0.01) sum += `<span class="owe">You owe ${money(iOwe * rate)}</span>`;
-            if (owedMe > 0.01) sum += `${sum ? '<span>·</span>' : ''}<span class="owed">You're owed ${money(owedMe * rate)}</span>`;
-            if (!sum) sum = "You're square";
-        }
-        setHTML(document.getElementById('settleSummary'), sum);
-        const pct = allAmt > 0 ? Math.max(0, Math.min(100, Math.round(paidAmt / allAmt * 100))) : 0;
-        setHTML(document.getElementById('settleProgress'), pays.length ? `<div class="st-prog"><div class="st-prog-top"><span><b>${money(paidAmt * rate)}</b> of ${money(allAmt * rate)} settled</span><span>${openCount ? `${openCount} open` : 'Done'}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>` : '');
         renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
         updateNoticeCount(); updateShopCount(); updateHomeWidget(); updateDebtsState(); renderSideCol();
         const ma = document.getElementById('menuAvatar'); if (ma) setHTML(ma, currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '');
@@ -3978,7 +3994,7 @@
         const mine = currentUser && (from === currentUser || to === currentUser);
         return `<div class="pay-card timeline-item${settled ? ' settled' : ''}${mine ? ' mine' : ''}" data-key="${escapeHTML(key || '')}"><div class="pay-top"><div class="pay-people">${avatarHTML(from, 'sm')}<span class="pay-arrow">${ico('arrow')}</span>${avatarHTML(to, 'sm')}</div><div class="pay-names"><b>${escapeHTML(from)}</b> ${verb} <b>${escapeHTML(to)}</b>${meta ? `<small>${meta}</small>` : ''}</div><div class="pay-amt${settled ? '' : ' owed'}">${amountText}</div></div>${actions ? `<div class="card-actions">${actions}</div>` : ''}${claimHtml || ''}</div>`;
     }
-    function flashPayCard(key) { flashDone(Array.from(document.querySelectorAll('.pay-card')).find(el => el.dataset.key === key)); }
+    function flashPayCard(key) { flashDone(Array.from(document.querySelectorAll('.pay-card, .up-row')).find(el => el.dataset.key === key)); }
     function toggleFullPaid(key, totalBaseAmt) {
         if(!db.paidStatus) db.paidStatus = {};
         const current = db.paidStatus[key] || 0;
@@ -4026,8 +4042,8 @@
         }, "decimal");
     }
 
-    // ---- Past cycles sheet: summary, then Unpaid (every open debt from old cycles, grouped by cycle - the only place
-    //      they're listed) or Cycles (one card per cycle). pastTab null = pick when opened: Unpaid if anything is open. ----
+    // ---- Past cycles sheet: Cycles (one card per cycle, the default) or Unpaid (every open debt from old cycles, grouped
+    //      by cycle - the only place they're listed). pastTab 'unpaid' only when asked for. ----
     var pastTab = null;
     const FMT_MONTH_LONG = new Intl.DateTimeFormat('default', { month: 'long', year: 'numeric' });
     function arcDate(s) { const p = String(s || '').split('/'); if (p.length !== 3) return null; const d = new Date(+p[2], +p[1] - 1, +p[0]); return isNaN(d.getTime()) ? null : d; }
@@ -4062,11 +4078,12 @@
                 cycUnpaidN++; cycUnpaidBase += remBase;
                 const can = currentUser === t.to, remLocal = remBase * rate;
                 const acts = can ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(key)}, ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, remBase);
-                cycUnpaidHtml += payCardHTML(t.from, t.to, 'owes', money(remLocal), paidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(paidBase * rate)} paid` : '', false, acts, can ? claimBanner(key, idx) : '', key);
+                const mine = currentUser && (t.from === currentUser || t.to === currentUser);
+                cycUnpaidHtml += `<div class="linear-row timeline-item up-row${mine ? ' mine' : ''}" data-key="${escapeHTML(key)}">${avatarHTML(t.from)}<div class="item-main"><div class="item-top"><div class="item-title">${escapeHTML(t.from)}</div><div class="item-amt owe">${money(remLocal)}</div></div><div class="item-sub">owes <b>${escapeHTML(t.to)}</b>${paidBase > 0.01 ? ` · was ${money(t.amt * rate)}, ${money(paidBase * rate)} paid` : ''}</div><div class="row-actions">${acts}</div>${can ? claimBanner(key, idx) : ''}</div></div>`;
             });
             if (cycUnpaidN) {
                 totalUnpaidCount += cycUnpaidN; totalUnpaidBase += cycUnpaidBase;
-                unpaidHtml += `<div class="up-cycle" id="up-cycle-${idx}">${calTileHTML(a)}<div class="uc-t"><b>${arcTitle(a)}</b><small>${range}</small></div><span class="uc-amt">${money(cycUnpaidBase * rate)}</span></div>${cycUnpaidHtml}`;
+                unpaidHtml += `<div class="date-marker up-head" id="up-cycle-${idx}"><span>${arcTitle(a)} · ${range}</span><b>${money(cycUnpaidBase * rate)}</b></div>${cycUnpaidHtml}`;
             }
 
             const isFullySettled = txs.every(t => t.amt - ((a.paidStatus && a.paidStatus[`${t.from}_${t.to}`]) || 0) <= 0.01); // every debt paid, whatever "My view" hides
@@ -4077,7 +4094,6 @@
             const paidBy = {}; details.forEach(d => { paidBy[d.name] = (paidBy[d.name] || 0) + (Number(d.amount) || 0); });
             const people = Object.keys(paidBy).sort((x, y) => paidBy[y] - paidBy[x]); const top = people.length ? paidBy[people[0]] : 0;
             const whoHtml = people.map(u => `<div class="arc-who-row">${avatarHTML(u, 'sm')}<div class="aw-main"><div class="aw-top"><span>${escapeHTML(u)}</span><span>${money(paidBy[u] * rate)}</span></div><div class="bar"><i style="width:${top > 0 ? Math.max(3, Math.round(paidBy[u] / top * 100)) : 0}%"></i></div></div></div>`).join('');
-            const perHead = (Number(a.total) || 0) / Math.max(pastActive.length, 1);
             const logsHtml = shownEx.map(d => {
                 const descText = formatDescText(d.desc, d.originalSym || sym); const receiptSafeStr = typeof d.receipt === 'string' ? jsArg(d.receipt) : jsArg(JSON.stringify(d.receipt));
                 return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.9rem;">${escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${money(d.amount * rate)}</div></div><div class="item-sub">${descText ? escapeHTML(descText) : ''}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`;
@@ -4085,21 +4101,16 @@
             const status = cycUnpaidN ? `<span class="tag danger">${cycUnpaidN} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '');
             cyclesHtml += `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)">${calTileHTML(a)}<div class="arc-t"><b>${arcTitle(a)}</b><small>${range} · ${details.length} expense${details.length === 1 ? '' : 's'}</small></div><div class="arc-r"><div class="cycle-total">${money((Number(a.total) || 0) * rate)}</div>${status}</div><svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>`
                 + `<div class="archive-details" onclick="event.stopPropagation()">`
-                + `<div class="arc-stats"><div><small>Per head</small><b>${money(perHead * rate)}</b></div><div><small>Expenses</small><b>${details.length}</b></div><div><small>People</small><b>${pastActive.length}</b></div></div>`
+                + `<div class="arc-foot"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">${ico('download')}Snapshot</button><button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">${ico('trash')}Delete</button></div>`
                 + (whoHtml ? `<div class="sub-title" style="margin-top:0;">Who paid</div><div class="arc-who">${whoHtml}</div>` : '')
                 + (cycUnpaidN ? `<div class="arc-unpaid interactive-btn" onclick="triggerHaptic(); showCycleUnpaid(${idx})"><div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;">${ico('alert')}${cycUnpaidN} unpaid · ${money(cycUnpaidBase * rate)}</span>${ico('chev')}</div></div>` : '')
                 + `<div class="sub-title">${myViewActive ? 'Your expenses' : 'Expenses'}</div><div>${logsHtml || '<div class="card-meta">No expenses.</div>'}</div>`
-                + `<div class="arc-foot"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">${ico('download')}Snapshot</button><button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">${ico('trash')}Delete</button></div>`
                 + `</div></div>`;
         });
         setHTML(arcDiv, arcCount ? (cyclesHtml || emptyState('archive', 'None of your expenses are in past cycles.')) : emptyState('archive', 'No past cycles yet. They appear here after you end a month.'));
 
-        // Summary tiles
-        const spent = archives.reduce((s, a) => s + (Number(a.total) || 0), 0);
-        setHTML(document.getElementById('pastSummary'), arcCount ? `<div class="past-sum"><div><small>Cycles</small><b>${arcCount}</b></div><div><small>Spent</small><b>${money(spent * rate)}</b></div><div class="${totalUnpaidCount ? 'danger' : 'success'}"><small>Unpaid</small><b>${totalUnpaidCount ? money(totalUnpaidBase * rate) : 'None'}</b></div></div>` : '');
-
-        // Which side shows
-        const hasUnpaid = totalUnpaidCount > 0; const tab = hasUnpaid && pastTab !== 'cycles' ? 'unpaid' : 'cycles';
+        // Which side shows: Cycles unless Unpaid was asked for (its tab, or a banner that leads there)
+        const hasUnpaid = totalUnpaidCount > 0; const tab = hasUnpaid && pastTab === 'unpaid' ? 'unpaid' : 'cycles';
         const segU = document.getElementById('pastSegUnpaid'), segC = document.getElementById('pastSegCycles');
         document.getElementById('pastSeg').style.display = hasUnpaid ? 'flex' : 'none';
         setHTML(segU, `Unpaid<span class="seg-n">${totalUnpaidCount}</span>`); setHTML(segC, `Cycles<span class="seg-n">${arcCount}</span>`);
@@ -4107,7 +4118,7 @@
         segU.setAttribute('aria-selected', String(tab === 'unpaid')); segC.setAttribute('aria-selected', String(tab === 'cycles'));
         document.getElementById('unpaidArchivesSection').style.display = tab === 'unpaid' ? 'block' : 'none';
         document.getElementById('archivesWrapper').style.display = tab === 'cycles' ? 'block' : 'none';
-        setHTML(document.getElementById('unpaidArchivesList'), unpaidHtml);
+        setHTML(document.getElementById('unpaidArchivesList'), unpaidHtml ? `<div class="timeline-wrapper">${unpaidHtml}</div>` : '');
 
         // Home screen: the Past cycles link and the banner in Settlements
         const plSub = document.getElementById('pastLinkSub'), plTag = document.getElementById('pastLinkTag');
@@ -4607,7 +4618,7 @@
             if (e.target.closest('input, textarea, select')) return null;
             return sh;
         };
-        const reset = (el) => { el.style.transition = ''; el.style.transform = ''; el.parentElement.style.background = ''; };
+        const reset = (el) => { el.style.transition = ''; el.style.transform = ''; el.style.clipPath = ''; el.parentElement.style.background = ''; };
         document.addEventListener('touchstart', (e) => {
             sheet = sheetFor(e); if (!sheet) return;
             overlay = sheet.parentElement; startY = e.touches[0].clientY; startT = Date.now(); dy = 0; active = false;
@@ -4617,16 +4628,20 @@
             dy = e.touches[0].clientY - startY;
             if (!active && dy < 6) { if (dy < -6) sheet = null; return; } // moving up: let the sheet scroll as normal
             active = true; if (e.cancelable) e.preventDefault();
-            sheet.style.transition = 'none'; sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
+            sheet.style.transition = 'none';
+            if (overlay.classList.contains('dock')) sheet.style.clipPath = `inset(${Math.max(0, Math.min(dy, sheet.offsetHeight - 64))}px 0px 0px 0px round 32px)`;
+            else sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
             overlay.style.background = `rgba(5, 10, 20, ${0.5 * Math.max(0.2, 1 - dy / 400)})`;
         }, { passive: false });
         const end = () => {
             if (!sheet) return; const el = sheet, ov = overlay; sheet = null; if (!active) return;
             const fast = dy > 40 && dy / Math.max(1, Date.now() - startT) > 0.6; // a quick flick also closes
             if (dy > 110 || fast) {
+                if (ov.classList.contains('dock')) { triggerHaptic(); if (navTop() === ov.id) navBack(); setTimeout(() => reset(el), 420); return; } // shrinks the rest of the way (navExit starts where the finger left it)
                 triggerHaptic(); el.style.transition = 'transform 0.2s ease-in'; el.style.transform = 'translateY(110%)';
                 setTimeout(() => { if (navTop() === ov.id) navBack(); reset(el); }, 190);
-            } else { el.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'; el.style.transform = ''; ov.style.background = ''; setTimeout(() => reset(el), 260); }
+            } else if (ov.classList.contains('dock')) { el.style.transition = 'clip-path 0.25s cubic-bezier(0.32, 0.72, 0, 1)'; el.style.clipPath = 'inset(0px 0px 0px 0px round 32px)'; ov.style.background = ''; setTimeout(() => reset(el), 260); }
+            else { el.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'; el.style.transform = ''; ov.style.background = ''; setTimeout(() => reset(el), 260); }
         };
         document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
     })();
