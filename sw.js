@@ -1,6 +1,6 @@
 // House Expenses service worker: offline copy of the page + web push notifications.
 // Bump CACHE_NAME together with APP_VERSION in index.html.
-const CACHE_NAME = 'house-expenses-v7.22.0';
+const CACHE_NAME = 'house-expenses-v7.23.0';
 const APP_SHELL = ['./', 'index.html', 'manifest.json', 'icon-512.png', 'fonts/inter.woff2'];
 
 self.addEventListener('install', (e) => {
@@ -71,6 +71,10 @@ self.addEventListener('notificationclick', (e) => {
 // ---- Share target: a receipt photo or a payment message shared from another app. The page (index.html?action=share)
 //      picks them up from the 'share-in' cache and opens the add box with them. ----
 async function shareIn(req) {
+  // A real share comes from the phone's share sheet (no web page behind it). A form on some other website posting
+  // here must not be able to fill in the add box.
+  const site = req.headers.get('Sec-Fetch-Site');
+  if (site && site !== 'none' && site !== 'same-origin') return Response.redirect(new URL('index.html', self.registration.scope).href, 303);
   try {
     const form = await req.formData();
     const files = form.getAll('photos').filter((f) => f && typeof f === 'object' && /^image\//.test(f.type || '')).slice(0, 10);
