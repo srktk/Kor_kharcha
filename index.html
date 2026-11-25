@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.30.0">
+    <meta name="app-version" content="7.31.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -362,6 +362,12 @@
         [data-theme="dark"] { --glass-bg: linear-gradient(180deg, rgba(38, 42, 52, 0.62), rgba(8, 10, 14, 0.62)); --glass-rim: rgba(255, 255, 255, 0.13); --glass-hi: rgba(255, 255, 255, 0.22); --glass-lo: rgba(0, 0, 0, 0.25); --glass-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3); --glass-sheen: rgba(255, 255, 255, 0.09); --glass-pill: rgba(255, 255, 255, 0.12); --glass-press: rgba(255, 255, 255, 0.16); }
         #tabGlass::before { content: ''; position: absolute; inset: 0 0 auto; height: calc(var(--tabbar-h) * 0.55); border-radius: 32px 32px 18px 18px; background: linear-gradient(180deg, var(--glass-sheen), transparent); pointer-events: none; }
         #groupNote { background: var(--glass-pill) !important; }
+        /* Light mode: the white glass pill vanished on white panels (Notices / Shopping chips, the tab bar's current tab) - give
+           chips a grey fill and an edge, and the current tab an accent tint so it stands out */
+        html[data-theme="light"] .add-chip:not(.on):not([aria-pressed="true"]) { background: var(--input-bg); box-shadow: inset 0 0 0 1px var(--border); }
+        html[data-theme="light"] #groupNote { background: var(--input-bg) !important; }
+        html[data-theme="light"] #tabPill { background: color-mix(in srgb, var(--accent) 15%, rgba(255, 255, 255, 0.7)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent), 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent); }
+        html[data-theme="light"] .tab::after { background: color-mix(in srgb, var(--accent) 12%, transparent); }
         .tab::after { content: ''; position: absolute; inset: 0 2px; border-radius: 26px; background: var(--glass-press); box-shadow: inset 0 1px 0 var(--glass-hi); opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3); z-index: -1; pointer-events: none; }
         .tab:active::after { opacity: 1; transform: scale(1); transition-duration: 0.08s, 0.2s; }
         /* One glass pill behind the current tab; it slides (stretching a little on the way) when you go to another tab:
@@ -1360,7 +1366,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.30.0";
+    const APP_VERSION = "7.31.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -4008,11 +4014,11 @@
         });
     }
     let gsEdgesQueued = false;
-    function gsEdgesSoon() { if (gsEdgesQueued) return; gsEdgesQueued = true; requestAnimationFrame(() => { gsEdgesQueued = false; gsEdges(); }); }
+    function gsEdgesSoon() { if (gsEdgesQueued) return; gsEdgesQueued = true; requestAnimationFrame(() => { gsEdgesQueued = false; gsEdges(); document.querySelectorAll('.fade-end, .login-card.sheet.tall .sheet-body').forEach(el => { if (el.offsetParent) fadeEndSync(el); }); }); }
     new MutationObserver((muts) => {
         for (const m of muts) {
             const t = m.target; if (t.nodeType !== 1) continue;
-            if (m.type === 'childList' ? (t.matches('.group, .stack') || t.querySelector('.group, .stack')) : (t.parentElement && t.parentElement.matches('.group, .stack'))) { gsEdgesSoon(); return; }
+            if (m.type === 'childList' ? (t.matches('.group, .stack') || !!t.closest('.fade-end, .sheet-body') || t.querySelector('.group, .stack')) : (t.parentElement && t.parentElement.matches('.group, .stack'))) { gsEdgesSoon(); return; }
         }
     }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class'] });
     document.addEventListener('DOMContentLoaded', gsEdges);
