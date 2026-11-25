@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.29.0">
+    <meta name="app-version" content="7.30.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -102,7 +102,7 @@
         .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.15s; position: relative; font-weight: 800; font-size: 0.95rem; }
         .icon-btn:active { transform: scale(0.94); }
         .icon-btn svg { width: 19px; height: 19px; }
-        #sideMenu > * { flex-shrink: 0; }
+        .menu-scroll > * { flex-shrink: 0; }
         .badge { background: var(--surface-2); padding: 6px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .action-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
         @media (hover: hover) { .action-icon:hover { color: var(--accent); } }
@@ -110,7 +110,8 @@
 
         /* ---- Side menu ("More") ---- */
         /* More grows up out of the tab bar like Shopping / Notices (same panel, the bar stays on top of it) */
-        #sideMenu { --gs-bg: var(--surface-2); position: fixed; z-index: 150; left: 14px; right: 14px; margin: 0 auto; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: calc(100dvh - 24px - max(14px, env(safe-area-inset-top)) - env(safe-area-inset-bottom)); max-height: 760px; background: var(--surface); color: var(--text-main); border: 1px solid var(--glass-rim); border-radius: 32px; box-shadow: var(--glass-shadow); padding: 22px 16px calc(var(--tabbar-h) + 14px); display: none; flex-direction: column; gap: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; transition: background-color 0.3s; }
+        #sideMenu { --gs-bg: var(--surface-2); position: fixed; z-index: 150; left: 14px; right: 14px; margin: 0 auto; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: calc(100dvh - 24px - max(14px, env(safe-area-inset-top)) - env(safe-area-inset-bottom)); max-height: 760px; background: var(--surface); color: var(--text-main); border: 1px solid var(--glass-rim); border-radius: 32px; box-shadow: var(--glass-shadow); padding: 22px 16px calc(var(--tabbar-h) + 14px); display: none; flex-direction: column; gap: 0; overflow: hidden; transition: background-color 0.3s; }
+        .menu-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px 6px; }
         #sideMenu.open, #sideMenu.closing { display: flex; }
         #sideMenu.open { animation: dock-grow 0.46s cubic-bezier(0.32, 0.72, 0, 1); }
         #sideMenu.open > * { animation: dock-fade 0.34s 0.1s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
@@ -119,12 +120,6 @@
         @keyframes dock-shrink { from { clip-path: inset(0 0 0 0 round 32px); } to { clip-path: inset(calc(100% - var(--tabbar-h)) 0 0 0 round 32px); } }
         @keyframes dock-out { to { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { #sideMenu.open, #sideMenu.open > *, #sideMenu.closing, #sideMenu.closing > * { animation: none; } #sideMenu.closing { display: none; } }
-        /* its groups as stacks of separate cards (big outer corners, small ones between), like Past cycles */
-        #sideMenu .group { background: none; border: 0; border-radius: 0; overflow: visible; display: flex; flex-direction: column; gap: 3px; }
-        #sideMenu .group > .row-item { background: var(--gs-bg); border: 1px solid var(--gs-border); border-radius: 6px; }
-        #sideMenu .group > .row-item:first-child { border-top-left-radius: 22px; border-top-right-radius: 22px; }
-        #sideMenu .group > .row-item:last-child { border-bottom: 1px solid var(--gs-border); border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
-        #sideMenu .group > .row-item:active { background: var(--input-bg); }
         #menuOverlay { position: fixed; inset: 0; background: rgba(5, 10, 20, 0.5); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); z-index: 149; display: none; animation: dim-in 0.2s ease-out; }
         #menuUserName { color: var(--text-main) !important; text-transform: none !important; letter-spacing: -0.3px !important; font-size: 1.15rem !important; }
         .menu-link { text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 0.95rem; padding: 13px 14px; border-radius: 14px; transition: background 0.15s; display: block; cursor: pointer; border: none !important; background: transparent; }
@@ -809,6 +804,27 @@
         #pastOverlay[data-past="unpaid"] #unpaidArchivesList > .gs-card:first-child { border-top-right-radius: 0; }
         #pastOverlay:has(#pastSegUnpaid[style*="none"]) #archiveList > .gs-card:first-child { border-top-right-radius: 0; }
         .gs-list > .archive-item.gs-card { padding: 14px 16px; }
+        /* ---- App-wide card stacks: every list group (More, Settings, Insights, Notifications...) and every list under a section
+           title is a stack of separate cards, big outer corners at the top and bottom, small ones between (gsEdges marks the
+           first / last SHOWN card). A section title is a tab joined to the first card, its foot curving into the card's top. ---- */
+        .group, .group-label + .stack { background: none !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; display: flex; flex-direction: column; gap: 3px; box-shadow: none !important; padding: 0 !important; }
+        .group > *, .group-label + .stack > * { background: var(--gs-bg); border: 1px solid var(--gs-border) !important; border-radius: 6px !important; margin: 0 !important; box-shadow: none; }
+        .group > .row-item:active { background: var(--input-bg); }
+        .group > .gs-first, .group-label + .stack > .gs-first { border-top-left-radius: 22px !important; border-top-right-radius: 22px !important; }
+        .group > .gs-last, .group-label + .stack > .gs-last { border-bottom-left-radius: 22px !important; border-bottom-right-radius: 22px !important; }
+        .group-label + .group > .gs-first, .group-label + .stack > .gs-first { border-top-left-radius: 0 !important; }
+        .group-label + .card { background: var(--gs-bg); border-color: var(--gs-border); border-radius: 0 22px 22px 22px; margin-top: 0; }
+        .group-label:has(+ .group, + .stack, + .card) { width: fit-content; max-width: calc(100% - 22px); box-sizing: border-box; position: relative; z-index: 1; gap: 10px; margin-left: 0; margin-right: 0; margin-bottom: -1px; padding: 10px 16px 9px; background: var(--gs-bg); border: 1px solid var(--gs-border); border-bottom: 0; border-radius: 18px 18px 0 0; color: var(--text-main); }
+        .group-label:has(+ .group, + .stack, + .card)::after { content: ''; position: absolute; bottom: 0; right: -18px; width: 18px; height: 18px; pointer-events: none; background: radial-gradient(circle at 100% 0, transparent 16.6px, var(--gs-border) 17px, var(--gs-border) 17.6px, var(--gs-bg) 18px); }
+        .sheet-body:not(#insightsBody) > .group-label:has(+ .group, + .stack, + .card) { margin-bottom: -9px; } /* the list's flex gap */
+        .group-label + .group:empty, .group-label + .stack:empty { display: none; }
+        /* ---- Bottom fade: lists fade out as they near the bottom bar / the bottom of their pop-up, instead of being cut off
+           (fadeEndSync drops it once a list is scrolled to its end, so the last item shows in full) ---- */
+        .fade-end, .login-card.sheet.tall .sheet-body { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent); transition: -webkit-mask-size 0.25s, mask-size 0.25s; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+        .fade-end.at-end, .login-card.sheet.tall .sheet-body.at-end { -webkit-mask-size: 100% calc(100% + 56px); mask-size: 100% calc(100% + 56px); }
+        /* the home page: a fixed fade under the bar, the page's colour, so cards melt away behind it */
+        #bottomFade { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--tabbar-h) + 46px + env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 62%); z-index: 94; pointer-events: none; transition: opacity 0.25s; }
+        #bottomFade.at-end { opacity: 0; }
     </style>
 </head>
 <body class="booting">
@@ -1144,6 +1160,7 @@
 
 <div id="menuOverlay" class="interactive-btn" onclick="toggleMenu()"></div>
 <nav id="sideMenu" aria-label="Main Menu">
+<div class="menu-scroll fade-end">
     <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 2px 18px;">
         <div style="display:flex; align-items:center; gap:12px;"><button id="menuAvatar" class="menu-avatar interactive-btn" aria-label="Change my photo" onclick="triggerHaptic(); openPhoto()"></button><div><div class="card-meta" style="margin:0;">Signed in as</div><h2 id="menuUserName" style="margin:0;"></h2></div></div>
         <button class="sheet-close interactive-btn" aria-label="Close Menu" onclick="triggerHaptic(); toggleMenu()" data-ic="x"></button>
@@ -1178,6 +1195,7 @@
     <div class="group">
         <a href="#" class="row-item danger interactive-btn" onclick="triggerHaptic(); logout(); event.preventDefault();"><span class="ri-icon" data-ic="logout"></span><span class="ri-label">Switch User</span></a>
     </div>
+</div>
 </nav>
 
 <main class="wrapper">
@@ -1274,6 +1292,7 @@
 </main>
 <div id="addBackdrop" onclick="triggerHaptic(); navBack()"></div>
 <div id="tabGlass" aria-hidden="true"></div>
+<div id="bottomFade" aria-hidden="true"></div>
 <button id="jumpTop" class="interactive-btn" aria-label="Jump to top" tabindex="-1" onclick="triggerHaptic(); jumpToTop()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
 
 <section class="input-section" id="inputSection" aria-label="Add Expense Area">
@@ -1341,7 +1360,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.29.0";
+    const APP_VERSION = "7.30.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -2673,10 +2692,10 @@
         const p = (db.notifPrefs && db.notifPrefs[currentUser]) || { scope: 'all', minAmount: 0 }; const { sym, rate } = viewMoney();
         const opt = (v, title, sub) => `<label class="choice interactive-btn"><input type="radio" name="notifScope" value="${v}" ${p.scope === v ? 'checked' : ''}><span class="ch-text"><b>${title}</b><small>${sub}</small></span></label>`;
         document.getElementById('historyOverlay').querySelector('h2').innerText = 'What Notifies Me';
-        document.getElementById('historyList').innerHTML = `<div class="group-label">Tell me about</div>` + opt('all', 'Everything', 'Every expense, payment and change in the house.')
-            + opt('mine', 'Only things involving me', "Expenses you paid or are part of, payments to or from you, plus house-wide things (new cycle, housemates, notes, restores).")
-            + `<div class="group-label" style="margin-top:12px;">Filters</div><label class="choice" style="align-items:center;"><span class="ch-text"><b>Skip small expenses</b><small>Under this amount (0 = never skip). Payments always notify.</small></span><span style="display:flex; align-items:center; gap:4px; font-weight:700;">${escapeHTML(sym)}<input id="notifMinAmt" class="mini-input" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}"></span></label>`
-            + `<label class="choice interactive-btn" style="align-items:center;"><span class="ch-text"><b>Shopping list additions</b><small>When someone adds items to the shopping list.</small></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'}></label>`
+        document.getElementById('historyList').innerHTML = `<div class="group-label">Tell me about</div><div class="group">` + opt('all', 'Everything', 'Every expense, payment and change in the house.')
+            + opt('mine', 'Only things involving me', "Expenses you paid or are part of, payments to or from you, plus house-wide things (new cycle, housemates, notes, restores).") + `</div>`
+            + `<div class="group-label" style="margin-top:12px;">Filters</div><div class="group"><label class="choice" style="align-items:center;"><span class="ch-text"><b>Skip small expenses</b><small>Under this amount (0 = never skip). Payments always notify.</small></span><span style="display:flex; align-items:center; gap:4px; font-weight:700;">${escapeHTML(sym)}<input id="notifMinAmt" class="mini-input" type="number" inputmode="decimal" min="0" step="1" value="${p.minAmount ? Math.round(p.minAmount * rate * 100) / 100 : 0}"></span></label>`
+            + `<label class="choice interactive-btn" style="align-items:center;"><span class="ch-text"><b>Shopping list additions</b><small>When someone adds items to the shopping list.</small></span><input id="notifShopping" type="checkbox" ${p.shopping === false ? '' : 'checked'}></label></div>`
             + `<button class="btn-glowing primary interactive-btn" style="margin-top:8px;" onclick="triggerHaptic(); saveNotifPrefs()">Save</button>`;
         document.getElementById('historyOverlay').style.display = 'flex';
     }
@@ -3981,7 +4000,30 @@
         return html;
     }
 
+    /** Card stacks: mark each group's first and last shown card (hidden rows don't count) for the big corners */
+    function gsEdges() {
+        document.querySelectorAll('.group, .group-label + .stack').forEach(g => {
+            const vis = Array.from(g.children).filter(c => c.style.display !== 'none' && getComputedStyle(c).display !== 'none');
+            Array.from(g.children).forEach(c => { const f = c === vis[0], l = c === vis[vis.length - 1]; if (c.classList.contains('gs-first') !== f) c.classList.toggle('gs-first', f); if (c.classList.contains('gs-last') !== l) c.classList.toggle('gs-last', l); });
+        });
+    }
+    let gsEdgesQueued = false;
+    function gsEdgesSoon() { if (gsEdgesQueued) return; gsEdgesQueued = true; requestAnimationFrame(() => { gsEdgesQueued = false; gsEdges(); }); }
+    new MutationObserver((muts) => {
+        for (const m of muts) {
+            const t = m.target; if (t.nodeType !== 1) continue;
+            if (m.type === 'childList' ? (t.matches('.group, .stack') || t.querySelector('.group, .stack')) : (t.parentElement && t.parentElement.matches('.group, .stack'))) { gsEdgesSoon(); return; }
+        }
+    }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class'] });
+    document.addEventListener('DOMContentLoaded', gsEdges);
+    /** Bottom fades: off once a list (or the home page) is scrolled to its end */
+    function fadeEndSync(el) {
+        if (!el) { const f = document.getElementById('bottomFade'); if (f) f.classList.toggle('at-end', window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4); return; }
+        const end = el.scrollTop + el.clientHeight >= el.scrollHeight - 4; if (el.classList.contains('at-end') !== end) el.classList.toggle('at-end', end);
+    }
+    document.addEventListener('scroll', (e) => { const t = e.target; if (t === document || t === document.documentElement) fadeEndSync(null); else if (t.classList && (t.classList.contains('fade-end') || t.matches('.login-card.sheet.tall .sheet-body'))) fadeEndSync(t); }, { capture: true, passive: true });
     function render() {
+        requestAnimationFrame(() => fadeEndSync(null));
         const { sym, rate } = viewMoney();
         document.getElementById('startDateDisplay').innerText = formatNiceDate(db.startDate);
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
