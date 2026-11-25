@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.32.1">
+    <meta name="app-version" content="7.32.2">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -1509,7 +1509,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.32.1";
+    const APP_VERSION = "7.32.2";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -3580,6 +3580,12 @@
             if (db.avatars && db.avatars[oldName]) { db.avatars[n] = db.avatars[oldName]; delete db.avatars[oldName]; }
             if (db.notifPrefs && db.notifPrefs[oldName]) { db.notifPrefs[n] = db.notifPrefs[oldName]; delete db.notifPrefs[oldName]; }
             (db.trash || []).forEach(ex => { if (ex.name === oldName) ex.name = n; if (Array.isArray(ex.involved) && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; });
+            // IOUs, notes (who wrote / saw them), shopping and the private log lines: the renamed person kept seeing none of theirs
+            const swapIn = (list) => Array.isArray(list) ? list.map(u => u === oldName ? n : u) : list;
+            (db.ious || []).forEach(i => { if (!i) return; ['from', 'to', 'by'].forEach(f => { if (i[f] === oldName) i[f] = n; }); });
+            (db.notices || []).forEach(x => { if (!x) return; if (x.by === oldName) x.by = n; x.seen = swapIn(x.seen); });
+            (db.shopping || []).forEach(x => { if (!x) return; if (x.by === oldName) x.by = n; if (x.doneBy === oldName) x.doneBy = n; });
+            (db.auditLog || []).forEach(a => { if (!a) return; a.who = swapIn(a.who); if (Array.isArray(a.to)) a.to = swapIn(a.to); else if (a.to === oldName) a.to = n; });
             // "I've paid" claims: keys are "From_To[_#tag]", and each claim records who made it
             const renameClaims = (claims) => {
                 if (!claims || typeof claims !== 'object') return claims; const out = {};
@@ -4348,9 +4354,10 @@
         customPrompt("Move to which #tag? (leave empty to take them out of their tag)", "", (val) => {
             const raw = String(val || '').trim().replace(/^#/, '');
             if (raw && !/^[\w-]{1,30}$/.test(raw)) { showToast("Tags use letters, numbers, - and _ only", 3000); return; }
+            const ids = selIds; if (!ids) return; // selecting ended meanwhile (e.g. signed out)
             let n = 0;
             (db.expenses || []).forEach(e => {
-                if (!selIds.has(e.id) || e.name !== currentUser) return;
+                if (!ids.has(e.id) || e.name !== currentUser) return;
                 const old = e.desc || ''; let desc = old.replace(/\s*#[\w-]+/g, ''); if (raw) desc = `${desc} #${raw}`.trim();
                 if (desc === old) return;
                 if (!Array.isArray(e.history)) e.history = [];
@@ -4461,7 +4468,7 @@
             return `<div class="card"${i.paid ? ' style="opacity:0.6;"' : ''}><div class="card-row" style="align-items:center;"><div style="display:flex; gap:10px; align-items:center; min-width:0;">${avatarHTML(other, 'sm')}<div style="min-width:0;"><div class="card-title">${iOwe ? `You owe ${escapeHTML(other)}` : `${escapeHTML(other)} owes you`}</div><div class="card-meta" style="margin:0;">${i.note ? escapeHTML(i.note) + ' · ' : ''}${new Date(i.t).toLocaleDateString()}${i.paid ? ' · paid back' : ''}</div></div></div><div class="card-amt" style="color:${i.paid ? 'var(--text-muted)' : iOwe ? 'var(--danger)' : 'var(--success)'};">${escapeHTML(fmt(amt))}</div></div>${acts ? `<div class="card-actions" style="margin-top:8px;">${acts}</div>` : ''}</div>`;
         };
         return `<div class="group-label" style="margin-top:16px; display:flex; align-items:center; justify-content:space-between;">Private IOUs<button class="btn-pill interactive-btn" style="text-transform:none; letter-spacing:0;" onclick="triggerHaptic(); iouNew()">+ New</button></div><div class="stack">`
-            + (list.map(card).join('') || `<div class="card"><div class="card-meta" style="margin:0;">Money between just two of you, kept out of the house split - like "I lent Sohail £20 for a taxi". Only you two see it.</div></div>`) + '</div>';
+            + (list.map(card).join('') || `<div class="card"><div class="card-meta" style="margin:0;">Money between just two of you, kept out of the house split - like "I lent Sohail £20 for a taxi". Only you two see it in the app and get notified (it is saved with the house data, so it is not secret).</div></div>`) + '</div>';
     }
     let iouLent = true;
     function iouNew() {
@@ -4473,7 +4480,7 @@
             <label class="field-label" for="iouAmt">Amount (${escapeHTML(sym)})</label><input id="iouAmt" class="chat-note" inputmode="decimal" autocomplete="off" placeholder="20.00" style="margin-bottom:12px;">
             <label class="field-label" for="iouNote">What for (optional)</label><input id="iouNote" class="chat-note" maxlength="80" autocomplete="off" placeholder="Taxi, concert ticket..." style="margin-bottom:14px;">
             <button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); iouSave()">Save IOU</button>
-            <div class="card-meta" style="text-align:center; margin-top:10px;">Kept out of the house split. Only the two of you see it and get notified.</div>`;
+            <div class="card-meta" style="text-align:center; margin-top:10px;">Kept out of the house split. Only the two of you see it in the app and get notified - but it is saved with the house data, so keep the note free of secrets.</div>`;
         document.getElementById('historyOverlay').style.display = 'flex';
     }
     function iouDir(lent) { iouLent = lent; triggerHaptic(); document.getElementById('iouLentBtn').classList.toggle('active', lent); document.getElementById('iouBorrowedBtn').classList.toggle('active', !lent); }
@@ -4548,8 +4555,15 @@
     const reEsc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     function mentionsIn(text) { return (db.users || []).filter(u => u !== currentUser && new RegExp('@' + reEsc(u) + '(?![\\w])', 'i').test(text)); }
     function mentionify(html) {
-        (db.users || []).slice().sort((a, b) => b.length - a.length).forEach(u => { const e = escapeHTML(u); html = html.replace(new RegExp('@' + reEsc(e) + '(?![\\w])', 'gi'), (m) => `<b class="mention">${m}</b>`); });
-        return html;
+        // Only in the text between tags: a link like https://x.com/@Sohail had the bold tag put inside its href (broken link)
+        const names = (db.users || []).slice().sort((a, b) => b.length - a.length).map(u => reEsc(escapeHTML(u))).filter(Boolean);
+        if (!names.length) return html;
+        const re = new RegExp('@(?:' + names.join('|') + ')(?![\\w])', 'gi');
+        let inLink = false;
+        return html.split(/(<[^>]*>)/).map(part => {
+            if (part.startsWith('<')) { if (/^<a\b/i.test(part)) inLink = true; else if (/^<\/a>/i.test(part)) inLink = false; return part; }
+            return inLink ? part : part.replace(re, (m) => `<b class="mention">${m}</b>`);
+        }).join('');
     }
     function mentionSuggest() {
         const i = document.getElementById('noticeInput'), box = document.getElementById('mentionSuggest'); if (!i || !box) return;
