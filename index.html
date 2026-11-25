@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.23.1">
+    <meta name="app-version" content="7.24.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -248,6 +248,87 @@
         .add-chip .ic { color: var(--text-muted); transition: color 0.2s; }
         .add-chip .ic svg { width: 16px; height: 16px; }
         .add-chip.on { color: var(--accent-strong); background: var(--accent-soft); }
+        /* A photo chip with photos picked grows a small x on its right that drops them */
+        .chip-pair { display: inline-flex; align-items: center; }
+        .chip-x { display: none; width: 34px; height: 34px; margin-left: -6px; border: 0; border-radius: 0 17px 17px 0; background: var(--accent-soft); color: var(--accent-strong); align-items: center; justify-content: center; cursor: pointer; padding: 0 4px 0 0; }
+        .chip-x svg { width: 14px; height: 14px; }
+        .chip-pair.on .add-chip { border-radius: 17px 0 0 17px; padding-right: 8px; }
+        .chip-pair.on .chip-x { display: inline-flex; }
+        .chip-x:active { transform: scale(0.92); }
+        /* Search box at the top of Current Expenses */
+        .ex-search { display: flex; align-items: center; gap: 8px; height: 40px; margin: 0 0 12px; padding: 0 6px 0 14px; border-radius: 20px; background: var(--input-bg); border: 1px solid transparent; transition: border-color 0.2s, box-shadow 0.2s; cursor: text; }
+        .ex-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .ex-search > .ic { color: var(--text-muted); display: inline-flex; }
+        .ex-search > .ic svg { width: 16px; height: 16px; }
+        .ex-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent !important; padding: 0; -webkit-appearance: none; appearance: none; }
+        .ex-search input::-webkit-search-cancel-button { display: none; }
+        .ex-search input::placeholder { color: var(--text-muted); }
+        .ex-search-x { display: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-muted); align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0; }
+        .ex-search-x svg { width: 13px; height: 13px; }
+        .ex-search.has-q .ex-search-x { display: inline-flex; }
+        .timeline-wrapper .linear-row:has(+ .date-marker) { border-bottom-color: transparent; } /* no divider right before a date */
+        .ex-row .item-desc-t { overflow-wrap: anywhere; word-break: break-word; color: var(--text-muted); font-size: 0.82rem; line-height: 1.4; }
+        .ex-row mark { background: var(--accent-soft); color: var(--accent-strong); border-radius: 4px; padding: 0 2px; }
+        /* ---- Settlements card ---- */
+        .st-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+        .st-sum { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .st-sum:empty { display: none; }
+        .st-sum .owe { color: var(--danger); }
+        .st-sum .owed { color: var(--success); }
+        .st-prog { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
+        .st-prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+        .st-prog-top b { font-size: 1.05rem; color: var(--text-main); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+        .st-prog .bar > i { background: var(--success); }
+        .st-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .st-tools .add-chip { background: var(--surface-2); }
+        .st-tools .add-chip.on { background: var(--accent-soft); }
+        .st-group { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 16px 4px 8px; display: flex; align-items: center; gap: 6px; }
+        .st-group:first-child { margin-top: 2px; }
+        .pay-card.mine:not(.settled) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+        .pay-card.settled .card-actions { margin-top: 8px; }
+        .st-markall { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; margin: 2px 0 4px; border: 1px dashed var(--border); border-radius: 16px; background: none; color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+        .st-markall svg { width: 16px; height: 16px; color: var(--success); }
+        .st-markall:active { transform: scale(0.98); background: var(--surface-2); }
+        /* ---- Past cycles sheet ---- */
+        .past-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .past-sum > div { background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 10px 12px; min-width: 0; }
+        .past-sum small { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+        .past-sum b { display: block; font-size: 1.02rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .past-sum .danger b { color: var(--danger); }
+        .past-sum .success b { color: var(--success); }
+        .seg .seg-n { display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 4px; border-radius: 9px; font-size: 0.7rem; background: var(--input-bg); }
+        .seg button.active .seg-n { background: var(--accent-soft); color: var(--accent-strong); }
+        #pastSegUnpaid .seg-n { background: var(--danger-soft); color: var(--danger); }
+        .up-cycle { display: flex; align-items: center; gap: 10px; margin: 18px 4px 10px; }
+        .up-cycle:first-child { margin-top: 2px; }
+        .up-cycle .uc-t { flex: 1; min-width: 0; }
+        .up-cycle .uc-t b { display: block; font-size: 0.95rem; font-weight: 700; }
+        .up-cycle .uc-t small { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .up-cycle .uc-amt { font-weight: 800; color: var(--danger); font-variant-numeric: tabular-nums; }
+        .cal-tile { width: 44px; height: 46px; flex-shrink: 0; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; overflow: hidden; }
+        .cal-tile i { font-style: normal; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: var(--accent-strong); }
+        .cal-tile b { font-size: 1.05rem; font-weight: 800; margin-top: 3px; color: var(--text-main); }
+        .archive-header { gap: 12px; }
+        .arc-t { flex: 1; min-width: 0; }
+        .arc-t b { display: flex; align-items: center; gap: 6px; font-size: 1rem; font-weight: 700; min-width: 0; }
+        .arc-t small { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+        .arc-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+        .arc-r .cycle-total { font-size: 1.05rem; letter-spacing: -0.3px; }
+        .arc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+        .arc-stats > div { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px 10px; min-width: 0; }
+        .arc-stats small { display: block; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .arc-stats b { display: block; font-size: 0.92rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .arc-who { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+        .arc-who-row { display: flex; align-items: center; gap: 10px; }
+        .arc-who-row .aw-main { flex: 1; min-width: 0; }
+        .arc-who-row .aw-top { display: flex; justify-content: space-between; gap: 8px; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; }
+        .arc-who-row .aw-top span:last-child { font-variant-numeric: tabular-nums; font-weight: 700; }
+        .arc-who-row .bar { height: 6px; }
+        .arc-unpaid { margin: 14px 0 0; }
+        .arc-foot { display: flex; gap: 8px; margin-top: 16px; }
+        .arc-foot .btn-pill { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; font-size: 0.8rem; border-radius: 14px; }
+        .arc-foot .btn-pill svg { width: 15px; height: 15px; }
+        .archive-details .linear-row:last-child { border-bottom: none; }
         .add-chip.on .ic { color: inherit; }
         #editBar { display: none; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 8px 8px 8px 14px; font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); box-shadow: var(--shadow-lg); }
         body.editing #editBar { display: flex; }
@@ -787,12 +868,17 @@
     <div class="login-card sheet tall">
         <div class="sheet-head"><h2>Past cycles</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closePast()" data-ic="x"></button></div>
         <div class="sheet-body">
+            <!-- Past cycles: a summary, then two views - Unpaid (every debt still open, grouped by cycle; the only place
+                 they are listed) and Cycles (one card per cycle: who paid what, its expenses, Snapshot / Delete) -->
+            <div id="pastSummary"></div>
+            <div id="pastSeg" class="seg" role="tablist" aria-label="Past cycles view" style="display:none;">
+                <button id="pastSegUnpaid" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('unpaid')">Unpaid</button>
+                <button id="pastSegCycles" role="tab" class="interactive-btn" onclick="triggerHaptic(); setPastTab('cycles')">Cycles</button>
+            </div>
             <div id="unpaidArchivesSection" style="display:none;">
-                <div class="group-label danger-text" style="display:flex; align-items:center; gap:6px;">Unpaid debts <span id="unpaidGlobalCount" class="danger-badge" style="display:none;">0</span></div>
-                <div id="unpaidArchivesList" class="stack"></div>
+                <div id="unpaidArchivesList"></div>
             </div>
             <div id="archivesWrapper">
-                <div class="group-label" style="display:flex; align-items:center; gap:6px;">All cycles <span id="archivesCount" class="count-badge" style="display:none;">0</span></div>
                 <div id="archiveList"></div>
             </div>
         </div>
@@ -1060,31 +1146,34 @@
 
     <section class="content-section" id="settlementsWrapper">
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
-            <h3 class="flow-title" style="cursor:pointer;">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
-            <div style="display:flex; align-items:center; gap:12px;">
-                <button class="btn-pill interactive-btn" onclick="triggerHaptic(); event.stopPropagation(); copySummary()">Copy Summary</button>
-                <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <div class="st-head">
+                <h3 class="flow-title" style="cursor:pointer;">Settlements <span id="settlementCount" class="count-badge" style="display:none;">0</span></h3>
+                <div id="settleSummary" class="st-sum"></div>
             </div>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
-            <div style="margin-bottom:12px;">
-                <button class="btn-pill interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); toggleShown(el, !isShown(el), 'flex');" style="display:inline-flex; align-items:center; gap:6px;"><span class="ic" data-ic="users" style="width:14px; height:14px;"></span>Active housemates</button>
-                <div id="cycleSplitCheckboxes" style="display:none; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+            <div id="settleProgress"></div>
+            <div class="st-tools">
+                <button class="add-chip interactive-btn" aria-label="Toggle Active Housemates" onclick="triggerHaptic(); const el = document.getElementById('cycleSplitCheckboxes'); toggleShown(el, !isShown(el), 'flex'); this.classList.toggle('on', isShown(el));"><span class="ic" data-ic="users"></span><span id="activeChipLabel">Who's in</span></button>
+                <button class="add-chip interactive-btn" onclick="triggerHaptic(); copySummary()"><span class="ic" data-ic="clipboard"></span>Copy summary</button>
             </div>
+            <div id="cycleSplitCheckboxes" style="display:none; flex-wrap:wrap; gap:8px; margin:0 0 12px;"></div>
             <div id="settleList"></div>
-            <button id="markAllBtn" class="btn-glowing small interactive-btn" style="display:none; margin-bottom:4px;" onclick="triggerHaptic(); markAllSettled()"><span class="ic" data-ic="check"></span>Mark all as settled</button>
-            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="triggerHaptic(); openPast()">
-                <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span>Unpaid debts from past cycles</span><span class="ic" data-ic="chev"></span></div>
+            <button id="markAllBtn" class="st-markall interactive-btn" style="display:none;" onclick="triggerHaptic(); markAllSettled()"><span class="ic" data-ic="check"></span>Mark all as settled</button>
+            <div id="unpaidDebtsNoticeWrapper" class="interactive-btn" style="display:none;" onclick="triggerHaptic(); openPast('unpaid')">
+                <div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;"><span class="ic" data-ic="alert"></span><span id="unpaidNoticeText">Unpaid debts from past cycles</span></span><span class="ic" data-ic="chev"></span></div>
             </div>
         </div>
     </section>
 
     <section class="content-section expanded" id="currentExpensesWrapper">
         <div class="flow-header interactive-btn" onclick="toggleSection(this)">
-            <h3 class="flow-title">Current Expenses</h3>
+            <h3 class="flow-title">Current Expenses <span id="exSearchCount" class="count-badge" style="display:none;"></span></h3>
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="collapsible-content">
+            <label id="exSearchBox" class="ex-search"><span class="ic" data-ic="search"></span><input id="exSearch" type="search" placeholder="Search this cycle" aria-label="Search current expenses" autocomplete="off" enterkeyhint="search" data-1p-ignore="true" data-lpignore="true" oninput="exSearchInput()" onkeydown="if (event.key === 'Escape') { exSearchClear(); }"><button type="button" class="ex-search-x interactive-btn" aria-label="Clear search" onclick="triggerHaptic(); exSearchClear()" data-ic="x"></button></label>
             <div id="expenseList"></div>
         </div>
     </section>
@@ -1118,8 +1207,8 @@
     </div>
     <div class="add-chips">
         <button id="noteChip" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); toggleOptionsMenu()"><span class="ic" data-ic="edit"></span>Note</button>
-        <button id="cameraChip" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); document.getElementById('cameraInput').click()"><span class="ic" data-ic="camera"></span><span class="chip-label">Camera</span></button>
-        <button id="galleryChip" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); document.getElementById('receiptInput').click()"><span class="ic" data-ic="image"></span><span class="chip-label">Gallery</span></button>
+        <span class="chip-pair"><button id="cameraChip" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); document.getElementById('cameraInput').click()"><span class="ic" data-ic="camera"></span><span class="chip-label">Camera</span></button><button id="cameraChipX" type="button" class="chip-x interactive-btn" aria-label="Remove camera photo" onmousedown="event.preventDefault()" onclick="triggerHaptic(); clearPhotos('cameraInput')" data-ic="x"></button></span>
+        <span class="chip-pair"><button id="galleryChip" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); document.getElementById('receiptInput').click()"><span class="ic" data-ic="image"></span><span class="chip-label">Gallery</span></button><button id="galleryChipX" type="button" class="chip-x interactive-btn" aria-label="Remove gallery photo" onmousedown="event.preventDefault()" onclick="triggerHaptic(); clearPhotos('receiptInput')" data-ic="x"></button></span>
     </div>
 </section>
 <nav id="tabBar" aria-label="Tabs">
@@ -1167,7 +1256,7 @@
     /** Friendly empty state used by lists */
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-icon">${ico(icon)}</span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.23.1";
+    const APP_VERSION = "7.24.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -2256,12 +2345,12 @@
     function closeNotices() { cancelNoticeEdit(); document.getElementById('noticeOverlay').style.display = 'none'; }
     function renderNotices() {
         const list = liveNotices().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
-        document.getElementById('noticeList').innerHTML = !localDbLoaded ? skelCards(3) : list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}">
+        setHTML(document.getElementById('noticeList'), !localDbLoaded ? skelCards(3) : list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}">
                 ${n.pinned || n.exp ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">${n.pinned ? `<span class="tag">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</span>` : ''}${n.exp ? `<span class="tag muted">${ico('clock').replace('<svg', '<svg width="12" height="12"')}${expiryLabel(n.exp)}</span>` : ''}</div>` : ''}
                 <div class="card-text">${linkify(n.text)}</div>
                 <div class="card-row" style="margin-top:10px;"><span style="display:flex; align-items:center; gap:8px;" class="card-meta">${avatarHTML(n.by || '?', 'sm')}${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
                 <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); toggleNoticePin(${jsArg(n.id)})">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editNotice(${jsArg(n.id)})">Edit</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteNotice(${jsArg(n.id)})">Delete</button></span></div></div>`).join('')
-            : emptyState('pin', 'No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.');
+            : emptyState('pin', 'No notes yet. Add the Wi-Fi password, bin day or anything everyone should know.'));
         if (localDbLoaded) seenNoticeIds = new Set((db.notices || []).map(n => n.id)); // notes added after this slide in
         updateNoticeCount(); renderSideCol();
     }
@@ -2415,9 +2504,9 @@
         const noteHtml = notes.slice(0, 4).map(n => { const txt = n.text.length > 180 ? n.text.slice(0, 178) + '…' : n.text; return `<div class="sc-note">${n.pinned ? `<span class="tag" style="margin-bottom:4px;">${ico('pin').replace('<svg', '<svg width="11" height="11"')}Pinned</span><br>` : ''}${linkify(txt)}<div class="card-meta">${escapeHTML(n.by || '')}${n.exp ? ' · ' + expiryLabel(n.exp) : ''}</div></div>`; }).join('');
         const o = outstandingFor(currentUser), t = o.total;
         const verdict = Math.abs(t) <= 0.01 ? 'All square' : t < 0 ? `You owe ${fmt(-t)}` : `You're owed ${fmt(t)}`;
-        col.innerHTML = `<div class="sc-card"><div class="sc-head"><h3>${ico('coins').replace('<svg', '<svg width="16" height="16"')}Settle up</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openDebts()">Open</button></div><div class="sc-total" style="color:${Math.abs(t) <= 0.01 ? 'var(--text-main)' : t < 0 ? 'var(--danger)' : 'var(--success)'};">${escapeHTML(verdict)}</div><div class="card-meta" style="margin-top:2px;">Across this cycle, hashtag bills and past cycles</div></div>`
+        setHTML(col, `<div class="sc-card"><div class="sc-head"><h3>${ico('coins').replace('<svg', '<svg width="16" height="16"')}Settle up</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openDebts()">Open</button></div><div class="sc-total" style="color:${Math.abs(t) <= 0.01 ? 'var(--text-main)' : t < 0 ? 'var(--danger)' : 'var(--success)'};">${escapeHTML(verdict)}</div><div class="card-meta" style="margin-top:2px;">Across this cycle, hashtag bills and past cycles</div></div>`
             + `<div class="sc-card"><div class="sc-head"><h3>${ico('cart').replace('<svg', '<svg width="16" height="16"')}Shopping list${todo.length ? ` <span class="count-badge">${todo.length}</span>` : ''}</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openShopping()">Open</button></div>${shop || '<div class="card-meta">Nothing to buy.</div>'}<form class="sc-add" onsubmit="event.preventDefault(); scAddShop()"><input id="scShopInput" aria-label="Add to the shopping list" placeholder="Add items, e.g. milk, eggs" maxlength="300" autocomplete="off"><button class="btn-pill primary interactive-btn" type="submit">Add</button></form></div>`
-            + `<div class="sc-card"><div class="sc-head"><h3>${ico('pin').replace('<svg', '<svg width="16" height="16"')}Notes${notes.length ? ` <span class="count-badge">${notes.length}</span>` : ''}</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openNotices()">Open</button></div>${noteHtml || '<div class="card-meta">No notes yet.</div>'}</div>`;
+            + `<div class="sc-card"><div class="sc-head"><h3>${ico('pin').replace('<svg', '<svg width="16" height="16"')}Notes${notes.length ? ` <span class="count-badge">${notes.length}</span>` : ''}</h3><button class="btn-pill interactive-btn" onclick="triggerHaptic(); openNotices()">Open</button></div>${noteHtml || '<div class="card-meta">No notes yet.</div>'}</div>`);
         if (keepFocus !== null) { const i = document.getElementById('scShopInput'); i.value = keepFocus; i.focus(); }
     }
     function scAddShop() {
@@ -2843,7 +2932,7 @@
     function openExpense(id) {
         const ex = (db.expenses || []).find(e => e.id === id); if (!ex) return;
         if (document.activeElement) document.activeElement.blur();
-        openExpenseId = id; document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex);
+        openExpenseId = id; setHTML(document.getElementById('expenseDetail'), expenseDetailHTML(ex));
         navEnsureEntry(); document.getElementById('expenseOverlay').style.display = 'flex';
     }
     function closeExpense() { openExpenseId = null; expenseEditing = false; document.querySelector('#expenseOverlay h2').innerText = 'Expense'; document.getElementById('expenseOverlay').style.display = 'none'; }
@@ -2851,7 +2940,7 @@
     function refreshExpenseSheet() {
         if (!openExpenseId || expenseEditing || document.getElementById('expenseOverlay').style.display !== 'flex') return; // never wipe an edit in progress
         const ex = (db.expenses || []).find(e => e.id === openExpenseId);
-        if (ex) document.getElementById('expenseDetail').innerHTML = expenseDetailHTML(ex); else closeExpense();
+        if (ex) setHTML(document.getElementById('expenseDetail'), expenseDetailHTML(ex)); else closeExpense();
     }
 
     // ---- Long-press menu: hold an expense (right-click on a computer) for Share, Add again, Edit, Delete... ----
@@ -2930,9 +3019,11 @@
     })();
 
     // ---- Past cycles sheet ----
-    function openPast() {
+    function openPast(tab) {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        pastTab = tab === 'unpaid' || tab === 'cycles' ? tab : null; { const { sym, rate } = viewMoney(); renderArchives(sym, rate); }
+        const card = document.querySelector('#pastOverlay .sheet'); if (card) card.scrollTop = 0;
         navEnsureEntry(); document.getElementById('pastOverlay').style.display = 'flex';
     }
     function closePast() { document.getElementById('pastOverlay').style.display = 'none'; }
@@ -3248,6 +3339,34 @@
         if (!validUsersFound) { db.users = [...defaultUsers]; defaultUsers.forEach(u => { btns.innerHTML += userTileHTML(u); }); }
     }
 
+    /** Put new HTML in a list only if it changed. render() runs after every tap, every save reply and every sync; rebuilding
+     *  lists that look the same re-decoded every photo and restarted every row, which showed as flicker on phones. A list
+     *  someone else replaced (skeletons, empty states) is always rewritten: we only skip when our own last write is still there. */
+    function setHTML(el, html) {
+        if (!el) return false;
+        if (el.__html === html && el.__htmlFirst === el.firstChild && el.childNodes.length === el.__htmlCount) return false;
+        el.innerHTML = html; el.__html = html; el.__htmlFirst = el.firstChild; el.__htmlCount = el.childNodes.length; return true;
+    }
+    // ---- Search in Current Expenses ----
+    var exQuery = '', exSearchRaf = 0; // var: render() may run before this line on a very early sync
+    function exSearchInput() {
+        exQuery = document.getElementById('exSearch').value || '';
+        cancelAnimationFrame(exSearchRaf); exSearchRaf = requestAnimationFrame(() => render());
+    }
+    function exSearchClear() {
+        const i = document.getElementById('exSearch'); if (i) i.value = ''; exQuery = ''; render();
+    }
+    function exMatches(ex, q, sym, rate) {
+        const hay = [ex.name, formatDescText(ex.desc, ex.originalSym || sym), ex.desc, money2(ex.amount * rate), String(ex.amount), formatNiceDate(ex.date || ''), (ex.involved || []).join(' ')].join(' ').toLowerCase();
+        return q.split(/\s+/).filter(Boolean).every(w => hay.includes(w));
+    }
+    /** Plain text made safe for HTML, with the searched words marked */
+    function hlText(text, q) {
+        text = String(text == null ? '' : text); const words = (q || '').split(/\s+/).filter(Boolean);
+        if (!words.length) return escapeHTML(text);
+        const re = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+        return text.split(re).map((part, i) => i % 2 ? `<mark>${escapeHTML(part)}</mark>` : escapeHTML(part)).join('');
+    }
     function formatDescDisplay(desc, origSym = '') { return escapeHTML(formatDescText(desc, origSym)); }
     /** The description as plain text with amounts marked (formatDescDisplay is the same, made safe for HTML) */
     function formatDescText(desc, origSym = '') {
@@ -3721,10 +3840,11 @@
         if (!db.activeUsers || db.activeUsers.length === 0) db.activeUsers = [...db.users];
         
         const chkContainer = document.getElementById('cycleSplitCheckboxes');
-        chkContainer.innerHTML = db.users.map(u => {
+        setHTML(chkContainer, db.users.map(u => {
             const isChecked = db.activeUsers.includes(u); const opac = isChecked ? '1' : '0.4';
             return `<button class="btn-pill interactive-btn" onclick="toggleActiveUser(${jsArg(u)})" style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px 4px 4px; opacity:${opac}; ${isChecked ? 'border-color:var(--accent); background:var(--accent-soft);' : ''}">${avatarHTML(u, 'sm')}${escapeHTML(u)}</button>`;
-        }).join('');
+        }).join(''));
+        { const inCount = db.users.filter(u => db.activeUsers.includes(u)).length, l = document.getElementById('activeChipLabel'); if (l) l.textContent = inCount < db.users.length ? `Who's in · ${inCount}/${db.users.length}` : "Who's in · everyone"; }
 
         let allValid = db.expenses || [];
         if (activeHashtag) { let tagStillExists = allValid.some(e => { let match = (e.desc || "").match(/#([\w-]+)/); return match && match[0] === activeHashtag; }); if (!tagStillExists) activeHashtag = null; }
@@ -3736,7 +3856,7 @@
         if(hashtags.size > 0) {
             hashtags.forEach(tag => { let isActive = activeHashtag === tag; tagHtml += `<button class="name-pill interactive-btn ${isActive ? 'main highlight-pulse' : ''}" style="margin:0; flex-shrink:0; border: 1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};" onclick="triggerHaptic(); toggleHashtag(${jsArg(tag)})">${escapeHTML(tag)}</button>`; });
         }
-        document.getElementById('hashtagContainer').innerHTML = tagHtml;
+        setHTML(document.getElementById('hashtagContainer'), tagHtml);
 
         let contextExpenses = allValid.filter(e => { let primaryMatch = (e.desc || "").match(/#([\w-]+)/); if (activeHashtag) { return primaryMatch && primaryMatch[0] === activeHashtag; } else { return !primaryMatch; } });
 
@@ -3760,27 +3880,31 @@
             if (matchesContext) { let isMine = true; if (myViewActive) { isMine = ex.name === currentUser; } if (isMine) displayExpenses.push(ex); }
         });
 
+        // Search box (Current Expenses): matches the person, the description and note, the amount and the date
+        const q = (exQuery || '').trim().toLowerCase(), allShown = displayExpenses.length;
+        if (q) displayExpenses = displayExpenses.filter(ex => exMatches(ex, q, sym, rate));
+        const sBox = document.getElementById('exSearchBox'); if (sBox) { sBox.style.display = allShown || q ? '' : 'none'; sBox.classList.toggle('has-q', !!exQuery); }
+        const sCount = document.getElementById('exSearchCount'); if (sCount) { sCount.style.display = q ? 'inline-block' : 'none'; sCount.textContent = q ? `${displayExpenses.length} of ${allShown}` : ''; }
         const list = document.getElementById('expenseList');
-        if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); list.innerHTML = emptyState('receipt', `No expenses yet${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}. Tap + to add the first one.`); } 
+        if (q && !displayExpenses.length) { document.getElementById('currentExpensesWrapper').classList.add('expanded'); setHTML(list, emptyState('search', `Nothing in this cycle matches “${escapeHTML(exQuery.trim())}”.`)); }
+        else if (!displayExpenses || displayExpenses.length === 0) { document.getElementById('currentExpensesWrapper').classList.remove('expanded'); setHTML(list, emptyState('receipt', `No expenses yet${activeHashtag ? ` for ${escapeHTML(activeHashtag)}` : ''}. Tap + to add the first one.`)); }
         else {
             document.getElementById('currentExpensesWrapper').classList.add('expanded');
             let listHtml = `<div class="timeline-wrapper">`; let currentGroupDate = null;
             displayExpenses.forEach((ex, renderIndex) => {
-                let exSym = ex.originalSym || sym; let displayDesc = formatDescDisplay(ex.desc, exSym);
+                const exSym = ex.originalSym || sym, descText = formatDescText(ex.desc, exSym);
                 let splitNote = ""; let involvedArr = (ex.involved && ex.involved.length > 0 && ex.involved.length < db.users.length) ? ex.involved : null;
                 if (involvedArr) { splitNote = `<div style="font-size:0.72rem; color:var(--accent-strong); margin-top:3px; font-weight:600;">Split: ${escapeHTML(involvedArr.join(', '))}</div>`; }
-                
-                let exDate = ex.date || db.startDate || "Unknown Date"; 
+                let exDate = ex.date || db.startDate || "Unknown Date";
                 if (exDate !== currentGroupDate) { let mt = (renderIndex === 0) ? '0px' : '20px'; listHtml += `<div class="date-marker" style="margin-top: ${mt};"><span>${formatNiceDate(exDate)}</span></div>`; currentGroupDate = exDate; }
-
-
                 const amtStr = `${sym}${money2(ex.amount * rate)}`;
                 const flags = (ex.receipt ? `<span title="Has receipt">${ico('image')}</span>` : '') + (ex.edited ? '<span>· Edited</span>' : '');
-                const rowInfo = `<div class="item-top"><div class="item-title">${displayDesc || escapeHTML(ex.name)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${escapeHTML(ex.name)}${flags}</div>${splitNote}`;
+                // Who paid is the title; what it was (amounts and note) sits underneath
+                const rowInfo = `<div class="item-top"><div class="item-title">${hlText(ex.name, q)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${descText ? `<span class="item-desc-t">${hlText(descText, q)}</span>` : ''}${flags}</div>${splitNote}`;
                 const isNew = seenExpenseIds && !seenExpenseIds.has(ex.id);
                 listHtml += `<div class="linear-row timeline-item ex-row interactive-btn${isNew ? ' enter' : ''}" role="button" tabindex="0" data-id="${escapeHTML(ex.id)}" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}</div></div>`;
             });
-            list.innerHTML = listHtml + `</div>`;
+            setHTML(list, listHtml + `</div>`);
         }
         if (localDbLoaded) seenExpenseIds = new Set((db.expenses || []).map(e => e.id)); // rows added after the first load slide in
 
@@ -3810,7 +3934,7 @@
         pays.sort((a, b) => ((a.amt - a.paid <= 0.01) - (b.amt - b.paid <= 0.01)) || (mineFirst(a) - mineFirst(b)) || (b.amt - a.amt));
         const openCount = pays.filter(t => t.amt - t.paid > 0.01).length;
         document.getElementById('settlementCount').innerText = openCount; document.getElementById('settlementCount').style.display = openCount > 0 ? 'inline-block' : 'none';
-        const sHtml = pays.map(t => {
+        const cardFor = (t) => {
             const tr = t.amt - t.paid, isS = tr <= 0.01, can = currentUser === t.to;
             let actions = '';
             if (can) {
@@ -3820,19 +3944,39 @@
             const meta = t.paid > 0.01 && !isS ? `Was ${money(t.amt * rate)} · ${money(t.paid * rate)} paid` : '';
             const shown = Math.round((isS ? t.amt : tr) * rate * 100) / 100;
             return payCardHTML(t.from, t.to, 'pays', `<span data-cu="s:${escapeHTML(t.key)}" data-v="${shown}" data-p="${escapeHTML(sym)}">${money(shown)}</span>`, meta, isS, actions, can && !isS ? claimBanner(t.key, -1) : '', t.key);
-        }).join('');
-        document.getElementById('settleList').innerHTML = sHtml || emptyState('check', 'All debts clear.');
+        };
+        // Grouped: your open payments, then the ones between other people, then everything already settled
+        const isOpen = (t) => t.amt - t.paid > 0.01, isMine = (t) => t.from === currentUser || t.to === currentUser;
+        const gMine = pays.filter(t => isOpen(t) && isMine(t)), gOther = pays.filter(t => isOpen(t) && !isMine(t)), gDone = pays.filter(t => !isOpen(t));
+        const grp = (label, arr) => arr.length ? (gMine.length + gOther.length + gDone.length > arr.length ? `<div class="st-group">${label} <span class="count-badge">${arr.length}</span></div>` : '') + arr.map(cardFor).join('') : '';
+        const sHtml = grp('Yours', gMine) + grp('Between others', gOther) + grp('Settled', gDone);
+        setHTML(document.getElementById('settleList'), sHtml || emptyState('check', 'Nothing to settle yet.'));
         countUps(document.getElementById('settleList'));
         document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
+        // Header line (shows even when the card is closed) and the "settled so far" bar
+        const iOwe = gMine.filter(t => t.from === currentUser).reduce((a, t) => a + (t.amt - t.paid), 0), owedMe = gMine.filter(t => t.to === currentUser).reduce((a, t) => a + (t.amt - t.paid), 0);
+        const allAmt = pays.reduce((a, t) => a + t.amt, 0), paidAmt = pays.reduce((a, t) => a + Math.min(t.paid, t.amt), 0);
+        let sum = '';
+        if (!pays.length) sum = 'Nothing to settle yet';
+        else if (!openCount) sum = `<span class="owed">All settled</span>`;
+        else {
+            if (iOwe > 0.01) sum += `<span class="owe">You owe ${money(iOwe * rate)}</span>`;
+            if (owedMe > 0.01) sum += `${sum ? '<span>·</span>' : ''}<span class="owed">You're owed ${money(owedMe * rate)}</span>`;
+            if (!sum) sum = "You're square";
+        }
+        setHTML(document.getElementById('settleSummary'), sum);
+        const pct = allAmt > 0 ? Math.max(0, Math.min(100, Math.round(paidAmt / allAmt * 100))) : 0;
+        setHTML(document.getElementById('settleProgress'), pays.length ? `<div class="st-prog"><div class="st-prog-top"><span><b>${money(paidAmt * rate)}</b> of ${money(allAmt * rate)} settled</span><span>${openCount ? `${openCount} open` : 'Done'}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>` : '');
         renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
         updateNoticeCount(); updateShopCount(); updateHomeWidget(); updateDebtsState(); renderSideCol();
-        const ma = document.getElementById('menuAvatar'); if (ma) ma.innerHTML = currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '';
-        const mps = document.getElementById('myPhotoState'); if (mps) mps.innerHTML = currentUser ? avatarHTML(currentUser, 'sm') : '';
+        const ma = document.getElementById('menuAvatar'); if (ma) setHTML(ma, currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '');
+        const mps = document.getElementById('myPhotoState'); if (mps) setHTML(mps, currentUser ? avatarHTML(currentUser, 'sm') : '');
     }
 
     /** "From → To" payment card used in Settlements and Past cycles */
     function payCardHTML(from, to, verb, amountText, meta, settled, actions, claimHtml, key) {
-        return `<div class="pay-card timeline-item${settled ? ' settled' : ''}" data-key="${escapeHTML(key || '')}"><div class="pay-top"><div class="pay-people">${avatarHTML(from, 'sm')}<span class="pay-arrow">${ico('arrow')}</span>${avatarHTML(to, 'sm')}</div><div class="pay-names"><b>${escapeHTML(from)}</b> ${verb} <b>${escapeHTML(to)}</b>${meta ? `<small>${meta}</small>` : ''}</div><div class="pay-amt${settled ? '' : ' owed'}">${amountText}</div></div>${actions ? `<div class="card-actions">${actions}</div>` : ''}${claimHtml || ''}</div>`;
+        const mine = currentUser && (from === currentUser || to === currentUser);
+        return `<div class="pay-card timeline-item${settled ? ' settled' : ''}${mine ? ' mine' : ''}" data-key="${escapeHTML(key || '')}"><div class="pay-top"><div class="pay-people">${avatarHTML(from, 'sm')}<span class="pay-arrow">${ico('arrow')}</span>${avatarHTML(to, 'sm')}</div><div class="pay-names"><b>${escapeHTML(from)}</b> ${verb} <b>${escapeHTML(to)}</b>${meta ? `<small>${meta}</small>` : ''}</div><div class="pay-amt${settled ? '' : ' owed'}">${amountText}</div></div>${actions ? `<div class="card-actions">${actions}</div>` : ''}${claimHtml || ''}</div>`;
     }
     function flashPayCard(key) { flashDone(Array.from(document.querySelectorAll('.pay-card')).find(el => el.dataset.key === key)); }
     function toggleFullPaid(key, totalBaseAmt) {
@@ -3882,82 +4026,96 @@
         }, "decimal");
     }
 
+    // ---- Past cycles sheet: summary, then Unpaid (every open debt from old cycles, grouped by cycle - the only place
+    //      they're listed) or Cycles (one card per cycle). pastTab null = pick when opened: Unpaid if anything is open. ----
+    var pastTab = null;
+    const FMT_MONTH_LONG = new Intl.DateTimeFormat('default', { month: 'long', year: 'numeric' });
+    function arcDate(s) { const p = String(s || '').split('/'); if (p.length !== 3) return null; const d = new Date(+p[2], +p[1] - 1, +p[0]); return isNaN(d.getTime()) ? null : d; }
+    function calTileHTML(a) { const d = arcDate(a.start); return `<span class="cal-tile" aria-hidden="true"><i>${d ? FMT_MONTH.format(d) : '—'}</i><b>${d ? "'" + String(d.getFullYear()).slice(-2) : ''}</b></span>`; }
+    function shortDate(s) { const d = arcDate(s); return d ? `${d.getDate()} ${FMT_MONTH.format(d)}` : escapeHTML(String(s || "")); }
+    function arcTitle(a) { const d = arcDate(a.start); return (d ? FMT_MONTH_LONG.format(d) : 'Old cycle') + (a.tag ? ` <span class="tag">${escapeHTML(a.tag)}</span>` : ''); }
+    function setPastTab(t) {
+        pastTab = t; const { sym, rate } = viewMoney(); renderArchives(sym, rate);
+        const card = document.querySelector('#pastOverlay .sheet'); if (card) card.scrollTop = 0;
+    }
+    /** From a cycle's card: show its open debts on the Unpaid side */
+    function showCycleUnpaid(idx) {
+        setPastTab('unpaid');
+        const el = document.getElementById(`up-cycle-${idx}`); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+
     function renderArchives(sym, rate) {
-        const arcDiv = document.getElementById('archiveList'); let globalUnpaidHtml = "", hasUnpaidPast = false, totalUnpaidCount = 0;
-        const arcCount = db.archives ? db.archives.length : 0; const arcBadge = document.getElementById('archivesCount');
-        if(arcBadge) { arcBadge.innerText = arcCount; arcBadge.style.display = arcCount > 0 ? 'inline-block' : 'none'; }
+        const arcDiv = document.getElementById('archiveList'); let unpaidHtml = "", totalUnpaidCount = 0, totalUnpaidBase = 0;
+        const archives = Array.isArray(db.archives) ? db.archives : []; const arcCount = archives.length;
+        const money = (v) => sym + money2(v);
+        let cyclesHtml = '';
+        archives.forEach((a, idx) => {
+            const pastActive = a.activeUsers || db.users; const details = Array.isArray(a.details) ? a.details : [];
+            const txs = getSettlements(details, a.total, pastActive, a.mathV);
+            const range = `${shortDate(a.start)} → ${shortDate(a.end)}`;
+            // Open debts in this cycle (the ones "My view" shows)
+            let cycUnpaidHtml = '', cycUnpaidN = 0, cycUnpaidBase = 0;
+            txs.forEach(t => {
+                const key = `${t.from}_${t.to}`; const paidBase = (a.paidStatus && a.paidStatus[key]) || 0; const remBase = t.amt - paidBase;
+                if (remBase <= 0.01) return;
+                if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
+                cycUnpaidN++; cycUnpaidBase += remBase;
+                const can = currentUser === t.to, remLocal = remBase * rate;
+                const acts = can ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(key)}, ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, remBase);
+                cycUnpaidHtml += payCardHTML(t.from, t.to, 'owes', money(remLocal), paidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(paidBase * rate)} paid` : '', false, acts, can ? claimBanner(key, idx) : '', key);
+            });
+            if (cycUnpaidN) {
+                totalUnpaidCount += cycUnpaidN; totalUnpaidBase += cycUnpaidBase;
+                unpaidHtml += `<div class="up-cycle" id="up-cycle-${idx}">${calTileHTML(a)}<div class="uc-t"><b>${arcTitle(a)}</b><small>${range}</small></div><span class="uc-amt">${money(cycUnpaidBase * rate)}</span></div>${cycUnpaidHtml}`;
+            }
 
-        if (!db.archives || !Array.isArray(db.archives) || db.archives.length === 0) { arcDiv.innerHTML = emptyState('archive', 'No past cycles yet. They appear here after you end a month.'); } 
-        else {
-            arcDiv.innerHTML = db.archives.map((a, idx) => {
-                const pastActive = a.activeUsers || db.users; let validArcEx = Array.isArray(a.details) ? a.details : [];
-                const txs = getSettlements(validArcEx, a.total, pastActive, a.mathV); let credMap = {};
-                const displayStart = a.tag ? `<span class="tag">${escapeHTML(a.tag)}</span> ${formatNiceDate(a.start)}` : formatNiceDate(a.start);
-                const displayEnd = formatNiceDate(a.end);
-                let cycleHasUnpaid = false; let cycleUnpaidHtml = "";
+            const isFullySettled = txs.every(t => t.amt - ((a.paidStatus && a.paidStatus[`${t.from}_${t.to}`]) || 0) <= 0.01); // every debt paid, whatever "My view" hides
+            const shownEx = myViewActive ? details.filter(d => d.name === currentUser) : details;
+            if (myViewActive && !shownEx.length && !cycUnpaidN) return;
 
-                txs.forEach(t => {
-                    if (!credMap[t.to]) credMap[t.to] = { totalOwed: 0, received: 0, txs: [] }; credMap[t.to].totalOwed += t.amt;
-                    const key = `${t.from}_${t.to}`; const amountPaidBase = (a.paidStatus && a.paidStatus[key]) || 0;
-                    if (amountPaidBase > 0) credMap[t.to].received += amountPaidBase; credMap[t.to].txs.push({ ...t, amountPaidBase, key });
-
-                    const txRemainingBase = t.amt - amountPaidBase;
-                    if (txRemainingBase > 0.01) {
-                        if (myViewActive && t.from !== currentUser && t.to !== currentUser) return; 
-                        hasUnpaidPast = true; cycleHasUnpaid = true; totalUnpaidCount++;
-                        const canMarkGlobal = currentUser === t.to, remLocal = txRemainingBase * rate, pdLocal = amountPaidBase * rate;
-                        
-                        const money = (v) => sym + money2(v);
-                        const acts = canMarkGlobal ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(key)}, ${remLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remLocal, false, key, idx, txRemainingBase);
-                        cycleUnpaidHtml += payCardHTML(t.from, t.to, 'owes', money(remLocal), amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(pdLocal)} paid` : '', false, acts, canMarkGlobal ? claimBanner(key, idx) : '', key);
-                    }
-                });
-
-                if (cycleHasUnpaid && cycleUnpaidHtml !== "") { globalUnpaidHtml += `<div class="cycle-dates" style="display:flex; align-items:center; gap:6px; margin:4px 4px 8px;">${ico('calendar').replace('<svg', '<svg width="13" height="13"')}${displayStart} → ${displayEnd}</div>${cycleUnpaidHtml}`; }
-
-                let archiveSettleHtml = "", hasUnpaidInArchive = false, archiveUnpaidCount = 0;
-                for (let cred in credMap) {
-                    const data = credMap[cred];
-                    data.txs.forEach(t => {
-                        const txRemainingBase = t.amt - t.amountPaidBase;
-                        if (txRemainingBase > 0.01) {
-                            if (myViewActive && t.from !== currentUser && t.to !== currentUser) return;
-                            hasUnpaidInArchive = true; archiveUnpaidCount++; const remainingLocal = txRemainingBase * rate; const paidLocal = t.amountPaidBase * rate; const canMark = currentUser === cred;
-                            const money = (v) => sym + money2(v);
-                            const acts = canMark ? `<button class="btn-pill interactive-btn" aria-label="Nudge Flatmate" onclick="sendNudge(${jsArg(t.from)}, ${remainingLocal}, ${jsArg(sym)})">Nudge</button><button class="btn-pill interactive-btn" aria-label="Partial Payment" onclick="triggerHaptic(); logArchivePayment(${idx}, ${jsArg(t.key)}, ${remainingLocal}, ${rate})">Partial</button><button class="btn-pill primary interactive-btn" aria-label="Mark Paid" onclick="triggerHaptic(); toggleArchiveFullPaid(${idx}, ${jsArg(t.key)}, ${t.amt})">Mark Paid</button>` : payOrPending(t.from, t.to, remainingLocal, false, t.key, idx, txRemainingBase);
-                            archiveSettleHtml += payCardHTML(t.from, t.to, 'owes', money(remainingLocal), t.amountPaidBase > 0.01 ? `Was ${money(t.amt * rate)} · ${money(paidLocal)} paid` : '', false, acts, canMark ? claimBanner(t.key, idx) : '', t.key);
-                        }
-                    });
-                }
-
-                const isFullySettled = txs.every(t => t.amt - ((a.paidStatus && a.paidStatus[`${t.from}_${t.to}`]) || 0) <= 0.01); // every debt paid, whatever "My view" hides
-                const adminActionHtml = `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">Delete</button>`; // settled cycles too: clearing old ones makes room
-
-                let finalUnpaidBlock = hasUnpaidInArchive ? `<div class="sub-title danger" style="margin-top:0;">Unpaid debts <span class="danger-badge" style="margin:0;">${archiveUnpaidCount}</span></div>${archiveSettleHtml}` : "";
-
-                let hasVisibleLogs = false;
-                let logsHtml = validArcEx.map((d, dIdx) => {
-                    if (myViewActive) { const isMine = d.name === currentUser; if (!isMine) return ''; }
-                    hasVisibleLogs = true; let exSym = d.originalSym || sym; let displayDesc = formatDescDisplay(d.desc, exSym); let receiptSafeStr = typeof d.receipt === 'string' ? `${jsArg(d.receipt)}` : jsArg(JSON.stringify(d.receipt));
-                    return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.88rem;">${displayDesc || escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${sym}${money2(d.amount * rate)}</div></div><div class="item-sub">${escapeHTML(d.name)}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`
-                }).join('');
-
-                if (myViewActive && !hasVisibleLogs && archiveSettleHtml === "") return '';
-
-                return `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)"><div style="min-width:0;"><div class="cycle-dates">${displayStart} → ${displayEnd}</div><div class="cycle-total">${sym}${money2(a.total * rate)}</div></div><div style="display:flex; gap:8px; align-items:center;">${hasUnpaidInArchive ? `<span class="tag danger">${archiveUnpaidCount} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '')}<svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div><div class="archive-details" onclick="event.stopPropagation()"><div class="card-actions" style="margin:0 0 14px;"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">Snapshot</button>${adminActionHtml}</div>${finalUnpaidBlock}<div class="sub-title" style="margin-top:${hasUnpaidInArchive ? '16px' : '0'};">Expenses</div><div>${logsHtml || '<div class="card-meta">No logs.</div>'}</div></div></div>`;
+            // Who paid what in that cycle
+            const paidBy = {}; details.forEach(d => { paidBy[d.name] = (paidBy[d.name] || 0) + (Number(d.amount) || 0); });
+            const people = Object.keys(paidBy).sort((x, y) => paidBy[y] - paidBy[x]); const top = people.length ? paidBy[people[0]] : 0;
+            const whoHtml = people.map(u => `<div class="arc-who-row">${avatarHTML(u, 'sm')}<div class="aw-main"><div class="aw-top"><span>${escapeHTML(u)}</span><span>${money(paidBy[u] * rate)}</span></div><div class="bar"><i style="width:${top > 0 ? Math.max(3, Math.round(paidBy[u] / top * 100)) : 0}%"></i></div></div></div>`).join('');
+            const perHead = (Number(a.total) || 0) / Math.max(pastActive.length, 1);
+            const logsHtml = shownEx.map(d => {
+                const descText = formatDescText(d.desc, d.originalSym || sym); const receiptSafeStr = typeof d.receipt === 'string' ? jsArg(d.receipt) : jsArg(JSON.stringify(d.receipt));
+                return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.9rem;">${escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${money(d.amount * rate)}</div></div><div class="item-sub">${descText ? escapeHTML(descText) : ''}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`;
             }).join('');
-        }
+            const status = cycUnpaidN ? `<span class="tag danger">${cycUnpaidN} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '');
+            cyclesHtml += `<div class="archive-item" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)">${calTileHTML(a)}<div class="arc-t"><b>${arcTitle(a)}</b><small>${range} · ${details.length} expense${details.length === 1 ? '' : 's'}</small></div><div class="arc-r"><div class="cycle-total">${money((Number(a.total) || 0) * rate)}</div>${status}</div><svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>`
+                + `<div class="archive-details" onclick="event.stopPropagation()">`
+                + `<div class="arc-stats"><div><small>Per head</small><b>${money(perHead * rate)}</b></div><div><small>Expenses</small><b>${details.length}</b></div><div><small>People</small><b>${pastActive.length}</b></div></div>`
+                + (whoHtml ? `<div class="sub-title" style="margin-top:0;">Who paid</div><div class="arc-who">${whoHtml}</div>` : '')
+                + (cycUnpaidN ? `<div class="arc-unpaid interactive-btn" onclick="triggerHaptic(); showCycleUnpaid(${idx})"><div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;">${ico('alert')}${cycUnpaidN} unpaid · ${money(cycUnpaidBase * rate)}</span>${ico('chev')}</div></div>` : '')
+                + `<div class="sub-title">${myViewActive ? 'Your expenses' : 'Expenses'}</div><div>${logsHtml || '<div class="card-meta">No expenses.</div>'}</div>`
+                + `<div class="arc-foot"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">${ico('download')}Snapshot</button><button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">${ico('trash')}Delete</button></div>`
+                + `</div></div>`;
+        });
+        setHTML(arcDiv, arcCount ? (cyclesHtml || emptyState('archive', 'None of your expenses are in past cycles.')) : emptyState('archive', 'No past cycles yet. They appear here after you end a month.'));
 
-        const unpaidSection = document.getElementById('unpaidArchivesSection'), unpaidList = document.getElementById('unpaidArchivesList'), unpaidNoticeWrapper = document.getElementById('unpaidDebtsNoticeWrapper'), globalUnpaidBadge = document.getElementById('unpaidGlobalCount');
-        if (globalUnpaidBadge) { globalUnpaidBadge.innerText = totalUnpaidCount; globalUnpaidBadge.style.display = totalUnpaidCount > 0 ? 'inline-block' : 'none'; }
+        // Summary tiles
+        const spent = archives.reduce((s, a) => s + (Number(a.total) || 0), 0);
+        setHTML(document.getElementById('pastSummary'), arcCount ? `<div class="past-sum"><div><small>Cycles</small><b>${arcCount}</b></div><div><small>Spent</small><b>${money(spent * rate)}</b></div><div class="${totalUnpaidCount ? 'danger' : 'success'}"><small>Unpaid</small><b>${totalUnpaidCount ? money(totalUnpaidBase * rate) : 'None'}</b></div></div>` : '');
 
+        // Which side shows
+        const hasUnpaid = totalUnpaidCount > 0; const tab = hasUnpaid && pastTab !== 'cycles' ? 'unpaid' : 'cycles';
+        const segU = document.getElementById('pastSegUnpaid'), segC = document.getElementById('pastSegCycles');
+        document.getElementById('pastSeg').style.display = hasUnpaid ? 'flex' : 'none';
+        setHTML(segU, `Unpaid<span class="seg-n">${totalUnpaidCount}</span>`); setHTML(segC, `Cycles<span class="seg-n">${arcCount}</span>`);
+        segU.classList.toggle('active', tab === 'unpaid'); segC.classList.toggle('active', tab === 'cycles');
+        segU.setAttribute('aria-selected', String(tab === 'unpaid')); segC.setAttribute('aria-selected', String(tab === 'cycles'));
+        document.getElementById('unpaidArchivesSection').style.display = tab === 'unpaid' ? 'block' : 'none';
+        document.getElementById('archivesWrapper').style.display = tab === 'cycles' ? 'block' : 'none';
+        setHTML(document.getElementById('unpaidArchivesList'), unpaidHtml);
+
+        // Home screen: the Past cycles link and the banner in Settlements
         const plSub = document.getElementById('pastLinkSub'), plTag = document.getElementById('pastLinkTag');
         if (plSub) plSub.innerText = arcCount ? `${arcCount} past cycle${arcCount === 1 ? '' : 's'}` : 'None yet';
         if (plTag) { plTag.innerText = `${totalUnpaidCount} unpaid`; plTag.style.display = totalUnpaidCount ? 'inline-flex' : 'none'; }
-        if (hasUnpaidPast) { unpaidSection.style.display = 'block'; unpaidList.innerHTML = globalUnpaidHtml; if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'block'; } 
-        else { unpaidSection.style.display = 'none'; unpaidList.innerHTML = ""; if (unpaidNoticeWrapper) unpaidNoticeWrapper.style.display = 'none'; }
+        const nw = document.getElementById('unpaidDebtsNoticeWrapper'); if (nw) nw.style.display = hasUnpaid ? 'block' : 'none';
+        const nt = document.getElementById('unpaidNoticeText'); if (nt) nt.textContent = `${totalUnpaidCount} unpaid from past cycles · ${money(totalUnpaidBase * rate)}`;
     }
-
     async function downloadArchive(ev, idx) {
         ev.stopPropagation(); const card = document.getElementById(`archive-card-${idx}`); const wasExpanded = card.classList.contains('expanded');
         if (!wasExpanded) card.classList.add('expanded');
@@ -4058,7 +4216,14 @@
         [['cameraChip', 'cameraInput', 'Camera'], ['galleryChip', 'receiptInput', 'Gallery']].forEach(([chipId, inputId, label]) => {
             const chip = document.getElementById(chipId), files = document.getElementById(inputId).files, n = files ? files.length : 0;
             if (!chip) return; chip.classList.toggle('on', n > 0); chip.querySelector('.chip-label').textContent = n ? `${label} · ${n}` : label;
+            if (chip.parentElement && chip.parentElement.classList.contains('chip-pair')) chip.parentElement.classList.toggle('on', n > 0);
         });
+    }
+    /** The x next to a photo chip: drop the photos picked there (Camera or Gallery) without adding new ones */
+    function clearPhotos(inputId) {
+        const input = document.getElementById(inputId); if (!input) return;
+        input.value = ''; try { if (input.files && input.files.length) input.files = new DataTransfer().files; } catch (e) {}
+        photoChipsSync(); updateAmtPreview(true); showToast("PHOTO REMOVED", 1200);
     }
 
     async function addExpense() {
