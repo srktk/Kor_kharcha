@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.37.0">
+    <meta name="app-version" content="7.38.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -954,6 +954,15 @@
         .settle-diagram > .pay-card .pay-top { flex: 1 0 auto !important; max-width: 100%; } /* names stay whole on one line; the buttons drop below when there's no room */
         .shop-item { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; }
         .shop-item.done { opacity: 0.6; }
+        .shop-fold { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; font: inherit; color: var(--text); text-align: left; cursor: pointer; }
+        .shop-fold b { font-size: 0.98rem; white-space: nowrap; }
+        .shop-fold-box { width: 24px; height: 24px; flex-shrink: 0; border-radius: 8px; background: var(--accent); color: var(--on-accent, #fff); display: inline-flex; align-items: center; justify-content: center; }
+        .shop-fold-box svg { width: 15px; height: 15px; stroke-width: 3; }
+        .shop-fold-names { flex: 1; min-width: 0; text-align: right; font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .shop-fold-chev { width: 18px; height: 18px; flex-shrink: 0; color: var(--text-muted); display: inline-flex; transition: transform 0.22s; }
+        .shop-fold-chev svg { width: 18px; height: 18px; }
+        .shop-fold.open .shop-fold-chev { transform: rotate(90deg); }
+        @media (prefers-reduced-motion: reduce) { .shop-fold-chev { transition: none; } }
         .shop-item.done .shop-text { text-decoration: line-through; }
         .shop-top { display: flex; align-items: center; gap: 8px; min-height: 26px; margin: -2px -4px -2px 0; }
         .shop-meta { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -1037,6 +1046,27 @@
         .event-chip .ev-left { font-size: 0.74rem; font-weight: 800; color: var(--text-muted); white-space: nowrap; }
         .event-chip .ev-left.soon { color: var(--accent-strong); }
         #noticeFoot .composer-chips { display: none; }
+        .invite-lead { margin: 0 0 14px; font-size: 0.86rem; line-height: 1.45; color: var(--text-muted); }
+        .invite-qr { width: min(230px, 64vw); aspect-ratio: 1; margin: 0 auto 16px; padding: 10px; border-radius: 22px; background: #fff; box-shadow: 0 8px 26px rgba(0,0,0,0.14); }
+        .invite-qr-svg { width: 100%; height: 100%; display: block; }
+        #inviteOverlay .row-item .btn-pill { flex-shrink: 0; }
+        .invite-note { margin: 12px 4px 0; font-size: 0.74rem; line-height: 1.4; color: var(--text-muted); text-align: center; }
+        .invite-foot { display: flex; gap: 10px; }
+        .invite-foot > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .invite-foot .ic svg { width: 17px; height: 17px; }
+        #noticePhotoChip.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-strong); }
+        #noticePhotoChip input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .note-photo-strip { display: flex; gap: 8px; padding: 2px 2px 8px; overflow-x: auto; scrollbar-width: none; }
+        .np-thumb { position: relative; flex-shrink: 0; width: 64px; height: 64px; border-radius: 12px; overflow: hidden; background: var(--surface-2); }
+        .np-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .np-thumb button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; padding: 0; background: rgba(0,0,0,0.6); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .np-thumb button svg { width: 13px; height: 13px; }
+        .note-photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+        .note-photos.n1 { grid-template-columns: 1fr; }
+        .np-img { padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: var(--surface-2); cursor: zoom-in; aspect-ratio: 4 / 3; display: block; width: 100%; }
+        .np-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .np-img.broken img { visibility: hidden; }
+        #noticeSaveBtn.busy { opacity: 0.6; pointer-events: none; }
         #noticeFoot.show-chips .composer-chips { display: flex; animation: fade-in 0.18s ease-out; }
         /* One short row that scrolls sideways (it used to wrap into two tall rows and squeeze the notes) */
         #noticeFoot .composer-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 6px; width: 100%; margin: 0 -2px; padding: 0 2px; }
@@ -1209,6 +1239,7 @@
         <div id="noticeFoot" class="sheet-foot composer-foot">
             <div id="mentionSuggest" style="display:none;" aria-label="Mention someone"></div>
             <div class="add-chips composer-chips">
+                <label id="noticePhotoChip" class="add-chip chip-select interactive-btn"><span class="ic" data-ic="camera"></span>Photo<input type="file" id="noticePhotoInput" accept="image/*" multiple aria-label="Add photos to the note" onchange="notePhotoPick(this)"></label>
                 <label class="add-chip chip-select interactive-btn"><span class="ic" data-ic="clock"></span><span id="noticeExpiryLabel">Keep forever</span><select id="noticeExpiry" aria-label="Remove the note after" onchange="this.dataset.touched = '1'; expiryChipSync()"><option value="0">Keep forever</option><option value="1">Remove after 1 day</option><option value="3">Remove after 3 days</option><option value="7">Remove after 1 week</option><option value="30">Remove after 1 month</option></select></label>
                 <button id="noticePinNew" type="button" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); setNoticePinChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="pin"></span>Pin to top</button>
                 <label id="noticeDateChip" class="add-chip chip-select interactive-btn"><span class="ic" data-ic="calendar"></span><span id="noticeDateLabel">Count</span><input type="date" id="noticeDate" aria-label="Event date (shows a countdown on Home)" onclick="try { this.showPicker(); } catch (e) {}" onchange="noticeDateSync()"></label>
@@ -1217,6 +1248,7 @@
             </div>
             <div id="noticeBox" class="notice-box">
                 <div id="pollFields" class="poll-fields" style="display:none;" aria-label="Poll answers"></div>
+                <div id="notePhotoStrip" class="note-photo-strip" style="display:none;" aria-label="Photos on this note"></div>
             <div id="noticeComposer" class="composer">
                 <textarea id="noticeInput" aria-label="New note" class="composer-input" rows="1" maxlength="1000" placeholder="Write a note... type @ to tag someone" oninput="growBox(this); mentionSuggest()"></textarea>
                 <button id="noticeSaveBtn" class="chat-btn primary interactive-btn" aria-label="Add note" onclick="triggerHaptic(); saveNotice()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
@@ -1417,6 +1449,19 @@
     </div>
 </div>
 
+<div id="inviteOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Invite a housemate</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeInvite()" data-ic="x"></button></div>
+        <p class="invite-lead">They scan this with their phone camera. It opens House Expenses; they type the house PIN you tell them, then pick their name.</p>
+        <div class="invite-qr"><svg class="invite-qr-svg" viewBox="-2 -2 33 33" shape-rendering="crispEdges" role="img" aria-label="QR code for the House Expenses website"><rect x="-2" y="-2" width="33" height="33" fill="#fff"/><path fill="#000" d="M0 0h7v1h-7zM8 0h1v1h-1zM11 0h2v1h-2zM15 0h1v1h-1zM17 0h4v1h-4zM22 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h3v1h-3zM14 1h1v1h-1zM16 1h1v1h-1zM18 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM10 2h2v1h-2zM13 2h1v1h-1zM15 2h1v1h-1zM18 2h2v1h-2zM22 2h1v1h-1zM24 2h3v1h-3zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM8 3h1v1h-1zM10 3h3v1h-3zM17 3h3v1h-3zM22 3h1v1h-1zM24 3h3v1h-3zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM9 4h1v1h-1zM12 4h4v1h-4zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h3v1h-3zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM9 5h4v1h-4zM14 5h1v1h-1zM17 5h3v1h-3zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h7v1h-7zM8 7h2v1h-2zM11 7h1v1h-1zM13 7h2v1h-2zM17 7h3v1h-3zM0 8h1v1h-1zM2 8h2v1h-2zM5 8h3v1h-3zM9 8h1v1h-1zM13 8h2v1h-2zM16 8h1v1h-1zM18 8h1v1h-1zM22 8h1v1h-1zM25 8h1v1h-1zM27 8h2v1h-2zM0 9h1v1h-1zM3 9h1v1h-1zM5 9h1v1h-1zM8 9h2v1h-2zM12 9h1v1h-1zM16 9h4v1h-4zM21 9h4v1h-4zM28 9h1v1h-1zM2 10h2v1h-2zM5 10h3v1h-3zM9 10h3v1h-3zM14 10h1v1h-1zM20 10h1v1h-1zM22 10h2v1h-2zM26 10h2v1h-2zM3 11h1v1h-1zM5 11h1v1h-1zM8 11h1v1h-1zM11 11h4v1h-4zM16 11h1v1h-1zM18 11h1v1h-1zM21 11h1v1h-1zM23 11h1v1h-1zM28 11h1v1h-1zM0 12h2v1h-2zM3 12h1v1h-1zM6 12h2v1h-2zM17 12h1v1h-1zM21 12h1v1h-1zM23 12h1v1h-1zM25 12h2v1h-2zM0 13h2v1h-2zM3 13h3v1h-3zM7 13h1v1h-1zM10 13h2v1h-2zM13 13h1v1h-1zM15 13h2v1h-2zM19 13h1v1h-1zM22 13h1v1h-1zM26 13h3v1h-3zM0 14h2v1h-2zM4 14h1v1h-1zM6 14h1v1h-1zM9 14h3v1h-3zM14 14h1v1h-1zM17 14h5v1h-5zM23 14h2v1h-2zM26 14h3v1h-3zM0 15h1v1h-1zM3 15h1v1h-1zM5 15h1v1h-1zM11 15h1v1h-1zM13 15h1v1h-1zM20 15h3v1h-3zM27 15h1v1h-1zM3 16h1v1h-1zM6 16h1v1h-1zM8 16h1v1h-1zM10 16h3v1h-3zM18 16h1v1h-1zM21 16h1v1h-1zM23 16h3v1h-3zM27 16h1v1h-1zM1 17h4v1h-4zM9 17h1v1h-1zM12 17h2v1h-2zM15 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM23 17h1v1h-1zM25 17h3v1h-3zM0 18h1v1h-1zM2 18h5v1h-5zM8 18h4v1h-4zM15 18h1v1h-1zM17 18h2v1h-2zM26 18h1v1h-1zM2 19h1v1h-1zM5 19h1v1h-1zM15 19h1v1h-1zM17 19h1v1h-1zM20 19h4v1h-4zM26 19h1v1h-1zM1 20h1v1h-1zM4 20h1v1h-1zM6 20h1v1h-1zM10 20h4v1h-4zM18 20h1v1h-1zM20 20h7v1h-7zM8 21h3v1h-3zM13 21h2v1h-2zM16 21h2v1h-2zM20 21h1v1h-1zM24 21h5v1h-5zM0 22h7v1h-7zM8 22h3v1h-3zM13 22h1v1h-1zM16 22h1v1h-1zM18 22h3v1h-3zM22 22h1v1h-1zM24 22h2v1h-2zM27 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h2v1h-2zM12 23h1v1h-1zM16 23h1v1h-1zM18 23h1v1h-1zM20 23h1v1h-1zM24 23h2v1h-2zM28 23h1v1h-1zM0 24h1v1h-1zM2 24h3v1h-3zM6 24h1v1h-1zM9 24h4v1h-4zM14 24h2v1h-2zM17 24h1v1h-1zM20 24h5v1h-5zM26 24h1v1h-1zM0 25h1v1h-1zM2 25h3v1h-3zM6 25h1v1h-1zM8 25h4v1h-4zM14 25h3v1h-3zM20 25h2v1h-2zM24 25h2v1h-2zM28 25h1v1h-1zM0 26h1v1h-1zM2 26h3v1h-3zM6 26h1v1h-1zM8 26h1v1h-1zM11 26h2v1h-2zM14 26h1v1h-1zM16 26h2v1h-2zM23 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM10 27h1v1h-1zM13 27h1v1h-1zM15 27h1v1h-1zM19 27h5v1h-5zM25 27h1v1h-1zM27 27h1v1h-1zM0 28h7v1h-7zM8 28h3v1h-3zM12 28h4v1h-4zM18 28h4v1h-4zM23 28h1v1h-1zM25 28h1v1h-1zM27 28h1v1h-1z"/></svg></div>
+        <div class="group">
+            <div class="row-item" style="cursor:default;"><span class="ri-icon" data-ic="share"></span><span class="ri-label">Website<span class="ri-sub">srktk.github.io/Kor_kharcha</span></span><button class="btn-pill interactive-btn" onclick="triggerHaptic(); inviteCopy()">Copy</button></div>
+            <div class="row-item" style="cursor:default;"><span class="ri-icon" data-ic="download"></span><span class="ri-label">Android app<span class="ri-sub">Send the APK file in WhatsApp</span></span></div>
+        </div>
+        <p class="invite-note">The PIN is never in the code: a stranger who scans it still can't get in.</p>
+        <div class="sheet-foot invite-foot"><button class="btn-glowing interactive-btn" onclick="triggerHaptic(); inviteShare()"><span class="ic" data-ic="share"></span>Share link</button><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeInvite()">Done</button></div>
+    </div>
+</div>
 <div id="aboutOverlay" class="sheet-overlay" style="display:none;">
     <div class="login-card sheet">
         <div class="sheet-head"><h2>About</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeAbout()" data-ic="x"></button></div>
@@ -1625,6 +1670,7 @@
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openSearch(); event.preventDefault();"><span class="ri-icon" data-ic="search"></span><span class="ri-label">Search</span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openInsights(); event.preventDefault();"><span class="ri-icon" data-ic="chart"></span><span class="ri-label">Insights</span></a>
         <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openAuditLog(); event.preventDefault();"><span class="ri-icon" data-ic="clipboard"></span><span class="ri-label">Audit Trail</span></a>
+        <a href="#" class="row-item interactive-btn" onclick="triggerHaptic(); openInvite(); event.preventDefault();"><span class="ri-icon" data-ic="users"></span><span class="ri-label">Invite a housemate</span></a>
     </div>
 
     <div class="group-label">App</div>
@@ -1815,7 +1861,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.37.0";
+    const APP_VERSION = "7.38.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -2043,13 +2089,13 @@
     // and remembers it; Back (phone button / gesture) or the ✕ then returns to it, with its scroll position, instead of home.
     // One history entry ({nav:true}) sits above the page while anything is open, so Back on the home screen leaves the app.
     const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
-        historyOverlay: 'closeHistory', photoOverlay: 'closePhoto', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', manageUsersOverlay: 'closeManageUsers', adminOverlay: 'closeAdmin', aboutOverlay: 'closeAbout', settingsOverlay: 'closeSettings',
+        historyOverlay: 'closeHistory', photoOverlay: 'closePhoto', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', manageUsersOverlay: 'closeManageUsers', adminOverlay: 'closeAdmin', aboutOverlay: 'closeAbout', inviteOverlay: 'closeInvite', settingsOverlay: 'closeSettings',
         helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
         insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast', debtsOverlay: 'closeDebts' };
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showProfile: 'historyOverlay', openExport: 'historyOverlay', iouNew: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay', openAdmin: 'adminOverlay', openAbout: 'aboutOverlay', openAway: 'historyOverlay', openRecap: 'historyOverlay', showCategoryExpenses: 'historyOverlay' };
+        showMoveOut: 'historyOverlay', showProfile: 'historyOverlay', openExport: 'historyOverlay', iouNew: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay', openAdmin: 'adminOverlay', openAbout: 'aboutOverlay', openInvite: 'inviteOverlay', openAway: 'historyOverlay', openRecap: 'historyOverlay', showCategoryExpenses: 'historyOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox', ctxOverlay: 'closeCtx' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navUserBack = false, navClickAttr = '';
@@ -2653,6 +2699,20 @@
         document.getElementById('aboutOverlay').style.display = 'flex';
     }
     function closeAbout() { document.getElementById('aboutOverlay').style.display = 'none'; }
+    // ---- Invite a housemate: a QR code of the website (drawn once, it never changes) + the link to share. The PIN is never in it ----
+    const SITE_URL = 'https://srktk.github.io/Kor_kharcha/';
+    function openInvite() {
+        if (document.activeElement) document.activeElement.blur();
+        const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
+        document.getElementById('inviteOverlay').style.display = 'flex';
+    }
+    function closeInvite() { document.getElementById('inviteOverlay').style.display = 'none'; }
+    async function inviteCopy() { await copyToClipboard(SITE_URL); showToast("LINK COPIED", 1600); }
+    function inviteShare() {
+        const text = `Join our house on House Expenses: ${SITE_URL}\nAsk me for the house PIN.`;
+        if (navigator.share) navigator.share({ title: 'House Expenses', text }).catch(e => { if (!e || e.name !== 'AbortError') inviteCopy(); });
+        else inviteCopy();
+    }
     { const v = document.getElementById('aboutVer'); if (v) v.innerText = 'v' + APP_VERSION; }
 
     // ---- Test mode: the app works as normal, but nothing leaves this phone (no saves, uploads or restores, so no
@@ -3222,7 +3282,7 @@
         const list = liveNotices().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
         setHTML(document.getElementById('noticeList'), !localDbLoaded ? skelCards(3) : list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}" data-nid="${escapeHTML(n.id)}">
                 ${n.pinned || n.exp || n.event || n.poll ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">${n.poll ? `<span class="tag">${ico('chart').replace('<svg', '<svg width="12" height="12"')}Poll</span>` : ''}${eventTagHTML(n)}${n.pinned ? `<span class="tag">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</span>` : ''}${n.exp ? `<span class="tag muted">${ico('clock').replace('<svg', '<svg width="12" height="12"')}${expiryLabel(n.exp)}</span>` : ''}</div>` : ''}
-                <div class="card-text">${mentionify(linkify(n.text))}</div>${pollHTML(n)}${reactsHTML(n)}${seenByHTML(n)}
+                <div class="card-text">${mentionify(linkify(n.text))}</div>${notePhotosHTML(n)}${pollHTML(n)}${reactsHTML(n)}${seenByHTML(n)}
                 <div class="card-row" style="margin-top:10px;"><span style="display:flex; align-items:center; gap:8px;" class="card-meta">${avatarHTML(n.by || '?', 'sm')}${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
                 <span style="display:flex; gap:4px;"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); toggleNoticePin(${jsArg(n.id)})">${n.pinned ? 'Unpin' : 'Pin'}</button>${n.by === currentUser
                     ? `<button class="btn-pill interactive-btn" onclick="triggerHaptic(); editNotice(${jsArg(n.id)})">Edit</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteNotice(${jsArg(n.id)})">Delete</button>`
@@ -3231,11 +3291,33 @@
         if (localDbLoaded) seenNoticeIds = new Set((db.notices || []).map(n => n.id)); // notes added after this slide in
         updateNoticeCount(); renderSideCol(); eventStripSync();
     }
-    function saveNotice() {
-        const input = document.getElementById('noticeInput'); const text = (input.value || '').trim().slice(0, 1000);
-        if (!text) { showToast("WRITE SOMETHING FIRST", 2000); return; }
+    async function saveNotice() {
+        const input = document.getElementById('noticeInput'); let text = (input.value || '').trim().slice(0, 1000);
+        if (!text && !notePhotos.length) { showToast("WRITE SOMETHING FIRST", 2000); return; }
+        if (noteUploading) return;
+        if (!text) text = 'Photo';
+        let uploaded = [];
+        const editId = editingNoticeId, pics = notePhotos.slice(); // what was sent: the upload takes a while
+        const fresh = pics.filter(p => p.data).length;
+        if (fresh) {
+            if (testMode()) { showToast("Photos aren't uploaded in test mode", 2500); return; }
+            noteUploading = true; const btn = document.getElementById('noticeSaveBtn'); btn.classList.add('busy');
+            showToast(fresh > 1 ? "UPLOADING PHOTOS..." : "UPLOADING PHOTO...");
+            const done = [];
+            try {
+                for (const p of pics) {
+                    if (!p.data) { uploaded.push(p); continue; }
+                    const up = await uploadImageData(p.data); const it = { url: up.url, del: up.delete_url }; uploaded.push(it); done.push(it);
+                }
+            } catch (e) {
+                done.forEach(p => deleteNotePhoto(p.del)); // don't leave half the photos behind
+                if (!e || e.message !== 'FULL') showToast(e && e.message === 'AUTH' ? "SIGN IN AGAIN TO ADD PHOTOS" : "PHOTO DIDN'T UPLOAD - CHECK THE INTERNET AND TRY AGAIN", 3500);
+                return;
+            } finally { noteUploading = false; btn.classList.remove('busy'); }
+            showToast("NOTE ADDED", 1200);
+        } else uploaded = pics;
         if (!Array.isArray(db.notices)) db.notices = [];
-        const n = editingNoticeId ? db.notices.find(x => x.id === editingNoticeId) : null; // gone = deleted on another phone meanwhile: added again below
+        const n = editId ? db.notices.find(x => x.id === editId) : null; // gone = deleted on another phone meanwhile: added again below
         const sel = document.getElementById('noticeExpiry'), days = Number(sel.value) || 0, pin = document.getElementById('noticePinNew').getAttribute('aria-pressed') === 'true';
         const event = /^\d{4}-\d{2}-\d{2}$/.test(document.getElementById('noticeDate').value) ? document.getElementById('noticeDate').value : '';
         // A dated note with no "remove after" goes by itself the day after the event
@@ -3253,6 +3335,8 @@
             n.text = n.poll ? text.split(/\n+/)[0].trim().slice(0, 300) || n.text : text; n.t = Date.now(); n.by = currentUser; n.pinned = pin; n.seen = []; // changed: everyone reads it again
             if (event) n.event = event; else delete n.event;
             if (sel.dataset.touched || event) { if (exp) n.exp = exp; else delete n.exp; } // left alone: keeps its old "remove after" time
+            const keep = new Set(uploaded.map(p => p.url)); (n.photos || []).forEach((u, i) => { if (!keep.has(u)) deleteNotePhoto((n.photoDel || [])[i]); });
+            setNotePhotos(n, uploaded);
             logAudit(`Updated a note: ${text.slice(0, 40)}`);
             const tu = mentionsIn(text); if (tu.length) Object.assign(db.auditLog[0], { kind: 'mention', to: tu });
         } else {
@@ -3260,6 +3344,7 @@
             if (exp) note.exp = exp;
             if (event) note.event = event;
             if (poll) note.poll = poll;
+            setNotePhotos(note, uploaded);
             db.notices.unshift(note);
             logAudit(poll ? `Started a poll: ${qText.slice(0, 40)}` : `Added a note: ${qText.slice(0, 40)}`);
             const tu = mentionsIn(text); if (tu.length) Object.assign(db.auditLog[0], { kind: 'mention', to: tu });
@@ -3268,21 +3353,57 @@
         cancelNoticeEdit(); renderNotices(); executeActionWithSave();
     }
     function editNotice(id) {
-        const n = (db.notices || []).find(x => x.id === id); if (!n || n.by !== currentUser) return; editingNoticeId = id; const input = document.getElementById('noticeInput'); input.value = n.text; growBox(input);
+        const n = (db.notices || []).find(x => x.id === id); if (!n || n.by !== currentUser || noteUploading) return; editingNoticeId = id; const input = document.getElementById('noticeInput'); input.value = n.text; growBox(input);
         document.getElementById('noticeSaveBtn').setAttribute('aria-label', 'Save note'); document.getElementById('noticeCancelEdit').style.display = ''; document.getElementById('noticeComposer').classList.add('editing');
         const sel = document.getElementById('noticeExpiry'); delete sel.dataset.touched;
         if (!n.exp) sel.value = '0'; else { const left = (n.exp - Date.now()) / 864e5; sel.value = String([1, 3, 7, 30].find(d => d >= left - 0.01) || 30); }
         expiryChipSync();
         document.getElementById('noticeDate').value = n.event || ''; noticeDateSync(); setPollChip(false);
         document.getElementById('noticePollChip').style.display = 'none'; // a poll's answers can't be changed once people vote
+        notePhotos = (Array.isArray(n.photos) ? n.photos : []).filter(notePhotoOk).map((u, i) => ({ url: u, del: (Array.isArray(n.photoDel) && n.photoDel[i]) || '' })); notePhotoStripSync();
         setNoticePinChip(!!n.pinned); input.focus();
     }
     function cancelNoticeEdit() {
-        editingNoticeId = null; const i = document.getElementById('noticeInput'); if (i) { i.value = ''; i.style.height = ''; } const b = document.getElementById('noticeSaveBtn'); if (b) b.setAttribute('aria-label', 'Add note');
+        if (noteUploading) return; // the note being sent is cleared when it's saved
+        editingNoticeId = null; notePhotos = []; notePhotoStripSync(); const i = document.getElementById('noticeInput'); if (i) { i.value = ''; i.style.height = ''; } const b = document.getElementById('noticeSaveBtn'); if (b) b.setAttribute('aria-label', 'Add note');
         const sel = document.getElementById('noticeExpiry'); if (sel) { sel.value = '0'; delete sel.dataset.touched; } expiryChipSync(); setNoticePinChip(false);
         const dt = document.getElementById('noticeDate'); if (dt) { dt.value = ''; noticeDateSync(); } setPollChip(false);
         const pc = document.getElementById('noticePollChip'); if (pc) pc.style.display = '';
         const c = document.getElementById('noticeCancelEdit'); if (c) c.style.display = 'none'; const box = document.getElementById('noticeComposer'); if (box) box.classList.remove('editing');
+    }
+    // ---- Photos on notes: n.photos = [url] (up to NOTE_MAX_PHOTOS), n.photoDel = their delete links. Uploaded when the note is posted ----
+    const NOTE_MAX_PHOTOS = 4;
+    let notePhotos = [], noteUploading = false; // the composer's photos: {data} = picked, not uploaded yet; {url, del} = already on the note
+    async function notePhotoPick(input) {
+        const files = [...(input.files || [])]; input.value = '';
+        if (noteUploading) { showToast("WAIT FOR THE UPLOAD TO FINISH", 2000); return; }
+        for (const f of files) {
+            if (notePhotos.length >= NOTE_MAX_PHOTOS) { showToast(`UP TO ${NOTE_MAX_PHOTOS} PHOTOS ON A NOTE`, 2500); break; }
+            if (!f.type.startsWith('image/')) { showToast("THAT ISN'T A PHOTO", 2500); continue; }
+            if (f.size > 15 * 1024 * 1024) { showToast("File too large (Max 15MB).", 3000); continue; }
+            const data = await compressImage(f); if (data && notePhotos.length < NOTE_MAX_PHOTOS) notePhotos.push({ data }); // two quick picks can overlap
+        }
+        notePhotoStripSync(); noticeChipsSync();
+    }
+    function notePhotoRemove(i) { if (noteUploading) return; triggerHaptic(); notePhotos.splice(i, 1); notePhotoStripSync(); noticeChipsSync(); }
+    function notePhotoStripSync() {
+        const box = document.getElementById('notePhotoStrip'); if (!box) return;
+        box.style.display = notePhotos.length ? 'flex' : 'none';
+        box.innerHTML = notePhotos.map((p, i) => `<span class="np-thumb"><img src="${escapeHTML(p.data || (notePhotoOk(p.url) ? p.url : ''))}" alt="Photo ${i + 1}"><button type="button" class="interactive-btn" aria-label="Remove photo ${i + 1}" onmousedown="event.preventDefault()" onclick="notePhotoRemove(${i})">${ico('x')}</button></span>`).join('');
+        const chip = document.getElementById('noticePhotoChip'); if (chip) chip.classList.toggle('on', notePhotos.length > 0);
+    }
+    /** A note photo must be one of our own server's photo links: the data is shared, and any other link could track who opens the note */
+    function notePhotoOk(u) { return typeof u === 'string' && u.startsWith(API_URL + '/r/') && /^\/r\/[0-9a-f-]{36}\.jpg$/.test(u.slice(API_URL.length)); }
+    function setNotePhotos(n, list) {
+        const ok = list.filter(p => p && notePhotoOk(p.url)).slice(0, NOTE_MAX_PHOTOS);
+        if (ok.length) { n.photos = ok.map(p => p.url); n.photoDel = ok.map(p => p.del || ''); } else { delete n.photos; delete n.photoDel; }
+    }
+    /** Same check as receipts: only our own server's delete links are ever called (they come from the shared data) */
+    function deleteNotePhoto(u) { if (!testMode() && typeof u === 'string' && u.startsWith(API_URL + '/r/') && /\/delete\/[0-9a-f-]{36}$/.test(u)) fetch(u, { mode: 'no-cors' }).catch(() => {}); }
+    function notePhotosHTML(n) {
+        const urls = (Array.isArray(n.photos) ? n.photos : []).filter(notePhotoOk).slice(0, NOTE_MAX_PHOTOS); if (!urls.length) return '';
+        const arg = jsArg(JSON.stringify(urls));
+        return `<div class="note-photos n${urls.length}">${urls.map((u, i) => `<button type="button" class="np-img interactive-btn" aria-label="Open photo ${i + 1} of ${urls.length}" onclick="viewImg(${arg}, ${i})"><img src="${escapeHTML(u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('broken')"></button>`).join('')}</div>`;
     }
     // ---- Dated notes (n.event = YYYY-MM-DD): a countdown on the note and on Home. Polls (n.poll = {opts, votes: {name: i}}) ----
     function noticeDateSync() {
@@ -3319,7 +3440,7 @@
         const foot = document.getElementById('noticeFoot'); if (!foot) return;
         const inside = foot.contains(document.activeElement);
         const set = document.getElementById('noticePinNew').getAttribute('aria-pressed') === 'true' || document.getElementById('noticePollChip').getAttribute('aria-pressed') === 'true'
-            || !!document.getElementById('noticeDate').value || document.getElementById('noticeExpiry').value !== '0' || !!editingNoticeId || !!document.getElementById('noticeInput').value.trim();
+            || !!document.getElementById('noticeDate').value || document.getElementById('noticeExpiry').value !== '0' || !!editingNoticeId || !!document.getElementById('noticeInput').value.trim() || notePhotos.length > 0;
         foot.classList.toggle('show-chips', inside || set);
     }
     document.addEventListener('focusin', (e) => { if (e.target.closest && e.target.closest('#noticeFoot')) noticeChipsSync(); });
@@ -3430,7 +3551,7 @@
     }
     function deleteNotice(id) {
         const n = (db.notices || []).find(x => x.id === id); if (!n || n.by !== currentUser) return;
-        customConfirm("Delete this note for everyone?", () => { db.notices = db.notices.filter(x => x.id !== id); logAudit(`Deleted a note: ${n.text.slice(0, 40)}`); if (editingNoticeId === id) cancelNoticeEdit(); renderNotices(); executeActionWithSave(); });
+        customConfirm("Delete this note for everyone?", () => { [].concat(n.photoDel || []).forEach(deleteNotePhoto); db.notices = db.notices.filter(x => x.id !== id); logAudit(`Deleted a note: ${n.text.slice(0, 40)}`); if (editingNoticeId === id) cancelNoticeEdit(); renderNotices(); executeActionWithSave(); });
     }
 
     // ---- Shopping list: db.shopping = [{id, t, by, text, done, doneBy}] ----
@@ -3531,7 +3652,7 @@
         //         [tick]  Item name (whole, can wrap)
         //                 [− n +]  [I'll get it]
         // Someone said "I'll get it": for everyone else it's locked, with just "I bought it" (which tells them)
-        document.getElementById('shopList').innerHTML = !localDbLoaded ? skelCards(3) : list.length ? list.map(s => {
+        const cardHTML = (s) => {
             const locked = shopLocked(s), mineClaim = s.claimBy === currentUser && !s.done;
             const tick = s.na && !s.done ? `<span class="shop-na-ic" aria-hidden="true">${ico('ban')}</span>`
                 : locked ? `<span class="shop-lock-ic" title="${escapeHTML(s.claimBy)}'s getting it" aria-hidden="true">${avatarHTML(s.claimBy, 'xs')}</span>`
@@ -3551,13 +3672,22 @@
                 <div class="shop-top">${meta}<span class="shop-icons">${icons}</span></div>
                 <div class="shop-row1">${tick}<div class="shop-text card-title">${qtyN > 1 ? `<span class="qty-b">${qtyN}×</span> ` : ''}${escapeHTML(s.text)}</div></div>
                 ${acts ? `<div class="shop-row2">${acts}</div>` : ''}</div>`;
-        }).join('')
+        };
+        // Bought items fold away under one "Bought (n)" row so the list shows what's still to buy
+        const toBuy = list.filter(x => !x.done), bought = list.filter(x => x.done);
+        const fold = bought.length ? `<button type="button" class="shop-fold card interactive-btn${shopBoughtOpen ? ' open' : ''}" aria-expanded="${shopBoughtOpen}" onclick="triggerHaptic(); shopFoldToggle()">
+                <span class="shop-fold-box" aria-hidden="true">${ico('check')}</span><b>Bought (${bought.length})</b>
+                <span class="shop-fold-names">${escapeHTML(bought.map(x => x.text).join(', '))}</span><span class="shop-fold-chev" aria-hidden="true">${ico('chev')}</span></button>` : '';
+        document.getElementById('shopList').innerHTML = !localDbLoaded ? skelCards(3) : list.length
+            ? toBuy.map(cardHTML).join('') + fold + (shopBoughtOpen ? bought.map(cardHTML).join('') : '')
             : emptyState('cart', 'Nothing to buy. Add items below, separated by commas.');
         document.getElementById('shopBoughtActions').style.display = all.some(x => x.done) ? 'flex' : 'none';
         if (localDbLoaded) seenShopIds = new Set(all.map(x => x.id)); // items added after this slide in
         updateShopCount(); renderSideCol(); shopSuggestSync();
         if (all.some(x => x && x.na) && document.getElementById('shoppingOverlay').style.display === 'flex') shopMarkSeen(); // synced in while the list is open
     }
+    let shopBoughtOpen = false;
+    function shopFoldToggle() { shopBoughtOpen = !shopBoughtOpen; renderShopping(); }
     function addShopItems() {
         const input = document.getElementById('shopInput');
         const names = (input.value || '').split(/[,\n]/).map(s => s.trim().replace(/\s+/g, ' ').slice(0, SHOP_MAX_LEN)).filter(Boolean);
@@ -3591,7 +3721,7 @@
         const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done) return;
         if (shopLocked(s)) { shopLockedToast(s); return; }
         customPrompt('Change the item', s.text, (val) => {
-            const { text, qty } = shopQtyParse(String(val || '').trim().replace(/s+/g, ' ').slice(0, SHOP_MAX_LEN)); if (!text) return;
+            const { text, qty } = shopQtyParse(String(val || '').trim().replace(/\s+/g, ' ').slice(0, SHOP_MAX_LEN)); if (!text) return;
             const it = (db.shopping || []).find(x => x.id === id); if (!it) return;
             it.text = text; if (qty > 1) it.qty = qty;
             renderShopping(); executeActionWithSave();
@@ -3625,7 +3755,7 @@
     function shopBought(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done) return;
         shopTellClaimer(s, 'bought'); s.done = true; s.doneBy = currentUser; renderShopping(); executeActionWithSave();
-        flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
+        flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id) || document.querySelector('#shopList .shop-fold'));
     }
     function toggleShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
@@ -3633,7 +3763,7 @@
         if (!s.done) shopTellClaimer(s, 'bought');
         s.done = !s.done; if (s.done) s.doneBy = currentUser; else delete s.doneBy;
         renderShopping(); executeActionWithSave(); // not logged: ticking back and forth would flood the activity log
-        if (s.done) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
+        if (s.done) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id) || document.querySelector('#shopList .shop-fold'));
     }
     function removeShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
@@ -3986,7 +4116,7 @@
                 else { db = targetData; localDbLoaded = true; setDbVersion(res.headers.get('X-Version')); }
             } else { showToast("INITIALIZING NEW VAULT...", 3000); initializeDB(); localDbLoaded = true; pushLocalChanges = true; }
             initializeDB(); 
-            if (db.notices.some(n => !noticeLive(n))) { db.notices = db.notices.filter(noticeLive); executeActionWithSave(); } // notes past their "remove after" time
+            if (db.notices.some(n => !noticeLive(n))) { db.notices.filter(n => !noticeLive(n)).forEach(n => [].concat(n.photoDel || []).forEach(deleteNotePhoto)); db.notices = db.notices.filter(noticeLive); executeActionWithSave(); } // notes past their "remove after" time
             if (db.trash && Array.isArray(db.trash)) { const purgeMs = trashExpiryDays * 24 * 60 * 60 * 1000; let originalLength = db.trash.length; db.trash = db.trash.filter(item => (Date.now() - item.deletedAt) < purgeMs); if (db.trash.length !== originalLength) executeActionWithSave(); }
             renderUsers(); saveLocalBackup(); 
             if (!currentUser) document.getElementById('loginOverlay').style.display = 'flex'; else { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('topUserName').innerText = currentUser; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = currentUser; render(); }
@@ -4738,13 +4868,13 @@
     }
     function closeInbox() { document.getElementById('inboxOverlay').style.display = 'none'; }
 
-    function viewImg(urlArrayRaw) { 
+    function viewImg(urlArrayRaw, start) { 
         triggerHaptic(); let urls = [];
         try { if (typeof urlArrayRaw === 'string' && urlArrayRaw.startsWith('[')) urls = JSON.parse(urlArrayRaw); else if (typeof urlArrayRaw === 'string') urls = urlArrayRaw.split(','); else if (Array.isArray(urlArrayRaw)) urls = urlArrayRaw; } catch(e) { urls = [urlArrayRaw]; }
         if(!urls || urls.length === 0) { showToast("Invalid receipt link.", 3000); return; }
         currentLightboxImages = (Array.isArray(urls) ? urls : [urls]).map(u => sanitizeURL(typeof u === 'string' ? u.trim() : null)).filter(u => u !== null);
         if(currentLightboxImages.length === 0) { showToast("Invalid receipt link.", 3000); return; }
-        currentLightboxIndex = 0; lightboxRotation = 0; lbReset(); updateLightboxDOM();
+        currentLightboxIndex = Math.min(Math.max(0, Number(start) || 0), currentLightboxImages.length - 1); lightboxRotation = 0; lbReset(); updateLightboxDOM();
         const overlay = document.getElementById('lightboxOverlay'); overlay.style.display = 'flex'; lbBind();
     }
 
@@ -4929,6 +5059,7 @@
         if (db.away != null) { db.away = items(db.away).filter(a => typeof a.who === 'string' && typeof a.from === 'string' && typeof a.to === 'string'); }
         if (Array.isArray(db.ious)) db.ious.forEach(i => { if (i && typeof i === 'object' && i.due != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(i.due))) delete i.due; });
         // Notes can expire (n.exp, a time): only a real number counts
+        db.notices.forEach(n => { if (n && n.photos != null) { const ph = Array.isArray(n.photos) && n.photos.every(notePhotoOk) ? n.photos.slice(0, NOTE_MAX_PHOTOS) : []; if (ph.length) { n.photos = ph; if (!Array.isArray(n.photoDel) || n.photoDel.length !== ph.length || !n.photoDel.every(d => typeof d === 'string')) delete n.photoDel; } else { delete n.photos; delete n.photoDel; } } });
         db.notices.forEach(n => { if (n.exp != null) { const e = Number(n.exp); if (isFinite(e) && e > 0) n.exp = e; else delete n.exp; } });
         if (db.settleClaims != null) { db.settleClaims = objOr(db.settleClaims); Object.keys(db.settleClaims).forEach(k => { const c = db.settleClaims[k]; if (!isObj(c) || typeof c.by !== 'string' || !isFinite(Number(c.amt))) delete db.settleClaims[k]; else c.amt = Number(c.amt); }); }
         db.archives = items(db.archives);
