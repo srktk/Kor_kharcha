@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.36.0">
+    <meta name="app-version" content="7.36.1">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -1012,6 +1012,27 @@
         .event-chip .ev-left.soon { color: var(--accent-strong); }
         #noticeFoot .composer-chips { display: none; }
         #noticeFoot.show-chips .composer-chips { display: flex; animation: fade-in 0.18s ease-out; }
+        /* One short row that scrolls sideways (it used to wrap into two tall rows and squeeze the notes) */
+        #noticeFoot .composer-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 6px; width: 100%; margin: 0 -2px; padding: 0 2px; }
+        #noticeFoot .composer-chips::-webkit-scrollbar { display: none; }
+        #noticeFoot .composer-chips .add-chip { flex-shrink: 0; height: 30px; padding: 0 10px; font-size: 0.74rem; gap: 5px; }
+        #noticeFoot .composer-chips .add-chip .ic svg { width: 14px; height: 14px; }
+        #noticeFoot { gap: 8px; }
+        /* Shopping and Notices panels: a smaller title, so the list gets the room */
+        .sheet-overlay.dock .sheet-head { margin-bottom: 8px; }
+        .sheet-overlay.dock .sheet-head h2 { font-size: 1.08rem !important; }
+        .sheet-overlay.dock .sheet-head .sheet-close { width: 32px; height: 32px; }
+        /* Their items as a stack of cards, like the other pages: small gaps, big round corners only at the ends */
+        #shopList, #noticeList { gap: 3px; }
+        #shopList > .card, #noticeList > .card { background: var(--gs-bg); border: 1px solid var(--gs-border); border-radius: 6px; box-shadow: none; margin: 0; }
+        #shopList > .card:first-child, #noticeList > .card:first-child { border-top-left-radius: 22px; border-top-right-radius: 22px; }
+        #shopList > .card:last-child, #noticeList > .card:last-child { border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
+        #noticeList > .card.selected { border-color: var(--accent); }
+        #shopList > .card.claimed { box-shadow: inset 3px 0 0 var(--accent); }
+        #shopList > .card.done { opacity: 0.6; }
+        /* quantity at the far right, the other pills to its left */
+        .shop-row2 .qty-step { order: 2; margin-left: auto; }
+        #healthCard { margin-top: 16px; }
         /* Poll: the answers and the question box are one rounded block; the whole block gets the accent edge while you write */
         .notice-box { width: 100%; }
         #noticeFoot > * { flex: none !important; } /* each part its own height: the shared-space rule squeezed the poll block and hid the question box */
@@ -1160,7 +1181,7 @@
             <div class="add-chips composer-chips">
                 <label class="add-chip chip-select interactive-btn"><span class="ic" data-ic="clock"></span><span id="noticeExpiryLabel">Keep forever</span><select id="noticeExpiry" aria-label="Remove the note after" onchange="this.dataset.touched = '1'; expiryChipSync()"><option value="0">Keep forever</option><option value="1">Remove after 1 day</option><option value="3">Remove after 3 days</option><option value="7">Remove after 1 week</option><option value="30">Remove after 1 month</option></select></label>
                 <button id="noticePinNew" type="button" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); setNoticePinChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="pin"></span>Pin to top</button>
-                <label id="noticeDateChip" class="add-chip chip-select interactive-btn"><span class="ic" data-ic="calendar"></span><span id="noticeDateLabel">Countdown</span><input type="date" id="noticeDate" aria-label="Event date (shows a countdown on Home)" onclick="try { this.showPicker(); } catch (e) {}" onchange="noticeDateSync()"></label>
+                <label id="noticeDateChip" class="add-chip chip-select interactive-btn"><span class="ic" data-ic="calendar"></span><span id="noticeDateLabel">Count</span><input type="date" id="noticeDate" aria-label="Event date (shows a countdown on Home)" onclick="try { this.showPicker(); } catch (e) {}" onchange="noticeDateSync()"></label>
                 <button id="noticePollChip" type="button" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); setPollChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="chart"></span>Poll</button>
                 <button id="noticeCancelEdit" type="button" class="add-chip interactive-btn" style="display:none;" onclick="triggerHaptic(); cancelNoticeEdit()"><span class="ic" data-ic="x"></span>Cancel edit</button>
             </div>
@@ -1240,7 +1261,7 @@
                 <div class="card help-card"><span class="ri-icon" data-ic="ban"></span><div><div class="card-title">Not available</div><p>Couldn't find it in the shop? Tap the <b>⊘</b> button. It stays on the list, greyed out, until everyone has seen it, then goes by itself. Nobody gets a notification for it.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="pin"></span><div><div class="card-title">Noticeboard</div><p>Notes for the whole house (Wi-Fi password, bin day). Type <b>@name</b> to tag someone. Notes can remove themselves after a few days. Only the writer can edit or delete a note.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Polls</div><p>Tap in the box to see the options, then <b>Poll</b>: write the question, fill the answers (① ② … tap <b>+ Answer</b> for more; left empty they are Yes / No). Tap an answer to vote; tap it again to take your vote back.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">Notes with a day</div><p>Tap <b>Countdown</b> to give a note a day (a party, the landlord visiting). It counts down on the Home screen (tap it there to jump to the note) and goes away by itself after the day.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">Notes with a day</div><p>Tap <b>Count</b> to give a note a day (a party, the landlord visiting). It counts down on the Home screen (tap it there to jump to the note) and goes away by itself after the day.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="smile"></span><div><div class="card-title">Reactions</div><p>On someone else's note, tap the smiley for 👍, or <b>hold it</b> to pick another reaction. Tap again to take it back.</p></div></div>
             </div>
 
@@ -1763,7 +1784,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.36.0";
+    const APP_VERSION = "7.36.1";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -3216,7 +3237,7 @@
     function noticeDateSync() {
         const i = document.getElementById('noticeDate'), l = document.getElementById('noticeDateLabel'), chip = document.getElementById('noticeDateChip'); if (!i || !l) return;
         const v = /^\d{4}-\d{2}-\d{2}$/.test(i.value) ? i.value : '';
-        l.textContent = v ? 'Countdown to ' + dueLabel(v).date : 'Countdown'; if (chip) chip.classList.toggle('on', !!v);
+        l.textContent = v ? 'Count to ' + dueLabel(v).date : 'Count'; if (chip) chip.classList.toggle('on', !!v);
     }
     // Poll: the text box is the question; answers have their own fields (① Yes, ② No as hints; + adds more, up to 6)
     const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥'];
@@ -3242,7 +3263,7 @@
         const ins = [...document.querySelectorAll('#pollFields .poll-field input')];
         return [...new Set(ins.map((x, i) => x.value.trim().slice(0, 60) || (i < 2 ? x.placeholder : '')).filter(Boolean))].slice(0, 6);
     }
-    /* Notices options (Keep / Pin / Countdown / Poll) show only while you're writing - or while one of them is set */
+    /* Notices options (Keep / Pin / Count / Poll) show only while you're writing - or while one of them is set */
     function noticeChipsSync() {
         const foot = document.getElementById('noticeFoot'); if (!foot) return;
         const inside = foot.contains(document.activeElement);
@@ -3387,6 +3408,7 @@
         const onList = new Set((db.shopping || []).filter(s => s && !s.done).map(s => String(s.text).toLowerCase()));
         const token = (input.value.split(/[,\n]/).pop() || '').trim().toLowerCase().replace(/^\d{1,2}\s*[x×]\s*/, '');
         let items, typing = !!token;
+        if (!typing && input.value.trim()) { box.innerHTML = ''; box.style.display = 'none'; return; } // just picked one: nothing more until the next word
         if (!typing) items = shopUsual().filter(x => !onList.has(x.toLowerCase())).slice(0, 8);
         else {
             const pool = [...shopUsual(), ...SHOP_CATALOG]; const seen = new Set(); const uniq = pool.filter(x => { const k = x.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
