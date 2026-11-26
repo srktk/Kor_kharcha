@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.36.2">
+    <meta name="app-version" content="7.36.3">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -423,6 +423,9 @@
         .action-group { display: flex; align-items: center; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
         .btn-pill { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 12px; font-size: 0.72rem; color: var(--text-main); cursor: pointer; font-weight: 600; white-space: nowrap; transition: 0.15s; }
         .btn-pill:active { transform: scale(0.96); }
+        /* On a card inside a pop-up (card colour = surface-2), plain pills were the same colour as the card: lift them */
+        .login-card .btn-pill:not(.primary):not(.danger):not(.success), #sideMenu .btn-pill:not(.primary):not(.danger):not(.success) { background: var(--surface); border-color: var(--gs-border); }
+        .login-card .card .tag.muted, .login-card .card .tag:not(.danger):not(.success):not(.muted) { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent); }
         .btn-pill.primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
         .btn-pill.danger { border-color: transparent; color: var(--danger); background: var(--danger-soft); }
         .btn-pill.success { background: var(--success); color: #fff; border-color: var(--success); }
@@ -960,6 +963,17 @@
         .shop-ic svg { width: 16px; height: 16px; }
         .shop-row1 { display: flex; align-items: center; gap: 10px; }
         .shop-row1 .shop-text { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; font-size: 0.98rem; }
+        /* Tick: a rounded box that fills with the accent and draws the check */
+        .tick-box { -webkit-appearance: none; appearance: none; width: 24px !important; height: 24px !important; flex-shrink: 0; margin: 0; border-radius: 8px; border: 2px solid color-mix(in srgb, var(--text-muted) 55%, transparent); background: var(--surface) !important; cursor: pointer; padding: 0; position: relative; transition: background 0.22s, border-color 0.22s, transform 0.15s; }
+        .tick-box:active { transform: scale(0.88); }
+        .tick-box::after { content: ''; position: absolute; left: 7px; top: 3px; width: 6px; height: 11px; border: solid var(--on-accent, #fff); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) scale(0); transform-origin: 60% 60%; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s; }
+        .tick-box:checked { background: var(--accent) !important; border-color: var(--accent); } /* a general input rule sets the background with !important */
+        .tick-box.anim:checked { animation: tick-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .tick-box:not(.anim)::after { transition: none; } /* only the box just tapped animates; redrawn ones are simply ticked */
+        .tick-box:checked::after { transform: rotate(45deg) scale(1); }
+        .tick-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        @keyframes tick-pop { 0% { transform: scale(0.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+        @media (prefers-reduced-motion: reduce) { .tick-box, .tick-box::after { transition: none; animation: none !important; } }
         .shop-row2 .tag.shop-claim { padding: 4px 10px; max-width: none; }
         .shop-row2 { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding-left: 32px; }
         .shop-lock-ic { width: 22px; height: 22px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
@@ -1031,8 +1045,10 @@
         #shopList > .card.claimed { box-shadow: inset 3px 0 0 var(--accent); }
         #shopList > .card.done { opacity: 0.6; }
         /* quantity at the far right, the other pills to its left */
-        .shop-row2 .qty-step { order: 2; margin-left: auto; }
+        .shop-row2 { justify-content: flex-end; }
+        .shop-row2 .qty-step { order: 2; }
         #healthCard { margin-top: 16px; }
+        #adminGroup { margin-top: 16px; }
         /* Poll: the answers and the question box are one rounded block; the whole block gets the accent edge while you write */
         .notice-box { width: 100%; }
         #noticeFoot > * { flex: none !important; } /* each part its own height: the shared-space rule squeezed the poll block and hid the question box */
@@ -1784,7 +1800,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.36.2";
+    const APP_VERSION = "7.36.3";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -2540,9 +2556,9 @@
         const el = document.getElementById('versionRows'); if (!el) return;
         const av = db.appVer && typeof db.appVer === 'object' ? db.appVer : {};
         el.innerHTML = (db.users || []).map(u => {
-            const r = av[u]; const old = r && verCmp(r.v, APP_VERSION) < 0;
+            const r = av[u] && typeof av[u] === 'object' ? av[u] : null; const old = r && verCmp(r.v, APP_VERSION) < 0;
             const lvl = !r ? 'info' : old ? 'warn' : 'ok';
-            const val = r ? `${escapeHTML(String(r.v))} · ${r.app === 'android' ? 'app' : 'web'}${r.t ? ' · ' + escapeHTML(FMT_DM.format(new Date(r.t))) : ''}` : 'Not seen yet';
+            const val = r ? `${escapeHTML(String(r.v).slice(0, 20))} · ${r.app === 'android' ? 'app' : 'web'}${isFinite(Number(r.t)) && Number(r.t) > 0 ? ' · ' + escapeHTML(FMT_DM.format(new Date(Number(r.t)))) : ''}` : 'Not seen yet';
             return healthRow(lvl, `${avatarHTML(u, 'xs')} ${escapeHTML(u)}`, val);
         }).join('');
         const mv = db.minVer && db.minVer.v; const sub = document.getElementById('minVerSub');
@@ -3312,7 +3328,7 @@
     //      pick another. Not logged, so nobody is notified. Only the writer can edit or delete a note. ----
     const REACTS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
     let reactHold = null;
-    function myReact(n) { return n && n.reacts && typeof n.reacts[currentUser] === 'string' ? n.reacts[currentUser] : ''; }
+    function myReact(n) { const v = n && n.reacts && typeof n.reacts === 'object' ? n.reacts[currentUser] : ''; return REACTS.includes(v) ? v : ''; }
     function reactBtnHTML(n) {
         const mine = myReact(n);
         return `<button class="btn-pill react-btn interactive-btn${mine ? ' on' : ''}" aria-label="${mine ? 'Your reaction ' + mine + ', tap to remove, hold to change' : 'React, hold for more'}" oncontextmenu="event.preventDefault()" onpointerdown="reactDown(event, ${jsArg(n.id)})" onpointerup="reactUp()" onpointerleave="reactUp()" onpointercancel="reactUp()" onclick="reactClick(${jsArg(n.id)})">${mine ? `<span class="react-emo">${mine}</span>` : ico('smile')}</button>`;
@@ -3406,6 +3422,7 @@
     function shopSuggestSync() {
         const box = document.getElementById('shopSuggest'), input = document.getElementById('shopInput'); if (!box || !input) return;
         const onList = new Set((db.shopping || []).filter(s => s && !s.done).map(s => String(s.text).toLowerCase()));
+        input.value.split(/[,\n]/).slice(0, -1).forEach(t => { const w = shopQtyParse(t.trim()).text.toLowerCase(); if (w) onList.add(w); }); // already typed in the box
         const token = (input.value.split(/[,\n]/).pop() || '').trim().toLowerCase().replace(/^\d{1,2}\s*[x×]\s*/, '');
         let items, typing = !!token;
         if (!typing && input.value.trim()) { box.innerHTML = ''; box.style.display = 'none'; return; } // just picked one: nothing more until the next word
@@ -3413,7 +3430,7 @@
         else {
             const pool = [...shopUsual(), ...SHOP_CATALOG]; const seen = new Set(); const uniq = pool.filter(x => { const k = x.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
             const starts = uniq.filter(x => x.toLowerCase().startsWith(token)), inside = uniq.filter(x => !x.toLowerCase().startsWith(token) && x.toLowerCase().split(' ').some(w => w.startsWith(token)));
-            items = [...starts, ...inside].filter(x => x.toLowerCase() !== token).slice(0, 8);
+            items = [...starts, ...inside].filter(x => x.toLowerCase() !== token && !onList.has(x.toLowerCase())).slice(0, 8);
         }
         box.innerHTML = items.map(x => `<button type="button" class="add-chip interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); shopPick(${jsArg(x)}, ${typing})">${typing ? '' : '+ '}${escapeHTML(x)}</button>`).join('');
         box.style.display = items.length ? 'flex' : 'none';
@@ -3427,7 +3444,7 @@
     }
     function shopFreqCount(names) {
         if (!db.shopFreq || typeof db.shopFreq !== 'object' || Array.isArray(db.shopFreq)) db.shopFreq = {};
-        names.forEach(n => { const k = String(n).trim().toLowerCase().slice(0, 40); if (k) db.shopFreq[k] = (Number(db.shopFreq[k]) || 0) + 1; });
+        names.forEach(n => { const k = String(n).trim().toLowerCase().slice(0, 40); if (k && !['__proto__', 'constructor', 'prototype'].includes(k)) db.shopFreq[k] = (Number(db.shopFreq[k]) || 0) + 1; });
         const keys = Object.keys(db.shopFreq); if (keys.length > 120) keys.sort((a, b) => db.shopFreq[a] - db.shopFreq[b]).slice(0, keys.length - 120).forEach(k => delete db.shopFreq[k]); // keep it small
     }
     /* "Not available" (s.na): someone tried and couldn't get it. It stays on the list, greyed with a tag, until every
@@ -3461,7 +3478,7 @@
             const locked = shopLocked(s), mineClaim = s.claimBy === currentUser && !s.done;
             const tick = s.na && !s.done ? `<span class="shop-na-ic" aria-hidden="true">${ico('ban')}</span>`
                 : locked ? `<span class="shop-lock-ic" title="${escapeHTML(s.claimBy)}'s getting it" aria-hidden="true">${avatarHTML(s.claimBy, 'xs')}</span>`
-                : `<input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">`;
+                : `<input type="checkbox" class="tick-box" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="tickThen(this, () => toggleShopItem(${jsArg(s.id)}))">`;
             const icons = locked ? '' : (s.done ? '' : `<button class="shop-ic interactive-btn${s.na ? ' on' : ''}" aria-label="${s.na ? 'Available again' : 'Not available'}: ${escapeHTML(s.text)}" title="${s.na ? 'Available again' : 'Not available'}" onclick="triggerHaptic(); shopNaToggle(${jsArg(s.id)})">${ico(s.na ? 'restore' : 'ban')}</button>`)
                 + `<button class="shop-ic interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" onclick="triggerHaptic(); removeShopItem(${jsArg(s.id)})">${ico('x')}</button>`;
             const meta = s.na && !s.done ? `<span class="tag danger shop-na-tag">Not available${s.naBy ? ' · ' + escapeHTML(s.naBy) : ''}</span>`
@@ -3512,6 +3529,8 @@
         renderShopping(); executeActionWithSave();
         if (s.claimBy) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
+    /** A tick plays its little animation first, then the list updates (redrawing at once cut it off) */
+    function tickThen(el, fn) { triggerHaptic(); el.classList.add('anim'); el.disabled = true; setTimeout(fn, revealMotionOff() ? 0 : 280); }
     /** Someone else said "I'll get it": locked for everyone else (they can only say "I bought it") */
     function shopLocked(s) { return !!(s && !s.done && s.claimBy && s.claimBy !== currentUser); }
     function shopLockedToast(s) { showToast(`${escapeHTML(s.claimBy).toUpperCase()} IS GETTING IT`, 2200); }
@@ -4810,6 +4829,12 @@
             if (n.poll != null) { const p = n.poll; if (!isObj(p) || !Array.isArray(p.opts) || p.opts.length < 2) delete n.poll; else { p.opts = p.opts.slice(0, 6).map(o => String(o == null ? '' : o).slice(0, 60)); p.votes = isObj(p.votes) ? p.votes : {}; Object.keys(p.votes).forEach(u => { if (!Number.isInteger(p.votes[u]) || p.votes[u] < 0 || p.votes[u] >= p.opts.length) delete p.votes[u]; }); } }
             if (n.reacts != null && !isObj(n.reacts)) delete n.reacts;
         });
+        ['appVer', 'shopFreq', 'minVer', 'settleClaims'].forEach(k => { if (db[k] != null && !isObj(db[k])) delete db[k]; });
+        if (db.shopFreq) Object.keys(db.shopFreq).forEach(k => { if (!isFinite(Number(db.shopFreq[k])) || k === '__proto__') delete db.shopFreq[k]; });
+        if (db.minVer && typeof db.minVer.v !== 'string') delete db.minVer;
+        if (db.admins != null) { db.admins = names(db.admins); if (!db.admins.length) delete db.admins; }
+        if (db.superAdmin != null && typeof db.superAdmin !== 'string') delete db.superAdmin;
+        if (db.away != null) { db.away = items(db.away).filter(a => typeof a.who === 'string' && typeof a.from === 'string' && typeof a.to === 'string'); }
         if (Array.isArray(db.ious)) db.ious.forEach(i => { if (i && typeof i === 'object' && i.due != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(i.due))) delete i.due; });
         // Notes can expire (n.exp, a time): only a real number counts
         db.notices.forEach(n => { if (n.exp != null) { const e = Number(n.exp); if (isFinite(e) && e > 0) n.exp = e; else delete n.exp; } });
@@ -5201,7 +5226,7 @@
         // Categories: one line of icons and amounts (no bars)
         const catSum = {}; cur.forEach(e => { const cs = expenseCategories(e.desc), a = Number(e.amount) || 0; cs.forEach(c => { const k = c.group || c.id; catSum[k] = (catSum[k] || 0) + a / cs.length; }); });
         const catKeys = Object.keys(catSum).filter(k => catSum[k] > 0.005).sort((a, b) => catSum[b] - catSum[a]);
-        if (catKeys.length) h += `<div style="font-size:11px; font-weight:800; letter-spacing:0.8px; color:#96a1b5; margin:18px 0 8px;">BY CATEGORY</div><div style="display:flex; flex-wrap:wrap; gap:6px 16px; font-size:14px; font-weight:700;">${catKeys.map(k => { const c = CATEGORIES.find(x => x.id === k); return `<span style="white-space:nowrap;">${c ? c.emo : '•'} ${escapeHTML(fmt(catSum[k]))}</span>`; }).join('')}</div>`;
+        if (catKeys.length) h += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 2px;">${catKeys.map(k => { const c = CATEGORIES.find(x => x.id === k); return `<span style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px 6px 8px; border-radius:999px; background:#1a1e26; border:1px solid #2a2f3a; font-size:13px; font-weight:700; white-space:nowrap;"><span style="font-size:15px;">${c ? c.emo : '•'}</span>${escapeHTML(fmt(catSum[k]))}</span>`; }).join('')}</div>`; // pills: icon + amount, no title
         h += `<div style="font-size:11px; font-weight:800; letter-spacing:0.8px; color:#96a1b5; margin:18px 0 4px;">WHO PAYS WHOM</div>`;
         if (!txs.length) h += row('Everyone is square', '✓', '#4ade80');
         txs.forEach(t => {
