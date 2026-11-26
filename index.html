@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.34.0">
+    <meta name="app-version" content="7.35.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -275,6 +275,11 @@
         #tabGlass { position: fixed; margin: 0 auto; z-index: 95; pointer-events: none; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 452px; height: var(--tabbar-h); border-radius: 32px; background: var(--glass-bg); border: 1px solid var(--glass-rim); box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-lo); backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%); }
         #amtPreview { padding: 0 2px 2px; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); overflow-wrap: anywhere; }
         #amtPreview b { color: var(--accent-strong); font-weight: 700; }
+        /* Add box: the text field + send sit right on the tab bar; chips, the note and the amount preview stack above them */
+        #inputSection > .add-chips { order: 1; padding: 0 0 8px; }
+        #inputSection > #optionsMenu { order: 2; padding: 0 0 6px; }
+        #inputSection > #amtPreview { order: 3; padding: 0 2px 6px; }
+        #inputSection > .chat-row { order: 4; }
         .add-chips { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 10px; }
         .add-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; border: 0; color: var(--text-main); font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s, transform 0.15s; background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-hi); }
         .add-chip:active { transform: scale(0.95); }
@@ -940,8 +945,17 @@
         html.test-mode .greet-sub { visibility: hidden; } /* the banner sits there */
         .settle-diagram > .pay-card .pay-names { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .settle-diagram > .pay-card .pay-top { flex: 1 0 auto !important; max-width: 100%; } /* names stay whole on one line; the buttons drop below when there's no room */
-        .shop-item { gap: 8px !important; }
-        .shop-item .sheet-close { width: 30px !important; height: 30px !important; flex-shrink: 0; }
+        .shop-item { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; }
+        .shop-item.done { opacity: 0.6; }
+        .shop-item.done .shop-text { text-decoration: line-through; }
+        .shop-row1 { display: flex; align-items: center; gap: 10px; }
+        .shop-row1 .shop-text { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+        .shop-row1 .sheet-close { width: 30px; height: 30px; flex-shrink: 0; }
+        .shop-row2 { display: flex; align-items: center; gap: 8px; padding-left: 32px; min-height: 26px; }
+        .shop-row2 .shop-meta { margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .shop-row2 .shop-na-tag { margin: 0 auto 0 0; }
+        .shop-lock-ic { width: 22px; height: 22px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+        .shop-item.locked .shop-text { color: var(--text-muted); }
         .sd-box { position: relative; width: 100%; aspect-ratio: 320 / 210; }
         .sd-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .sd-arrow { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; opacity: 0.85; transition: stroke-width 0.2s, opacity 0.2s; }
@@ -977,6 +991,10 @@
         .help-cats::-webkit-scrollbar { display: none; }
         .help-cats button { flex-shrink: 0; }
         #helpOverlay .group-label { scroll-margin-top: 8px; }
+        .recap-hero { padding: 18px 20px; border-radius: 22px; background: var(--hero-gradient); color: #fff; }
+        .recap-hero .rh-k { font-size: 0.75rem; font-weight: 700; opacity: 0.85; }
+        .recap-hero .rh-v { font-size: 2.1rem; font-weight: 800; letter-spacing: -1px; margin: 4px 0 2px; }
+        .recap-hero .rh-s { font-size: 0.78rem; opacity: 0.9; }
         .event-strip { display: flex; flex-direction: column; gap: 6px; margin: 12px 16px 0; }
         .event-chip { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: 16px; border: 1px solid var(--gs-border, var(--border)); background: var(--gs-bg, var(--surface)); color: var(--text-main); font: inherit; text-align: left; cursor: pointer; }
         .event-chip .ev-ic { width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-strong); }
@@ -984,6 +1002,14 @@
         .event-chip .ev-t { flex: 1; min-width: 0; font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .event-chip .ev-left { font-size: 0.74rem; font-weight: 800; color: var(--text-muted); white-space: nowrap; }
         .event-chip .ev-left.soon { color: var(--accent-strong); }
+        #noticeFoot .composer-chips { display: none; }
+        #noticeFoot.show-chips .composer-chips { display: flex; animation: fade-in 0.18s ease-out; }
+        .poll-fields { flex-direction: column; gap: 6px; width: 100%; }
+        .poll-field { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 44px; border-radius: 16px; background: var(--input-bg); border: 1px solid transparent; }
+        .poll-field:focus-within { border-color: var(--accent); }
+        .poll-field .pf-n { font-size: 1.15rem; color: var(--accent-strong); line-height: 1; flex-shrink: 0; }
+        .poll-field input { flex: 1; min-width: 0; border: 0; outline: none; background: none; color: var(--text-main); font: inherit; font-size: 0.92rem; }
+        .poll-add { align-self: flex-start; }
         .poll { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .poll-opt { position: relative; overflow: hidden; display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); font: inherit; font-size: 0.84rem; text-align: left; cursor: pointer; }
         .poll-opt.mine { border-color: var(--accent); }
@@ -1015,7 +1041,7 @@
         .settle-diagram.tip-on .sd-amt:not(.sel) { animation: sd-ring 1.4s ease-out infinite; }
         @keyframes sd-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 9px transparent; } }
         @media (prefers-reduced-motion: reduce) { .sd-tip-hand, .settle-diagram.tip-on .sd-amt { animation: none !important; } }
-        .sd-dot { position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--gs-bg); z-index: 1; }
+        .sd-dot { position: absolute; top: 2px; right: 2px; width: 5px; height: 5px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--gs-bg); z-index: 1; }
         .sd-dot.owes { background: var(--danger); }
         .sd-dot.owed { background: var(--success); }
         .sd-person { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 1; }
@@ -1105,13 +1131,14 @@
     <div class="login-card sheet tall">
         <div class="sheet-head"><h2>Noticeboard</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeNotices()" data-ic="x"></button></div>
         <div id="noticeList" class="sheet-body"></div>
-        <div class="sheet-foot composer-foot">
+        <div id="noticeFoot" class="sheet-foot composer-foot">
             <div id="mentionSuggest" style="display:none;" aria-label="Mention someone"></div>
+            <div id="pollFields" class="poll-fields" style="display:none;" aria-label="Poll answers"></div>
             <div class="add-chips composer-chips">
                 <label class="add-chip chip-select interactive-btn"><span class="ic" data-ic="clock"></span><span id="noticeExpiryLabel">Keep forever</span><select id="noticeExpiry" aria-label="Remove the note after" onchange="this.dataset.touched = '1'; expiryChipSync()"><option value="0">Keep forever</option><option value="1">Remove after 1 day</option><option value="3">Remove after 3 days</option><option value="7">Remove after 1 week</option><option value="30">Remove after 1 month</option></select></label>
-                <button id="noticePinNew" type="button" class="add-chip interactive-btn" aria-pressed="false" onclick="triggerHaptic(); setNoticePinChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="pin"></span>Pin to top</button>
-                <label id="noticeDateChip" class="add-chip chip-select interactive-btn"><span class="ic" data-ic="calendar"></span><span id="noticeDateLabel">Date</span><input type="date" id="noticeDate" aria-label="Event date (shows a countdown on Home)" onclick="try { this.showPicker(); } catch (e) {}" onchange="noticeDateSync()"></label>
-                <button id="noticePollChip" type="button" class="add-chip interactive-btn" aria-pressed="false" onclick="triggerHaptic(); setPollChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="chart"></span>Poll</button>
+                <button id="noticePinNew" type="button" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); setNoticePinChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="pin"></span>Pin to top</button>
+                <label id="noticeDateChip" class="add-chip chip-select interactive-btn"><span class="ic" data-ic="calendar"></span><span id="noticeDateLabel">Until</span><input type="date" id="noticeDate" aria-label="Event date (shows a countdown on Home)" onclick="try { this.showPicker(); } catch (e) {}" onchange="noticeDateSync()"></label>
+                <button id="noticePollChip" type="button" class="add-chip interactive-btn" aria-pressed="false" onmousedown="event.preventDefault()" onclick="triggerHaptic(); setPollChip(this.getAttribute('aria-pressed') !== 'true')"><span class="ic" data-ic="chart"></span>Poll</button>
                 <button id="noticeCancelEdit" type="button" class="add-chip interactive-btn" style="display:none;" onclick="triggerHaptic(); cancelNoticeEdit()"><span class="ic" data-ic="x"></span>Cancel edit</button>
             </div>
             <div id="noticeComposer" class="composer">
@@ -1165,7 +1192,7 @@
                 <div class="card help-card"><span class="ri-icon" data-ic="users"></span><div><div class="card-title">Split with only some people</div><p>Tap the expense, then <b>Edit</b>, and tick only the people it was for. Everyone else isn't charged for it.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="swipe"></span><div><div class="card-title">Hold an expense</div><p>Press and hold one (right-click on a computer) for Share, Add again, Edit, Delete or Select many. Tap one to see its details, receipts and edit history.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="hash"></span><div><div class="card-title">Hashtag bills</div><p>Put a tag like <b>#rent</b> in an expense to keep it in its own pot with its own split. Tap the tag on the balance card to see only that bill.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="list"></span><div><div class="card-title">Categories</div><p>The little icon on each expense (⚡ electricity, 🔥 gas, 🛒 groceries, 🥩 meat…) is worked out from its words, including bijli, chawal or gosht, even when they're misspelt. Insights shows the totals per category.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="list"></span><div><div class="card-title">Categories</div><p>The little icons on each expense come from its words: ⚡ electricity (bijli, even misspelt), 🔥 gas, 📶 internet, and 🛒 groceries for everything else. An expense with several things shows several icons. Insights shows the totals per category.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">Away dates</div><p>Settings → Away dates. Expenses in this cycle dated while you're away, split between everyone, leave you out automatically.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="search"></span><div><div class="card-title">Find anything</div><p>More → Search looks through every cycle. Tap your name at the top to see only your own expenses.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="trash"></span><div><div class="card-title">Deleted by mistake?</div><p>Ask Shahzeb: deleted expenses stay in the Recovery Vault for a while and can be brought back.</p></div></div>
@@ -1174,7 +1201,7 @@
             <div id="helpSettle" class="group-label">Settling up</div>
             <div class="stack">
                 <div class="card help-card"><span class="ri-icon" data-ic="swap"></span><div><div class="card-title">The diagram</div><p>Arrows point to who gets paid. A <b style="color:var(--danger)">red dot</b> on someone's picture means they owe, <b style="color:var(--success)">green</b> means they're owed. <b>Tap an amount</b> on an arrow to see that payment and its buttons.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="card"></span><div><div class="card-title">Paying someone</div><p>Tap <b>Pay</b> to open their payment link (if they set one), then <b>I've paid</b>. They tap <b>Got it</b> to confirm, or <b>Not yet</b>.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="card"></span><div><div class="card-title">Paying someone</div><p>Tap <b>Pay</b> to open their payment link (if they set one), then <b>I've paid</b>. Only they are notified, and they tap <b>Got it</b> or <b>Not yet</b> right in their notifications (the bell).</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="bell"></span><div><div class="card-title">Getting paid</div><p>Tap <b>Remind</b> to send a friendly reminder (once an hour at most), <b>Partial</b> if they paid some of it, or <b>Paid</b> when it's all in.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="coins"></span><div><div class="card-title">Settle Up page</div><p>More → Settle Up adds up everything open with each housemate across this cycle, hashtag bills and past cycles, and settles it all in one go.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="users"></span><div><div class="card-title">Who's in this month</div><p>In Settlements, tap the people button and untick anyone who's away: the split works out without them.</p></div></div>
@@ -1183,11 +1210,11 @@
 
             <div id="helpHouse" class="group-label">Shopping &amp; notes</div>
             <div class="stack">
-                <div class="card help-card"><span class="ri-icon" data-ic="cart"></span><div><div class="card-title">Shopping list</div><p>Tap a usual item above the box to add it, or start typing (<b>mi</b> → Milk) and tap a suggestion. Separate items with commas (<b>2x milk</b> sets how many). Tap <b>I'll get it</b> so nobody buys it twice, tick it when bought, then <b>Add as expense</b>.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="cart"></span><div><div class="card-title">Shopping list</div><p>Tap a usual item above the box to add it, or start typing (<b>mi</b> → Milk) and tap a suggestion. Separate items with commas (<b>2x milk</b> sets how many). Tap <b>I'll get it</b> so nobody buys it twice: the item is then locked for everyone else, and you tap <b>I bought it</b> when you have it. If the person who added it gets it anyway, you get a notification. Then <b>Add as expense</b>.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="ban"></span><div><div class="card-title">Not available</div><p>Couldn't find it in the shop? Tap the <b>⊘</b> button. It stays on the list, greyed out, until everyone has seen it, then goes by itself. Nobody gets a notification for it.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="pin"></span><div><div class="card-title">Noticeboard</div><p>Notes for the whole house (Wi-Fi password, bin day). Type <b>@name</b> to tag someone. Notes can remove themselves after a few days. Only the writer can edit or delete a note.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Polls</div><p>Tap <b>Poll</b>, write the question on the first line and each answer on its own line (or just the question for Yes / No). Tap an answer to vote; tap it again to take your vote back.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">Dated notes</div><p>Tap <b>Date</b> to give a note a day (a party, the landlord visiting). It counts down on the Home screen and goes away by itself after the day.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Polls</div><p>Tap in the box to see the options, then <b>Poll</b>: write the question, fill the answers (① ② … tap <b>+ Answer</b> for more; left empty they are Yes / No). Tap an answer to vote; tap it again to take your vote back.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">Notes with a day</div><p>Tap <b>Until</b> to give a note a day (a party, the landlord visiting). It counts down on the Home screen (tap it there to jump to the note) and goes away by itself after the day.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="smile"></span><div><div class="card-title">Reactions</div><p>On someone else's note, tap the smiley for 👍, or <b>hold it</b> to pick another reaction. Tap again to take it back.</p></div></div>
             </div>
 
@@ -1205,18 +1232,11 @@
                 <div class="card help-card"><span class="ri-icon" data-ic="bell"></span><div><div class="card-title">Notifications</div><p>The bell shows what changed. Settings → What Notifies Me chooses which changes reach your phone.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="card"></span><div><div class="card-title">Your payment link</div><p>Settings → My Payment Link: add your Monzo or PayPal link so the Pay button takes people straight there.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="palette"></span><div><div class="card-title">Make it yours</div><p>Settings → Display: theme, text size, accent colour and which currency amounts are shown in. These only change your phone.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="shield"></span><div><div class="card-title">Admins</div><p>Admins have Settings → Admin Panel (housemates, Recovery Vault, backups, test mode). The super admin makes other admins and can hand the role on; only the super admin can rename or remove an admin.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="logout"></span><div><div class="card-title">Switch user</div><p>More → Switch User if someone else uses this phone. More → About app shows the version you're on.</p></div></div>
             </div>
         </div>
         <div class="sheet-foot"><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeHelp()">Got It</button></div>
-    </div>
-</div>
-
-<div id="manageUsersOverlay" class="sheet-overlay" style="display:none;">
-    <div class="login-card sheet">
-        <div class="sheet-head"><h2>Manage Housemates</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeManageUsers()" data-ic="x"></button></div>
-        <div id="manageUserList" class="stack" style="max-height:52dvh; overflow-y:auto;"></div>
-        <div class="sheet-foot"><button id="addHousemateBtn" class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); addUser()">Add New Housemate</button></div>
     </div>
 </div>
 
@@ -1306,11 +1326,10 @@
             <button class="row-item interactive-btn" onclick="triggerHaptic(); openNotifPrefs();"><span class="ri-icon" data-ic="bell"></span><span class="ri-label">What Notifies Me</span><span class="ri-end" data-ic="chev"></span></button>
         </div>
 
-        <div class="group-label">House</div>
+        <div id="adminGroup" style="display:none;"><div class="group-label">Admin</div>
         <div class="group">
-            <button class="row-item interactive-btn" onclick="triggerHaptic(); openManageUsers();"><span class="ri-icon" data-ic="users"></span><span class="ri-label">Manage Housemates</span><span class="ri-end" data-ic="chev"></span></button>
             <button id="adminBtn" class="row-item interactive-btn" style="display:none;" onclick="triggerHaptic(); openAdmin();"><span class="ri-icon" data-ic="shield"></span><span class="ri-label">Admin Panel<span class="ri-sub">Owner-only settings and tools</span></span><span class="ri-end" data-ic="chev"></span></button>
-        </div>
+        </div></div>
 
         <div class="group-label">Export</div>
         <div class="group">
@@ -1358,6 +1377,7 @@
         </div>
         <div class="group-label">House</div>
         <div class="group">
+            <button class="row-item interactive-btn" onclick="triggerHaptic(); openManageUsers();"><span class="ri-icon" data-ic="users"></span><span class="ri-label">Manage Housemates<span class="ri-sub">Add, rename, remove; admins</span></span><span class="ri-end" data-ic="chev"></span></button>
             <div id="smartRoundingContainer" class="row-item interactive-btn" onclick="triggerHaptic(); toggleSmartRounding()">
                 <span class="ri-icon" data-ic="coins"></span><span class="ri-label">Smart rounding<span class="ri-sub">Round settle-up amounts to 10p, for the whole house</span></span>
                 <span class="toggle-switch"><input type="checkbox" aria-label="Toggle Smart Rounding" id="smartRoundingInput" style="pointer-events:none;"><span class="toggle-slider" style="pointer-events:none;"></span></span>
@@ -1378,6 +1398,14 @@
             <div id="healthRows" class="group"></div>
         </div>
         <div class="sheet-foot"><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeAdmin()">Done</button></div>
+    </div>
+</div>
+
+<div id="manageUsersOverlay" class="sheet-overlay" style="display:none;">
+    <div class="login-card sheet">
+        <div class="sheet-head"><h2>Manage Housemates</h2><button class="sheet-close interactive-btn" aria-label="Close" onclick="triggerHaptic(); closeManageUsers()" data-ic="x"></button></div>
+        <div id="manageUserList" class="stack" style="max-height:52dvh; overflow-y:auto;"></div>
+        <div class="sheet-foot"><button id="addHousemateBtn" class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); addUser()">Add New Housemate</button></div>
     </div>
 </div>
 
@@ -1709,7 +1737,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.34.0";
+    const APP_VERSION = "7.35.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1935,13 +1963,13 @@
     // and remembers it; Back (phone button / gesture) or the ✕ then returns to it, with its scroll position, instead of home.
     // One history entry ({nav:true}) sits above the page while anything is open, so Back on the home screen leaves the app.
     const NAV_SHEETS = { // sheet id → its close function, topmost first (historyOverlay sits above the others)
-        historyOverlay: 'closeHistory', photoOverlay: 'closePhoto', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', adminOverlay: 'closeAdmin', aboutOverlay: 'closeAbout', settingsOverlay: 'closeSettings',
-        manageUsersOverlay: 'closeManageUsers', helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
+        historyOverlay: 'closeHistory', photoOverlay: 'closePhoto', expenseOverlay: 'closeExpense', inboxOverlay: 'closeInbox', restoreOverlay: 'closeRestore', trashOverlay: 'closeTrash', manageUsersOverlay: 'closeManageUsers', adminOverlay: 'closeAdmin', aboutOverlay: 'closeAbout', settingsOverlay: 'closeSettings',
+        helpOverlay: 'closeHelp', shoppingOverlay: 'closeShopping', noticeOverlay: 'closeNotices',
         insightsOverlay: 'closeInsights', searchOverlay: 'closeSearch', auditOverlay: 'closeAuditLog', pastOverlay: 'closePast', debtsOverlay: 'closeDebts' };
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showProfile: 'historyOverlay', openExport: 'historyOverlay', iouNew: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay', openAdmin: 'adminOverlay', openAbout: 'aboutOverlay', openAway: 'historyOverlay' };
+        showMoveOut: 'historyOverlay', showProfile: 'historyOverlay', openExport: 'historyOverlay', iouNew: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay', openAdmin: 'adminOverlay', openAbout: 'aboutOverlay', openAway: 'historyOverlay', openRecap: 'historyOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox', ctxOverlay: 'closeCtx' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navUserBack = false, navClickAttr = '';
@@ -2407,10 +2435,38 @@
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         
-        document.getElementById('adminBtn').style.display = isOwner() ? 'flex' : 'none';
+        document.getElementById('adminBtn').style.display = isOwner() ? 'flex' : 'none'; document.getElementById('adminGroup').style.display = isOwner() ? '' : 'none';
         document.getElementById('settingsOverlay').style.display = 'flex';
     }
-    function isOwner() { return currentUser === "Shahzeb"; }
+    /* ---- Admins: db.superAdmin (one person; Shahzeb until handed over) + db.admins (others). Admins see the Admin Panel and
+       manage housemates. Nobody can rename or remove an admin, except the super admin, who can also make and unmake admins
+       and hand the super admin role to someone else. (Kept in the shared data: a house-PIN app, not a bank.) ---- */
+    function superAdmin() { const u = db.users || []; return u.includes(db.superAdmin) ? db.superAdmin : u.includes('Shahzeb') ? 'Shahzeb' : (u[0] || ''); }
+    function adminList() { const s = superAdmin(); return [s, ...(Array.isArray(db.admins) ? db.admins : []).filter(a => a !== s && (db.users || []).includes(a))].filter(Boolean); }
+    function isAdmin(u = currentUser) { return !!u && adminList().includes(u); }
+    function isSuper(u = currentUser) { return !!u && superAdmin() === u; }
+    function isOwner() { return isAdmin(); }
+    /** May the current person rename / remove `u`? Admins can't touch admins; the super admin can (but nobody removes the super admin) */
+    function canManage(u, what) {
+        if (!isAdmin()) return false;
+        if (isSuper(u)) return what === 'rename' && isSuper();
+        return !isAdmin(u) || isSuper() || u === currentUser; // an admin may rename / remove themselves
+    }
+    function setAdmin(u, on) {
+        if (!isSuper() || isSuper(u) || !(db.users || []).includes(u)) return;
+        customConfirm(on ? `Make <b>${escapeHTML(u)}</b> an admin?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get the Admin Panel and can manage housemates (but not other admins).</span>` : `Remove <b>${escapeHTML(u)}</b> as admin?`, () => {
+            db.superAdmin = superAdmin(); const set = new Set((db.admins || []).filter(a => a !== u)); if (on) set.add(u);
+            db.admins = [...set]; logAudit(on ? `Made ${u} an admin` : `Removed ${u} as admin`, null, true);
+            executeActionWithSave(); openManageUsersList(); render();
+        });
+    }
+    function makeSuper(u) {
+        if (!isSuper() || isSuper(u) || !(db.users || []).includes(u)) return;
+        customConfirm(`Hand the <b>super admin</b> role to <b>${escapeHTML(u)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">You stay an admin, but only ${escapeHTML(u)} will be able to manage admins, and you can't take it back yourself.</span>`, () => {
+            const old = superAdmin(); db.superAdmin = u; db.admins = [...new Set([...(db.admins || []).filter(a => a !== u), old])];
+            logAudit(`Made ${u} the super admin`, null, true); executeActionWithSave(); openManageUsersList(); render();
+        });
+    }
     // ---- Admin Panel: everything only the owner sees (smart rounding, Vault, restore, health, test mode) ----
     function openAdmin() {
         if (!isOwner()) return;
@@ -2820,22 +2876,19 @@
         if (top.length) html += h('Biggest expenses') + '<div class="group">' + top.map(ex => `<div class="health-row"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(ex.name)}</b> · ${formatDescDisplay(ex.desc, ex.originalSym || viewMoney().sym)}</span><span class="hv">${fmt(ex.amount)}</span></div>`).join('') + '</div>';
         return html;
     }
-    /* ---- Categories, worked out from an expense's words (English, Urdu / Pashto in Roman letters, shop names). Misspelt
-       long words still count (electrcity, elecricity...): up to 1-2 letters off. First matching category in this order wins,
-       so "gas and electricity" is Electricity. Results are cached per text (render runs often). ---- */
+    /* ---- Categories from an expense's words: only Electricity, Gas and Internet are their own; everything else is Groceries.
+       Knows Urdu / Pashto words in Roman letters (bijli, bejli, bjli...) and close misspellings of the longer words
+       (electrcity, elecricity: 1-2 letters off). An expense can have several ("bijli and milk" = ⚡ + 🛒). Cached per text. ---- */
     const CATEGORIES = [
-        { id: 'electricity', name: 'Electricity', emo: '⚡', words: ['electricity', 'electric', 'electricty', 'bijli', 'bejli', 'bjli', 'bijlee', 'bijle', 'bijlie', 'bijly', 'bjlee', 'edf', 'octopus', 'ovo', 'eon', 'prepay', 'meter top up', 'topup'] },
+        { id: 'electricity', name: 'Electricity', emo: '⚡', words: ['electricity', 'electric', 'electricty', 'elec', 'bijli', 'bejli', 'bjli', 'bijlee', 'bijle', 'bijlie', 'bijly', 'bjlee', 'edf', 'octopus', 'ovo', 'eon'] },
         { id: 'gas', name: 'Gas', emo: '🔥', words: ['gas', 'boiler'] },
-        { id: 'water', name: 'Water', emo: '💧', words: ['water bill', 'water rates', 'thames water', 'pani bill'] },
         { id: 'internet', name: 'Internet', emo: '📶', words: ['internet', 'wifi', 'wi-fi', 'broadband', 'fibre', 'router', 'virgin media', 'bt'] },
-        { id: 'rent', name: 'Rent', emo: '🏠', words: ['rent', 'kiraya', 'kraya', 'landlord'] },
-        { id: 'council', name: 'Council tax', emo: '🏛️', words: ['council', 'council tax'] },
-        { id: 'takeaway', name: 'Takeaway', emo: '🍕', words: ['takeaway', 'take away', 'pizza', 'kfc', 'mcdonalds', 'burger', 'dominos', 'deliveroo', 'ubereats', 'uber eats', 'just eat', 'justeat', 'restaurant', 'biryani', 'kebab', 'nandos', 'shawarma'] },
-        { id: 'meat', name: 'Meat', emo: '🥩', words: ['meat', 'gosht', 'ghosht', 'gosht', 'ghwakha', 'ghkhwakha', 'ghwakhe', 'ghokha', 'ghwaka', 'mutton', 'lamb', 'beef', 'mince', 'qeema', 'keema', 'chicken', 'murgh', 'murghi', 'murgi', 'halal', 'butcher', 'qasai'] },
-        { id: 'groceries', name: 'Groceries', emo: '🛒', words: ['grocery', 'groceries', 'shopping', 'tesco', 'asda', 'aldi', 'lidl', 'sainsbury', 'sainsburys', 'morrisons', 'iceland', 'coop', 'co-op', 'waitrose', 'costco', 'milk', 'doodh', 'dudh', 'eggs', 'egg', 'anday', 'anda', 'bread', 'roti', 'naan', 'rice', 'chawal', 'chawel', 'chaawal', 'chawl', 'atta', 'aata', 'flour', 'daal', 'dal', 'sabzi', 'sabji', 'vegetables', 'veg', 'veggies', 'fruit', 'fruits', 'tomato', 'tomatoes', 'tamatar', 'onion', 'onions', 'pyaz', 'piyaz', 'payaz', 'potato', 'potatoes', 'aloo', 'oil', 'ghee', 'sugar', 'cheeni', 'chini', 'tea', 'chai', 'yoghurt', 'yogurt', 'dahi', 'butter', 'cheese', 'spices', 'masala', 'salt', 'namak', 'garlic', 'lehsan', 'ginger', 'adrak', 'chillies', 'mirch', 'banana', 'bananas', 'apples', 'juice'] },
-        { id: 'cleaning', name: 'Cleaning', emo: '🧽', words: ['cleaning', 'cleaner', 'bleach', 'detergent', 'soap', 'sponge', 'sponges', 'bin bags', 'binbags', 'toilet roll', 'toilet paper', 'tissue', 'tissues', 'kitchen roll', 'washing up', 'fairy', 'dettol', 'domestos', 'hoover', 'mop', 'surf', 'ariel', 'persil'] },
-        { id: 'transport', name: 'Transport', emo: '🚗', words: ['uber', 'taxi', 'bolt', 'bus', 'train', 'fuel', 'petrol', 'diesel', 'parking', 'tube', 'oyster'] },
+        { id: 'groceries', name: 'Groceries', emo: '🛒', words: [] },
     ];
+    // Words that say nothing about what was bought ("45 bijli top-up" is only electricity)
+    const CAT_FILLER = new Set(['top', 'up', 'top-up', 'topup', 'topped', 'bill', 'bills', 'payment', 'paid', 'pay', 'for', 'and', 'the', 'of', 'to', 'a', 'an', 'meter', 'card', 'key',
+        'month', 'monthly', 'week', 'weekly', 'prepay', 'prepaid', 'credit', 'recharge', 'house', 'home', 'from', 'in', 'on', 'at', 'with', 'plus', 'half', 'share', 'split',
+        'my', 'our', 'extra', 'tariff', 'standing', 'charge', 'charges', 'units', 'unit', 'aur', 'ka', 'ki', 'ke', 'or', 'this', 'last', 'next', 'cycle', 'balance', 'account', 'direct', 'debit', 'dd', 'nov', 'dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct']);
     function editDistance(a, b, cap) {
         if (Math.abs(a.length - b.length) > cap) return cap + 1;
         let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
@@ -2847,27 +2900,28 @@
         return prev[b.length];
     }
     const catCache = new Map();
-    function expenseCategory(desc) {
+    function expenseCategories(desc) {
         const key = String(desc || ''); if (catCache.has(key)) return catCache.get(key);
         const text = ' ' + key.toLowerCase().replace(/#[\w-]+/g, ' ').replace(/[^a-zÀ-ɏ\s-]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
-        const tokens = text.trim().split(' ').filter(Boolean);
-        let hit = null;
-        for (const c of CATEGORIES) {
-            if (c.words.some(w => w.includes(' ') ? text.includes(' ' + w + ' ') : tokens.includes(w))) { hit = c; break; }
-        }
-        if (!hit) { // close spellings of the longer words (5+ letters): 1 letter off, 2 for words of 8+
-            outer: for (const c of CATEGORIES) for (const w of c.words) {
-                if (w.length < 5 || w.includes(' ')) continue; const cap = w.length >= 8 ? 2 : 1;
-                for (const t of tokens) if (t.length >= 4 && editDistance(t, w, cap) <= cap) { hit = c; break outer; }
-            }
-        }
+        const tokens = text.trim().split(' ').filter(Boolean); const used = new Set(); const hits = [];
+        CATEGORIES.forEach(c => {
+            let hit = false;
+            c.words.forEach(w => {
+                if (w.includes(' ')) { if (text.includes(' ' + w + ' ')) { hit = true; w.split(' ').forEach(x => used.add(x)); } return; }
+                tokens.forEach(t => { if (t === w || (w.length >= 5 && t.length >= 4 && editDistance(t, w, w.length >= 8 ? 2 : 1) <= (w.length >= 8 ? 2 : 1))) { hit = true; used.add(t); } });
+            });
+            if (hit) hits.push(c);
+        });
+        const rest = tokens.filter(t => !used.has(t) && !CAT_FILLER.has(t) && t.replace(/-/g, '').length >= 2);
+        if (rest.length || !hits.length) hits.push(CATEGORIES[CATEGORIES.length - 1]); // anything else: groceries
         if (catCache.size > 2000) catCache.clear();
-        catCache.set(key, hit); return hit;
+        catCache.set(key, hits); return hits;
     }
+    function expenseCategory(desc) { return expenseCategories(desc)[0]; }
     /** "By category" block for a list of expenses (Insights month and year) */
     function categoryBarsHtml(exps) {
         const { fmt } = viewMoney(); const sums = {}; let total = 0;
-        exps.forEach(ex => { const c = expenseCategory(ex.desc); const k = c ? c.id : 'other'; sums[k] = (sums[k] || 0) + (Number(ex.amount) || 0); total += Number(ex.amount) || 0; });
+        exps.forEach(ex => { const cs = expenseCategories(ex.desc), a = Number(ex.amount) || 0; cs.forEach(c => { sums[c.id] = (sums[c.id] || 0) + a / cs.length; }); total += a; }); // a mixed expense is shared between its categories
         const rows = Object.keys(sums).filter(k => sums[k] > 0).sort((a, b) => (a === 'other') - (b === 'other') || sums[b] - sums[a]);
         if (!rows.length || !total) return '';
         const max = Math.max(...rows.map(k => sums[k]), 0.01);
@@ -3008,7 +3062,7 @@
         customConfirm(`Tell ${escapeHTML(to)} you've paid them <b>${fmt(remainingBase)}</b>?<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">They'll get a notification to confirm it.</span>`, () => {
             if (arcIdx >= 0) { arcIdx = refind(); if (arcIdx < 0) { showToast("That cycle changed - try again", 2500); return; } }
             claimStore(arcIdx, true)[key] = { by: currentUser, amt: Math.round(remainingBase * 100) / 100, t: Date.now() };
-            logAudit(`Said they paid ${to} ${fmt(remainingBase)}`, key); render(); executeActionWithSave(); showToast(`SENT - WAITING FOR ${escapeHTML(to).toUpperCase()}`, 2500);
+            logAudit(`Said they paid ${to} ${fmt(remainingBase)}`, key, false, 'pastpay'); Object.assign(db.auditLog[0], { who: [currentUser, to], claim: 'pay' }); render(); executeActionWithSave(); showToast(`SENT - WAITING FOR ${escapeHTML(to).toUpperCase()}`, 2500);
         });
     }
     function confirmClaim(key, arcIdx) {
@@ -3016,7 +3070,7 @@
         const holder = arcIdx >= 0 ? db.archives[arcIdx] : db; if (!holder.paidStatus) holder.paidStatus = {};
         holder.paidStatus[key] = Math.round(((holder.paidStatus[key] || 0) + claim.amt) * 100) / 100;
         delete holder.payClaims[key];
-        logAudit(`Confirmed ${claim.by}'s payment of ${viewMoney().fmt(claim.amt)}`, key); render(); executeActionWithSave(); showToast("PAYMENT CONFIRMED", 2000);
+        logAudit(`Confirmed ${claim.by}'s payment of ${viewMoney().fmt(claim.amt)}`, key, false, 'pastpay'); db.auditLog[0].who = [claim.by, currentUser]; render(); executeActionWithSave(); showToast("PAYMENT CONFIRMED", 2000);
     }
     function rejectClaim(key, arcIdx) {
         const claim = getClaim(key, arcIdx); if (!claim) return;
@@ -3025,7 +3079,7 @@
             if (arcIdx >= 0) { arcIdx = refind(); if (arcIdx < 0) return; }
             const store = claimStore(arcIdx, false); if (!store || !store[key]) return;
             delete store[key];
-            logAudit(`Hasn't received ${claim.by}'s payment yet`, key); render(); executeActionWithSave();
+            logAudit(`Hasn't received ${claim.by}'s payment yet`, key, false, 'pastpay'); db.auditLog[0].who = [claim.by, currentUser]; render(); executeActionWithSave();
         });
     }
     /** Shown to the person owed when the other person says they've paid. */
@@ -3046,16 +3100,20 @@
     }
     function updateNoticeCount() { const el = document.getElementById('noticeCount'); if (!el) return; const n = liveNotices().length; el.innerText = n; el.style.display = n ? 'inline-block' : 'none'; setTabBadge('tabNoticeBadge', n); }
     function setTabBadge(id, n) { const b = document.getElementById(id); if (!b) return; b.innerText = n > 99 ? '99+' : n; b.style.display = n ? 'inline-flex' : 'none'; }
-    function openNotices() {
+    function openNotices(focusId) {
         if (document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         cancelNoticeEdit(); renderNotices();
         document.getElementById('noticeOverlay').style.display = 'flex'; noticesMarkSeen();
+        if (typeof focusId === 'string') setTimeout(() => { // from the Home countdown: scroll to that note and flash it
+            const card = [...document.querySelectorAll('#noticeList .card')].find(c => c.dataset.nid === focusId); if (!card) return;
+            card.scrollIntoView({ block: 'center', behavior: revealMotionOff() ? 'auto' : 'smooth' }); flashDone(card);
+        }, 380);
     }
     function closeNotices() { cancelNoticeEdit(); reactPickerClose(); document.getElementById('noticeOverlay').style.display = 'none'; }
     function renderNotices() {
         const list = liveNotices().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.t - a.t);
-        setHTML(document.getElementById('noticeList'), !localDbLoaded ? skelCards(3) : list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}">
+        setHTML(document.getElementById('noticeList'), !localDbLoaded ? skelCards(3) : list.length ? list.map(n => `<div class="card${n.pinned ? ' selected' : ''}${seenNoticeIds && !seenNoticeIds.has(n.id) ? ' enter' : ''}" data-nid="${escapeHTML(n.id)}">
                 ${n.pinned || n.exp || n.event || n.poll ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">${n.poll ? `<span class="tag">${ico('chart').replace('<svg', '<svg width="12" height="12"')}Poll</span>` : ''}${eventTagHTML(n)}${n.pinned ? `<span class="tag">${ico('pin').replace('<svg', '<svg width="12" height="12"')}Pinned</span>` : ''}${n.exp ? `<span class="tag muted">${ico('clock').replace('<svg', '<svg width="12" height="12"')}${expiryLabel(n.exp)}</span>` : ''}</div>` : ''}
                 <div class="card-text">${mentionify(linkify(n.text))}</div>${pollHTML(n)}${reactsHTML(n)}${seenByHTML(n)}
                 <div class="card-row" style="margin-top:10px;"><span style="display:flex; align-items:center; gap:8px;" class="card-meta">${avatarHTML(n.by || '?', 'sm')}${escapeHTML(n.by || '')} · ${new Date(n.t).toLocaleDateString()}</span>
@@ -3080,9 +3138,8 @@
         const pollOn = document.getElementById('noticePollChip').getAttribute('aria-pressed') === 'true' && !(n && n.poll);
         let qText = text, poll = null;
         if (pollOn) {
-            const lines = text.split(/\n+/).map(s => s.trim()).filter(Boolean); qText = lines[0].slice(0, 300);
-            let opts = [...new Set(lines.slice(1).map(s => s.replace(/^[-*•\d.)\s]+/, '').trim().slice(0, 60)).filter(Boolean))].slice(0, 6);
-            if (opts.length < 2) opts = ['Yes', 'No'];
+            qText = text.replace(/\s+/g, ' ').slice(0, 300);
+            let opts = pollAnswers(); if (opts.length < 2) opts = ['Yes', 'No'];
             poll = { opts, votes: {} };
         }
         if (n) {
@@ -3124,12 +3181,41 @@
     function noticeDateSync() {
         const i = document.getElementById('noticeDate'), l = document.getElementById('noticeDateLabel'), chip = document.getElementById('noticeDateChip'); if (!i || !l) return;
         const v = /^\d{4}-\d{2}-\d{2}$/.test(i.value) ? i.value : '';
-        l.textContent = v ? dueLabel(v).date : 'Date'; if (chip) chip.classList.toggle('on', !!v);
+        l.textContent = v ? 'Until ' + dueLabel(v).date : 'Until'; if (chip) chip.classList.toggle('on', !!v);
     }
+    // Poll: the text box is the question; answers have their own fields (① Yes, ② No as hints; + adds more, up to 6)
+    const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥'];
     function setPollChip(on) {
         const c = document.getElementById('noticePollChip'); if (c) c.setAttribute('aria-pressed', on ? 'true' : 'false');
-        const i = document.getElementById('noticeInput'); if (i) i.placeholder = on ? 'Question on the first line, then one answer per line (none = Yes / No)' : 'Write a note... type @ to tag someone';
+        const i = document.getElementById('noticeInput'); if (i) i.placeholder = on ? 'Ask a question...' : 'Write a note... type @ to tag someone';
+        const box = document.getElementById('pollFields'); if (!box) return;
+        if (on) { if (!box.children.length) { pollFieldAdd(true); pollFieldAdd(true); } box.style.display = 'flex'; }
+        else { box.innerHTML = ''; box.style.display = 'none'; }
+        noticeChipsSync();
     }
+    function pollFieldAdd(quiet) {
+        const box = document.getElementById('pollFields'); if (!box) return;
+        const rows = box.querySelectorAll('.poll-field'); if (rows.length >= 6) return;
+        const n = rows.length; const add = box.querySelector('.poll-add'); if (add) add.remove();
+        box.insertAdjacentHTML('beforeend', `<label class="poll-field"><span class="pf-n" aria-hidden="true">${CIRCLED[n]}</span><input type="text" maxlength="60" autocomplete="off" aria-label="Answer ${n + 1}" placeholder="${n === 0 ? 'Yes' : n === 1 ? 'No' : 'Answer ' + (n + 1)}" onkeydown="if (event.key === 'Enter') { event.preventDefault(); pollFieldAdd(); }"></label>`);
+        if (n + 1 < 6) box.insertAdjacentHTML('beforeend', `<button type="button" class="add-chip poll-add interactive-btn" onmousedown="event.preventDefault()" onclick="triggerHaptic(); pollFieldAdd()">+ Answer</button>`);
+        if (!quiet) { const ins = box.querySelectorAll('.poll-field input'); ins[ins.length - 1].focus(); }
+    }
+    /** The answers typed (an empty first / second field counts as its hint: Yes / No) */
+    function pollAnswers() {
+        const ins = [...document.querySelectorAll('#pollFields .poll-field input')];
+        return [...new Set(ins.map((x, i) => x.value.trim().slice(0, 60) || (i < 2 ? x.placeholder : '')).filter(Boolean))].slice(0, 6);
+    }
+    /* Notices options (Keep / Pin / Until / Poll) show only while you're writing - or while one of them is set */
+    function noticeChipsSync() {
+        const foot = document.getElementById('noticeFoot'); if (!foot) return;
+        const inside = foot.contains(document.activeElement);
+        const set = document.getElementById('noticePinNew').getAttribute('aria-pressed') === 'true' || document.getElementById('noticePollChip').getAttribute('aria-pressed') === 'true'
+            || !!document.getElementById('noticeDate').value || document.getElementById('noticeExpiry').value !== '0' || !!editingNoticeId || !!document.getElementById('noticeInput').value.trim();
+        foot.classList.toggle('show-chips', inside || set);
+    }
+    document.addEventListener('focusin', (e) => { if (e.target.closest && e.target.closest('#noticeFoot')) noticeChipsSync(); });
+    document.addEventListener('focusout', (e) => { if (e.target.closest && e.target.closest('#noticeFoot')) setTimeout(noticeChipsSync, 120); });
     function eventLeft(event) {
         const d = dueLabel(event); const n = d.left;
         return { date: d.date, left: n === 'today' ? 'today' : n === 'tomorrow' ? 'tomorrow' : /late/.test(n) ? 'passed' : n, past: /late/.test(n) };
@@ -3157,7 +3243,7 @@
         const el = document.getElementById('eventStrip'); if (!el) return;
         const today = isoDay(Date.now()), until = isoDay(Date.now() + 60 * 864e5);
         const list = liveNotices().filter(n => n && n.event && n.event >= today && n.event <= until).sort((a, b) => a.event < b.event ? -1 : 1).slice(0, 3);
-        setHTML(el, list.map(n => { const e = eventLeft(n.event); return `<button class="event-chip interactive-btn" onclick="triggerHaptic(); openNotices()"><span class="ev-ic">${ico('calendar')}</span><span class="ev-t">${escapeHTML(n.text.split('\n')[0].slice(0, 60))}</span><span class="ev-left${e.left === 'today' || e.left === 'tomorrow' ? ' soon' : ''}">${escapeHTML(e.left === 'today' ? 'Today' : e.left === 'tomorrow' ? 'Tomorrow' : e.left)}</span></button>`; }).join(''));
+        setHTML(el, list.map(n => { const e = eventLeft(n.event); return `<button class="event-chip interactive-btn" onclick="triggerHaptic(); openNotices(${jsArg(n.id)})"><span class="ev-ic">${ico('calendar')}</span><span class="ev-t">${escapeHTML(n.text.split('\n')[0].slice(0, 60))}</span><span class="ev-left${e.left === 'today' || e.left === 'tomorrow' ? ' soon' : ''}">${escapeHTML(e.left === 'today' ? 'Today' : e.left === 'tomorrow' ? 'Tomorrow' : e.left)}</span></button>`; }).join(''));
         el.style.display = list.length ? '' : 'none';
     }
     function expiryChipSync() { const s = document.getElementById('noticeExpiry'), l = document.getElementById('noticeExpiryLabel'); if (s && l && s.selectedIndex >= 0) l.textContent = s.options[s.selectedIndex].text; }
@@ -3289,7 +3375,7 @@
     /* "Not available" (s.na): someone tried and couldn't get it. It stays on the list, greyed with a tag, until every
        housemate has opened the list once since (s.naSeen), then it goes by itself. Never logged, so nobody is notified. */
     function shopNaToggle(id) {
-        const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done) return;
+        const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done) return; if (shopLocked(s)) { shopLockedToast(s); return; }
         if (s.na) { delete s.na; delete s.naBy; delete s.naT; delete s.naSeen; }
         else { s.na = true; s.naBy = currentUser; s.naT = Date.now(); s.naSeen = [currentUser]; delete s.claimBy; delete s.claimT; }
         renderShopping(); executeActionWithSave();
@@ -3309,13 +3395,23 @@
         const all = db.shopping || [];
         const byT = (a, b) => b.t - a.t;
         const list = all.filter(x => !x.done && !x.na).sort(byT).concat(all.filter(x => !x.done && x.na).sort(byT), all.filter(x => x.done).sort(byT));
-        document.getElementById('shopList').innerHTML = !localDbLoaded ? skelCards(3) : list.length ? list.map(s => `<div class="shop-item card${seenShopIds && !seenShopIds.has(s.id) ? ' enter' : ''}${s.claimBy && !s.done ? ' claimed' : ''}${s.na && !s.done ? ' na' : ''}" data-sid="${escapeHTML(s.id)}" style="display:flex; align-items:center; gap:12px; padding:10px 12px; ${s.done ? 'opacity:0.6;' : ''}">
-                ${s.na && !s.done ? `<span class="shop-na-ic" aria-hidden="true">${ico('ban')}</span>` : `<input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">`}
-                <div style="flex:1; min-width:0;"><div class="shop-text card-title" style="${s.done ? 'text-decoration:line-through;' : ''}">${(Number(s.qty) || 1) > 1 ? `<span class="qty-b">${Number(s.qty)}×</span> ` : ''}${escapeHTML(s.text)}</div>
-                <div class="shop-sub">${s.na && !s.done ? `<span class="tag danger shop-na-tag">Not available${s.naBy ? ' · ' + escapeHTML(s.naBy) : ''}</span>` : `<span class="card-meta" style="margin:0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))}${isNaN(new Date(s.t)) ? '' : ' · ' + FMT_DM.format(new Date(s.t))}</span>`}${s.done || s.na ? '' : `<span class="qty-step"><button type="button" aria-label="One fewer ${escapeHTML(s.text)}" onclick="shopQty(${jsArg(s.id)}, -1)">−</button><b>${Number(s.qty) || 1}</b><button type="button" aria-label="One more ${escapeHTML(s.text)}" onclick="shopQty(${jsArg(s.id)}, 1)">+</button></span>`}</div></div>
-                ${s.done || s.na ? '' : shopClaimHTML(s)}
-                ${s.done ? '' : `<button class="sheet-close interactive-btn shop-na-btn${s.na ? ' on' : ''}" aria-label="${s.na ? 'Available again' : 'Not available'}: ${escapeHTML(s.text)}" title="${s.na ? 'Available again' : 'Not available'}" style="width:32px; height:32px;" onclick="triggerHaptic(); shopNaToggle(${jsArg(s.id)})">${ico(s.na ? 'restore' : 'ban')}</button>`}
-                <button class="sheet-close interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" style="width:32px; height:32px;" onclick="triggerHaptic(); removeShopItem(${jsArg(s.id)})">${ico('x')}</button></div>`).join('')
+        // Card: [tick] name (whole, can wrap) [⊘][✕]   /   who · when   [− n +]   [I'll get it]
+        // Someone else said "I'll get it": locked for everyone but them and the person who added it
+        document.getElementById('shopList').innerHTML = !localDbLoaded ? skelCards(3) : list.length ? list.map(s => {
+            const locked = shopLocked(s), mineClaim = s.claimBy === currentUser && !s.done;
+            const tick = s.na && !s.done ? `<span class="shop-na-ic" aria-hidden="true">${ico('ban')}</span>`
+                : locked ? `<span class="shop-lock-ic" title="${escapeHTML(s.claimBy)}'s getting it" aria-hidden="true">${avatarHTML(s.claimBy, 'xs')}</span>`
+                : `<input type="checkbox" aria-label="Bought ${escapeHTML(s.text)}" ${s.done ? 'checked' : ''} onchange="triggerHaptic(); toggleShopItem(${jsArg(s.id)})" style="width:22px; height:22px; flex-shrink:0; accent-color:var(--accent);">`;
+            const icons = locked ? '' : (s.done ? '' : `<button class="sheet-close interactive-btn shop-na-btn${s.na ? ' on' : ''}" aria-label="${s.na ? 'Available again' : 'Not available'}: ${escapeHTML(s.text)}" title="${s.na ? 'Available again' : 'Not available'}" onclick="triggerHaptic(); shopNaToggle(${jsArg(s.id)})">${ico(s.na ? 'restore' : 'ban')}</button>`)
+                + `<button class="sheet-close interactive-btn" aria-label="Remove ${escapeHTML(s.text)}" onclick="triggerHaptic(); removeShopItem(${jsArg(s.id)})">${ico('x')}</button>`;
+            const meta = s.na && !s.done ? `<span class="tag danger shop-na-tag">Not available${s.naBy ? ' · ' + escapeHTML(s.naBy) : ''}</span>`
+                : `<span class="card-meta shop-meta">${escapeHTML(s.done && s.doneBy ? 'bought by ' + s.doneBy : (s.by || ''))}${isNaN(new Date(s.t)) ? '' : ' · ' + FMT_DM.format(new Date(s.t))}</span>`;
+            const qty = s.done || s.na || locked ? ((Number(s.qty) || 1) > 1 && locked ? `<span class="qty-b">${Number(s.qty)}×</span>` : '') : `<span class="qty-step"><button type="button" aria-label="One fewer ${escapeHTML(s.text)}" onclick="shopQty(${jsArg(s.id)}, -1)">−</button><b>${Number(s.qty) || 1}</b><button type="button" aria-label="One more ${escapeHTML(s.text)}" onclick="shopQty(${jsArg(s.id)}, 1)">+</button></span>`;
+            const claim = s.done || s.na ? '' : mineClaim ? `<button class="btn-pill primary interactive-btn shop-claim" aria-label="I bought ${escapeHTML(s.text)}" onclick="triggerHaptic(); shopBought(${jsArg(s.id)})">I bought it</button><button class="btn-pill interactive-btn shop-claim" aria-label="Can't get ${escapeHTML(s.text)}" title="Can't get it after all" onclick="triggerHaptic(); claimShopItem(${jsArg(s.id)})">Can't</button>` : shopClaimHTML(s);
+            return `<div class="shop-item card${seenShopIds && !seenShopIds.has(s.id) ? ' enter' : ''}${s.claimBy && !s.done ? ' claimed' : ''}${s.na && !s.done ? ' na' : ''}${locked ? ' locked' : ''}${s.done ? ' done' : ''}" data-sid="${escapeHTML(s.id)}">
+                <div class="shop-row1">${tick}<div class="shop-text card-title">${(Number(s.qty) || 1) > 1 && !locked ? `<span class="qty-b">${Number(s.qty)}×</span> ` : ''}${escapeHTML(s.text)}</div>${icons}</div>
+                <div class="shop-row2">${meta}${qty}${claim}</div></div>`;
+        }).join('')
             : emptyState('cart', 'Nothing to buy. Add items below, separated by commas.');
         document.getElementById('shopBoughtActions').style.display = all.some(x => x.done) ? 'flex' : 'none';
         if (localDbLoaded) seenShopIds = new Set(all.map(x => x.id)); // items added after this slide in
@@ -3350,14 +3446,34 @@
         renderShopping(); executeActionWithSave();
         if (s.claimBy) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
+    /** Someone else said "I'll get it": only they and the person who added the item can change it */
+    function shopLocked(s) { return !!(s && !s.done && s.claimBy && s.claimBy !== currentUser && s.by !== currentUser); }
+    function shopLockedToast(s) { showToast(`${escapeHTML(s.claimBy).toUpperCase()} IS GETTING IT`, 2200); }
+    /** The person who added an item got it / removed it after someone else said "I'll get it": tell them not to buy it.
+        Goes only to that person (like a reminder) */
+    function shopTellClaimer(s, what) {
+        if (!s || !s.claimBy || s.claimBy === currentUser || s.done && what !== 'removed') return;
+        logAudit(`${what === 'removed' ? 'Took' : 'Already got'} ${s.text} ${what === 'removed' ? 'off the shopping list' : ''}`.trim(), null, false, 'nudge');
+        Object.assign(db.auditLog[0], { to: s.claimBy, msg: `${what === 'removed' ? 'took ' + s.text + ' off the list' : 'already got ' + s.text} - no need to buy it` });
+    }
+    /** "I bought it" (the person who said they'd get it) */
+    function shopBought(id) {
+        const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done || s.claimBy !== currentUser) return;
+        s.done = true; s.doneBy = currentUser; renderShopping(); executeActionWithSave();
+        flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
+    }
     function toggleShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
+        if (shopLocked(s)) { shopLockedToast(s); renderShopping(); return; }
+        if (!s.done) shopTellClaimer(s, 'bought');
         s.done = !s.done; if (s.done) s.doneBy = currentUser; else delete s.doneBy;
         renderShopping(); executeActionWithSave(); // not logged: ticking back and forth would flood the activity log
         if (s.done) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
     function removeShopItem(id) {
         const s = (db.shopping || []).find(x => x.id === id); if (!s) return;
+        if (shopLocked(s)) { shopLockedToast(s); return; }
+        if (!s.done) shopTellClaimer(s, 'removed');
         db.shopping = db.shopping.filter(x => x.id !== id); pendingShopIds = pendingShopIds.filter(x => x !== id);
         renderShopping(); executeActionWithSave(); // not logged (only clearing bought items and "Add as expense" are)
     }
@@ -4035,7 +4151,7 @@
         customConfirm(`Tell <b>${escapeHTML(n)}</b> you've paid them <b>${fmt(v)}</b>?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">They get a notification and tap "Got it" to settle everything between you.</span>`, () => {
             if (!db.settleClaims || typeof db.settleClaims !== 'object') db.settleClaims = {};
             db.settleClaims[settleKey(currentUser, n)] = { by: currentUser, amt: Math.round(v * 100) / 100, t: Date.now() };
-            logAudit(`Says they paid ${n} ${fmt(v)} to settle up`, null, false, 'pastpay'); db.auditLog[0].who = [currentUser, n];
+            logAudit(`Says they paid ${n} ${fmt(v)} to settle up`, null, false, 'pastpay'); Object.assign(db.auditLog[0], { who: [currentUser, n], claim: 'settle' });
             render(); executeActionWithSave(); showToast(`SENT - WAITING FOR ${escapeHTML(n).toUpperCase()}`, 2500);
         });
     }
@@ -4159,16 +4275,30 @@
         if(document.activeElement) document.activeElement.blur();
         const menu = document.getElementById('sideMenu'); if (menu.classList.contains('open')) toggleMenu();
         
-        const list = document.getElementById('manageUserList');
-        list.innerHTML = db.users.map(u => `<div class="card"><div style="display:flex; align-items:center; gap:12px;">${avatarHTML(u)}<div class="card-title" style="flex:1;">${escapeHTML(u)}${(db.activeUsers || []).includes(u) ? '' : ' <span class="tag muted">away</span>'}</div></div><div class="card-actions"><button class="btn-pill interactive-btn" onclick="triggerHaptic(); showMoveOut(${jsArg(u)})">Move-out</button><button class="btn-pill interactive-btn" onclick="triggerHaptic(); editUser(${jsArg(u)})">Rename</button><button class="btn-pill danger interactive-btn" onclick="triggerHaptic(); deleteUser(${jsArg(u)})">Remove</button></div></div>`).join('');
-        const addBtn = document.getElementById('addHousemateBtn'); if (currentUser === "Shahzeb") { addBtn.style.display = 'flex'; } else { addBtn.style.display = 'none'; }
+        if (!isAdmin()) { showToast("ONLY ADMINS CAN MANAGE HOUSEMATES", 2500); return; }
+        openManageUsersList();
         document.getElementById('manageUsersOverlay').style.display = 'flex';
     }
+    function openManageUsersList() {
+        const list = document.getElementById('manageUserList'); if (!list) return;
+        list.innerHTML = db.users.map(u => {
+            const role = isSuper(u) ? '<span class="tag">Super admin</span>' : isAdmin(u) ? '<span class="tag">Admin</span>' : '';
+            const btn = (label, fn, cls = '') => `<button class="btn-pill interactive-btn${cls}" onclick="triggerHaptic(); ${fn}(${jsArg(u)})">${label}</button>`;
+            const acts = btn('Move-out', 'showMoveOut')
+                + (canManage(u, 'rename') ? btn('Rename', 'editUser') : '')
+                + (canManage(u, 'remove') ? btn('Remove', 'deleteUser', ' danger') : '')
+                + (isSuper() && !isSuper(u) ? (isAdmin(u) ? btn('Remove admin', 'unAdmin') : btn('Make admin', 'mkAdmin')) + btn('Make super admin', 'makeSuper') : '');
+            return `<div class="card"><div style="display:flex; align-items:center; gap:12px;">${avatarHTML(u)}<div class="card-title" style="flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">${escapeHTML(u)}${role}${(db.activeUsers || []).includes(u) ? '' : ' <span class="tag muted">away</span>'}</div></div><div class="card-actions">${acts}</div></div>`;
+        }).join('') + `<div class="card-meta" style="text-align:center; margin-top:4px;">${isSuper() ? "You're the super admin: you can manage admins." : 'Admins can only be renamed or removed by the super admin (' + escapeHTML(superAdmin()) + ').'}</div>`;
+        document.getElementById('addHousemateBtn').style.display = isAdmin() ? 'flex' : 'none';
+    }
+    function mkAdmin(u) { setAdmin(u, true); }
+    function unAdmin(u) { setAdmin(u, false); }
 
     function closeManageUsers() { document.getElementById('manageUsersOverlay').style.display = 'none'; }
 
     function addUser() {
-        if (currentUser !== 'Shahzeb') { showToast("Only Shahzeb can add housemates.", 3000); return; }
+        if (!isAdmin()) { showToast("Only admins can add housemates.", 3000); return; }
         customPrompt("Enter new housemate's name:", "", (val) => {
             const n = sanitizeName(val); if (!n) return; const nLower = n.toLowerCase(); if (db.users.some(u => u.toLowerCase() === nLower)) { showToast("User already exists.", 3000); return; }
             db.users.push(n); db.activeUsers.push(n); logAudit("Added User", n); renderUsers(); openManageUsers(); render(); executeActionWithSave();
@@ -4176,6 +4306,7 @@
     }
 
     function editUser(oldName) {
+        if (!canManage(oldName, 'rename')) { showToast(isAdmin(oldName) ? 'ONLY THE SUPER ADMIN CAN RENAME AN ADMIN' : 'ONLY ADMINS CAN RENAME HOUSEMATES', 2500); return; }
         customPrompt(`Rename ${escapeHTML(oldName)} to:`, oldName, (newName) => {
             const n = sanitizeName(newName); if (!n || n === oldName) return;
             if (!db.users.includes(oldName)) { showToast("That housemate was renamed or removed on another phone.", 3000); openManageUsers(); return; }
@@ -4192,6 +4323,8 @@
             if (db.avatars && db.avatars[oldName]) { db.avatars[n] = db.avatars[oldName]; delete db.avatars[oldName]; }
             if (db.appVer && db.appVer[oldName]) { db.appVer[n] = db.appVer[oldName]; delete db.appVer[oldName]; }
             (db.away || []).forEach(a => { if (a && a.who === oldName) a.who = n; });
+            if (db.superAdmin === oldName || (!db.superAdmin && superAdmin() === n)) db.superAdmin = n; else if (oldName === 'Shahzeb' && !db.superAdmin) db.superAdmin = n; // keep the role with the person
+            if (Array.isArray(db.admins)) db.admins = db.admins.map(a => a === oldName ? n : a);
             if (db.notifPrefs && db.notifPrefs[oldName]) { db.notifPrefs[n] = db.notifPrefs[oldName]; delete db.notifPrefs[oldName]; }
             (db.trash || []).forEach(ex => { if (ex.name === oldName) ex.name = n; if (Array.isArray(ex.involved) && ex.involved.includes(oldName)) ex.involved[ex.involved.indexOf(oldName)] = n; });
             // IOUs, notes (who wrote / saw them), shopping and the private log lines: the renamed person kept seeing none of theirs
@@ -4217,6 +4350,7 @@
     }
 
     function deleteUser(name) {
+        if (!canManage(name, 'remove')) { showToast(isSuper(name) ? "THE SUPER ADMIN CAN'T BE REMOVED" : isAdmin(name) ? 'ONLY THE SUPER ADMIN CAN REMOVE AN ADMIN' : 'ONLY ADMINS CAN REMOVE HOUSEMATES', 2500); return; }
         if (db.users.length <= 1) { showToast("Cannot delete last user.", 3000); return; }
         const unsettled = (name) => { // balance (before payments) must be zero in the normal bills and every hashtag
             let validExpenses = db.expenses || []; let contexts = [null]; validExpenses.forEach(e => { let match = (e.desc || "").match(/#([\w-]+)/); if(match && !contexts.includes(match[0])) contexts.push(match[0]); });
@@ -4236,6 +4370,7 @@
             const idx = db.users.indexOf(name); if (idx > -1) db.users.splice(idx, 1); const aIdx = db.activeUsers.indexOf(name); if (aIdx > -1) db.activeUsers.splice(aIdx, 1);
             if (db.payLinks) delete db.payLinks[name];
             if (db.avatars) delete db.avatars[name];
+            if (Array.isArray(db.admins)) db.admins = db.admins.filter(a => a !== name);
             logAudit("Removed User", name); if (currentUser === name) { executeActionWithSave(); closeManageUsers(); logout(); } else { renderUsers(); openManageUsers(); render(); executeActionWithSave(); }
         });
     }
@@ -4391,20 +4526,37 @@
         if (!currentUser) return; if (document.activeElement) document.activeElement.blur();
         refreshWebPush(); // the On/Off label next to "Phone notifications"
 
+        renderInboxList();
+        navEnsureEntry(); document.getElementById('inboxOverlay').style.display = 'flex';
+    }
+    /** An "I've paid" still waiting for me to confirm: where it is ({arcIdx}) or null */
+    function pendingClaimFor(a) {
+        if (!a || !a.claim || !Array.isArray(a.who) || a.who[1] !== currentUser) return null;
+        if (a.claim === 'settle') { const c = db.settleClaims && db.settleClaims[settleKey(a.by, currentUser)]; return c && c.by === a.by ? { settle: true } : null; }
+        if (typeof a.trg !== 'string') return null;
+        const mine = (h) => h && h.payClaims && h.payClaims[a.trg] && h.payClaims[a.trg].by === a.by && Math.abs((h.payClaims[a.trg].t || 0) - a.t) < 60000;
+        if (mine(db)) return { arcIdx: -1 };
+        const i = (db.archives || []).findIndex(mine); return i >= 0 ? { arcIdx: i } : null;
+    }
+    function renderInboxList() {
         const seen = inboxSeen(); const list = inboxEntries();
         document.getElementById('inboxList').innerHTML = list.length ? sectionsHTML(list, a => dayHead(a.t), a => {
             const ex = typeof a.trg === 'string' ? (db.expenses || []).find(e => e.id === a.trg) : null;
             const nudge = a.kind === 'nudge';
             const text = nudge ? `<span class="tag danger">Reminder</span> <b>${escapeHTML(a.by)}</b>: ${escapeHTML(a.msg || a.act)}`
                 : `<b>${escapeHTML(a.by)}</b> ${escapeHTML(a.act)}`;
+            // "I've paid" to me, not answered yet: confirm right here
+            const pc = pendingClaimFor(a);
+            const acts = !pc ? '' : pc.settle
+                ? `<div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); settleWith(${jsArg(a.by)}, true)">Got it</button><button class="btn-pill interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); rejectSettleClaim(${jsArg(a.by)})">Not yet</button></div>`
+                : `<div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); confirmClaim(${jsArg(a.trg)}, ${pc.arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); rejectClaim(${jsArg(a.trg)}, ${pc.arcIdx})">Not yet</button></div>`;
             return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${ex ? ' tappable interactive-btn' : ''}" ${ex ? `role="button" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
                 <div class="card-text">${text}</div>
                 ${a.trg && !nudge ? `<div class="card-meta" style="color:var(--accent-strong);">${auditTargetLabel(a.trg)}</div>` : ''}
-                <div class="card-meta">${timeAgo(a.t)}</div></div></div></div>`;
+                <div class="card-meta">${timeAgo(a.t)}</div>${acts}</div></div></div>`;
         }) : emptyState('bell', 'Nothing new. New expenses, payments, reminders and month-end from your housemates show up here.');
         if (list[0]) safeSetStorage(inboxSeenKey(), String(Math.max(seen, list[0].t)));
         updateInboxBadge();
-        navEnsureEntry(); document.getElementById('inboxOverlay').style.display = 'flex';
     }
     function closeInbox() { document.getElementById('inboxOverlay').style.display = 'none'; }
 
@@ -4799,7 +4951,8 @@
             const sc = jumpScroller;
             if (sc && sc.scrollTop > Math.max(320, sc.clientHeight * 0.6)) {
                 const r = sc.getBoundingClientRect(), vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                pos = { right: Math.max(12, Math.round(window.innerWidth - r.right + 14)), bottom: Math.max(12, Math.round(window.innerHeight - Math.min(r.bottom, vh) + 14)) };
+                // bottom middle of the list: the corner covered the rows' buttons (shopping list ⊘ / ✕)
+                pos = { right: Math.max(12, Math.round(window.innerWidth - (r.left + r.right) / 2 - 23)), bottom: Math.max(12, Math.round(window.innerHeight - Math.min(r.bottom, vh) + 14)) };
                 on = true;
             }
         }
@@ -4908,21 +5061,49 @@
         return true;
     }
 
+    // ---- Cycle recap: shown after "End month" (total, per head, vs last time, who paid most, biggest, categories, who pays whom) ----
+    let recapArc = null;
+    function openRecap(arc) {
+        if (!arc || !Array.isArray(arc.details)) return; recapArc = arc;
+        const { fmt } = viewMoney(); const exps = arc.details.filter(Boolean);
+        const total = exps.reduce((s, e) => s + (Number(e.amount) || 0), 0); const active = arc.activeUsers && arc.activeUsers.length ? arc.activeUsers : db.users;
+        const prev = (db.archives || []).find(a => a && a !== arc && !a.tag && a.total > 0 && (db.archives.indexOf(a) > db.archives.indexOf(arc)));
+        const diff = prev ? (total - prev.total) / prev.total * 100 : null;
+        const paid = {}; exps.forEach(e => { paid[e.name] = (paid[e.name] || 0) + (Number(e.amount) || 0); });
+        const topPayer = Object.keys(paid).sort((a, b) => paid[b] - paid[a])[0];
+        const biggest = exps.slice().sort((a, b) => b.amount - a.amount)[0];
+        const txs = getSettlements(exps, total, active, arc.mathV);
+        const tile = (k, v) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+        let h = `<div class="recap-hero"><div class="rh-k">${escapeHTML(formatNiceDate(arc.start))} → ${escapeHTML(formatNiceDate(arc.end))}</div><div class="rh-v">${escapeHTML(fmt(total))}</div><div class="rh-s">${exps.length} expense${exps.length === 1 ? '' : 's'}${diff === null ? '' : ` · ${Math.abs(diff).toFixed(0)}% ${diff >= 0 ? 'more' : 'less'} than last time`}</div></div>`;
+        h += `<div class="tiles" style="margin-top:10px;">${tile('Per head', escapeHTML(fmt(total / Math.max(active.length, 1))))}${tile('Paid the most', topPayer ? escapeHTML(topPayer) + ' · ' + escapeHTML(fmt(paid[topPayer])) : '-')}</div>`;
+        if (biggest) h += `<div class="group-label">Biggest expense</div><div class="group"><div class="health-row"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(biggest.name)}</b> · ${formatDescDisplay(biggest.desc, biggest.originalSym || viewMoney().sym)}</span><span class="hv">${escapeHTML(fmt(biggest.amount))}</span></div></div>`;
+        h += categoryBarsHtml(exps);
+        h += `<div class="group-label">Who pays whom</div><div class="group">${txs.length ? txs.map(t => { const left = t.amt - ((arc.paidStatus || {})[`${t.from}_${t.to}`] || 0); return `<div class="health-row"><span>${escapeHTML(t.from)} → ${escapeHTML(t.to)}</span><span class="hv"${left <= 0.01 ? ' style="color:var(--success);"' : ''}>${left <= 0.01 ? 'Paid ✓' : escapeHTML(fmt(left))}</span></div>`; }).join('') : '<div class="health-row"><span>Everyone is square</span><span class="hv" style="color:var(--success);">✓</span></div>'}</div>`;
+        h += `<div class="card-meta" style="text-align:center; margin-top:8px;">Unpaid amounts stay in Past cycles until they're settled.</div>`;
+        h += `<div class="sheet-foot" style="gap:8px;"><button class="btn-glowing interactive-btn" onclick="triggerHaptic(); shareSummaryImage(recapArc)">${ico('share').replace('<svg', '<svg width="17" height="17"')} Share picture</button><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeHistory()">Done</button></div>`;
+        document.getElementById('historyOverlay').querySelector('h2').innerText = 'Cycle recap';
+        document.getElementById('historyList').innerHTML = h;
+        document.getElementById('historyOverlay').style.display = 'flex';
+    }
     // ---- A picture of this cycle (total, who paid what, who pays whom) to share on WhatsApp ----
-    async function shareSummaryImage() {
+    /** src (optional) = a past cycle (an archive): the picture shows that cycle instead of the current one */
+    async function shareSummaryImage(src) {
         if (typeof html2canvas === 'undefined') { showToast("Couldn't make the picture - are you online?", 3000); return; }
         const { sym, fmt } = viewMoney();
-        const cur = (db.expenses || []).filter(e => e && !/#[\w-]+/.test(e.desc || ''));
+        const S = src && typeof src === 'object'
+            ? { exps: (src.details || []).filter(Boolean), active: src.activeUsers && src.activeUsers.length ? src.activeUsers : db.users, mathV: src.mathV, paid: src.paidStatus || {}, since: src.start, until: src.end }
+            : { exps: (db.expenses || []).filter(e => e && !/#[\w-]+/.test(e.desc || '')), active: db.activeUsers && db.activeUsers.length ? db.activeUsers : db.users, mathV: db.mathV, paid: db.paidStatus || {}, since: db.startDate, until: '' };
+        const cur = S.exps;
         const total = cur.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-        const active = db.activeUsers && db.activeUsers.length ? db.activeUsers : db.users;
+        const active = S.active;
         const paid = {}; active.forEach(u => paid[u] = 0); cur.forEach(e => { paid[e.name] = (paid[e.name] || 0) + (Number(e.amount) || 0); });
         const maxPaid = Math.max(1, ...Object.values(paid));
-        const txs = getSettlements(cur, total, db.activeUsers, db.mathV);
+        const txs = getSettlements(cur, total, active, S.mathV);
         let accent = '#0d9488'; try { const c = document.createElement('canvas').getContext('2d'), pr = document.createElement('span'); pr.style.color = 'var(--accent)'; document.body.appendChild(pr); c.fillStyle = getComputedStyle(pr).color; pr.remove(); c.fillRect(0, 0, 1, 1); const d = c.getImageData(0, 0, 1, 1).data; accent = `rgb(${d[0]}, ${d[1]}, ${d[2]})`; } catch (e) {}
         const box = document.createElement('div');
         box.style.cssText = `position:fixed; left:-10000px; top:0; width:400px; padding:26px 24px 22px; background:#0b0d11; color:#eef2f7; font-family:Inter, -apple-system, Segoe UI, Roboto, sans-serif; border-radius:0;`;
         const row = (l, r, c) => `<div style="display:flex; justify-content:space-between; gap:12px; padding:7px 0; font-size:14px;${c ? ` color:${c};` : ''}"><span>${l}</span><b>${r}</b></div>`;
-        let h = `<div style="font-size:13px; color:#96a1b5; font-weight:600;">House Expenses · since ${escapeHTML(formatNiceDate(db.startDate))}</div>`;
+        let h = `<div style="font-size:13px; color:#96a1b5; font-weight:600;">House Expenses · ${S.until ? escapeHTML(formatNiceDate(S.since)) + ' → ' + escapeHTML(formatNiceDate(S.until)) : 'since ' + escapeHTML(formatNiceDate(S.since))}</div>`;
         h += `<div style="margin:12px 0 18px; padding:18px 20px; border-radius:22px; background:linear-gradient(135deg, ${accent}, #1e40af); color:#fff;"><div style="font-size:12px; opacity:0.85; font-weight:600;">Total house bill</div><div style="font-size:38px; font-weight:800; letter-spacing:-1px; margin-top:2px;">${escapeHTML(fmt(total))}</div><div style="font-size:13px; opacity:0.9; margin-top:4px;">${cur.length} expense${cur.length === 1 ? '' : 's'} · ${escapeHTML(fmt(total / Math.max(1, active.length)))} each</div></div>`;
         h += `<div style="font-size:11px; font-weight:800; letter-spacing:0.8px; color:#96a1b5; margin:0 0 6px;">WHO PAID</div>`;
         Object.keys(paid).sort((a, b) => paid[b] - paid[a]).forEach(u => {
@@ -4931,7 +5112,7 @@
         h += `<div style="font-size:11px; font-weight:800; letter-spacing:0.8px; color:#96a1b5; margin:18px 0 4px;">WHO PAYS WHOM</div>`;
         if (!txs.length) h += row('Everyone is square', '✓', '#4ade80');
         txs.forEach(t => {
-            const left = t.amt - ((db.paidStatus && db.paidStatus[`${t.from}_${t.to}`]) || 0);
+            const left = t.amt - (S.paid[`${t.from}_${t.to}`] || 0);
             h += left <= 0.01 ? row(`${escapeHTML(t.from)} → ${escapeHTML(t.to)}`, 'Paid ✓', '#4ade80') : row(`${escapeHTML(t.from)} → ${escapeHTML(t.to)}`, escapeHTML(fmt(left)));
         });
         h += `<div style="margin-top:16px; font-size:11px; color:#5e6779; text-align:right;">${escapeHTML(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }))}</div>`;
@@ -5040,7 +5221,7 @@
         document.addEventListener('touchstart', (e) => {
             ok = e.touches.length === 1 && !window.matchMedia('(min-width: 960px)').matches && !!current(); if (!ok) return;
             for (let n = e.target; n && n !== document.body; n = n.parentElement) {
-                if (n.matches && n.matches('input, textarea, select, .seg, .sd-box')) { ok = false; return; }
+                if (n.matches && n.matches('input, textarea, select, .seg, .sd-box, .shop-suggest, .help-cats, .swipe-track, .composer-chips, .poll-fields')) { ok = false; return; } // sideways-scrolling rows scroll, not switch tabs
                 if (swipeActionsEnabled && n.classList && n.classList.contains('ex-row')) { ok = false; return; }
                 if (n.scrollWidth > n.clientWidth + 2) { const cs = getComputedStyle(n); if (/auto|scroll/.test(cs.overflowX) && !/auto|scroll/.test(cs.overflowY)) { ok = false; return; } }
             }
@@ -5296,7 +5477,7 @@
         return { text, qty: 1 };
     }
     function shopQty(id, d) {
-        const s = (db.shopping || []).find(x => x && x.id === id); if (!s || s.done) return;
+        const s = (db.shopping || []).find(x => x && x.id === id); if (!s || s.done) return; if (shopLocked(s)) { shopLockedToast(s); return; }
         const q = Math.max(1, Math.min(99, (Number(s.qty) || 1) + d)); if (q === (Number(s.qty) || 1)) return;
         if (q > 1) s.qty = q; else delete s.qty;
         triggerHaptic(); renderShopping(); executeActionWithSave();
@@ -5395,8 +5576,8 @@
                 const amtStr = `${sym}${money2(ex.amount * rate)}`;
                 const flags = (ex.receipt ? `<span title="Has receipt">${ico('image')}</span>` : '') + (ex.edited ? '<span>· Edited</span>' : '') + (unsynced().has(ex.id) ? '<span class="unsync-flag">· Waiting to sync</span>' : '');
                 // Who paid is the title; what it was (amounts and note) sits underneath
-                const cat = expenseCategory(ex.desc);
-                const rowInfo = `<div class="item-top"><div class="item-title">${hlText(ex.name, q)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub">${cat ? `<span class="cat-emo" title="${cat.name}" aria-label="${cat.name}">${cat.emo}</span>` : ''}${descText ? `<span class="item-desc-t">${hlText(descText, q)}</span>` : ''}${flags}</div>${splitNote}`;
+                const cats = expenseCategories(ex.desc);
+                const rowInfo = `<div class="item-top"><div class="item-title">${hlText(ex.name, q)}</div><div class="item-amt">${amtStr}</div></div><div class="item-sub"><span class="cat-emo" title="${cats.map(c => c.name).join(', ')}" aria-label="${cats.map(c => c.name).join(', ')}">${cats.map(c => c.emo).join('')}</span>${descText ? `<span class="item-desc-t">${hlText(descText, q)}</span>` : ''}${flags}</div>${splitNote}`;
                 const isNew = seenExpenseIds && !seenExpenseIds.has(ex.id);
                 listHtml += `<div class="linear-row timeline-item ex-row interactive-btn${isNew ? ' enter' : ''}${unsynced().has(ex.id) ? ' unsynced' : ''}" role="button" tabindex="0" data-id="${escapeHTML(ex.id)}" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})">${avatarHTML(ex.name)}<div class="item-main">${rowInfo}</div></div>`;
             });
@@ -5454,6 +5635,7 @@
         document.getElementById('markAllBtn').style.display = openCount > 1 ? 'flex' : 'none';
         renderArchives(sym, rate); refreshExpenseSheet(); updateInboxBadge();
         updateNoticeCount(); updateShopCount(); updateHomeWidget(); updateDebtsState(); renderSideCol(); eventStripSync();
+        if (document.getElementById('inboxOverlay').style.display === 'flex') renderInboxList(); // a "Got it" tapped there
         const ma = document.getElementById('menuAvatar'); if (ma) setHTML(ma, currentUser ? avatarHTML(currentUser, 'lg') + `<span class="ma-edit">${ico('camera')}</span>` : '');
         const mps = document.getElementById('myPhotoState'); if (mps) setHTML(mps, currentUser ? avatarHTML(currentUser, 'sm') : '');
     }
@@ -6038,6 +6220,8 @@
             //  The data grows ~8.5 KB per cycle, so everything is kept; the health card watches the size.)
             db.expenses = []; db.paidStatus = {}; db.payClaims = {}; db.mathV = 2; db.startDate = endDateStr; db.activeUsers = [...db.users]; activeHashtag = null;
             logAudit("Ended Month"); render(); executeActionWithSave(); isArchiving = false;
+            const recapArc = db.archives.find(a => a && !a.tag && a.end === endDateStr) || db.archives[0];
+            if (recapArc) setTimeout(() => openRecap(recapArc), 380); // once the question box has gone
         });
     }
 
