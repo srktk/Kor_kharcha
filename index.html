@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.36.1">
+    <meta name="app-version" content="7.36.2">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -1267,7 +1267,7 @@
 
             <div id="helpCycle" class="group-label">Cycles</div>
             <div class="stack">
-                <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">End the month</div><p>On the balance card, <b>End month &amp; start new</b> saves this cycle (with its payments) and starts a fresh one. Tap <b>Cycle started</b> to change the start date.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">End the month</div><p>On the balance card, <b>End month &amp; start new</b> saves this cycle (with its payments), clears the shopping list and starts a fresh one, then shows a recap you can share. Tap <b>Cycle started</b> to change the start date.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="archive"></span><div><div class="card-title">Past cycles</div><p>More → Past cycles. <b>Unpaid</b> lists every debt still open from earlier months, and you can settle them there.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Insights</div><p>More → Insights shows where the money went by month or year.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="download"></span><div><div class="card-title">Export</div><p>Settings → Export: PDF, Excel, CSV or the receipt photos. Pick which cycles to include. Every export has the totals and per-head amounts.</p></div></div>
@@ -1784,7 +1784,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.36.1";
+    const APP_VERSION = "7.36.2";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -5198,6 +5198,10 @@
         Object.keys(paid).sort((a, b) => paid[b] - paid[a]).forEach(u => {
             h += `<div style="padding:6px 0;"><div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>${escapeHTML(u)}</span><span>${escapeHTML(fmt(paid[u]))}</span></div><div style="height:6px; border-radius:3px; background:#1f232b; margin-top:5px;"><div style="height:6px; border-radius:3px; width:${Math.max(2, paid[u] / maxPaid * 100).toFixed(1)}%; background:${accent};"></div></div></div>`;
         });
+        // Categories: one line of icons and amounts (no bars)
+        const catSum = {}; cur.forEach(e => { const cs = expenseCategories(e.desc), a = Number(e.amount) || 0; cs.forEach(c => { const k = c.group || c.id; catSum[k] = (catSum[k] || 0) + a / cs.length; }); });
+        const catKeys = Object.keys(catSum).filter(k => catSum[k] > 0.005).sort((a, b) => catSum[b] - catSum[a]);
+        if (catKeys.length) h += `<div style="font-size:11px; font-weight:800; letter-spacing:0.8px; color:#96a1b5; margin:18px 0 8px;">BY CATEGORY</div><div style="display:flex; flex-wrap:wrap; gap:6px 16px; font-size:14px; font-weight:700;">${catKeys.map(k => { const c = CATEGORIES.find(x => x.id === k); return `<span style="white-space:nowrap;">${c ? c.emo : '•'} ${escapeHTML(fmt(catSum[k]))}</span>`; }).join('')}</div>`;
         h += `<div style="font-size:11px; font-weight:800; letter-spacing:0.8px; color:#96a1b5; margin:18px 0 4px;">WHO PAYS WHOM</div>`;
         if (!txs.length) h += row('Everyone is square', '✓', '#4ade80');
         txs.forEach(t => {
@@ -6281,7 +6285,7 @@
 
     function endMonth() {
         if (isArchiving) return; let validExpenses = db.expenses || []; if (validExpenses.length === 0) { showToast("No expenses to archive.", 3000); return; }
-        customConfirm("End the current month and move expenses to archive?", () => {
+        customConfirm("End the current month and move expenses to archive?<br><span style=\"font-size:0.8rem; font-weight:500; color:var(--text-muted);\">The shopping list is cleared too.</span>", () => {
             isArchiving = true; if(!Array.isArray(db.archives)) db.archives = [];
             validExpenses = db.expenses || []; // re-read: expenses that synced in while this question was open must be archived too, not lost
             const today = new Date(); const endDateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
@@ -6307,6 +6311,7 @@
 
             // (Old versions kept only the newest 15 archives and silently deleted the rest, unpaid debts included.
             //  The data grows ~8.5 KB per cycle, so everything is kept; the health card watches the size.)
+            db.shopping = []; pendingShopIds = []; // a new cycle starts with an empty shopping list
             db.expenses = []; db.paidStatus = {}; db.payClaims = {}; db.mathV = 2; db.startDate = endDateStr; db.activeUsers = [...db.users]; activeHashtag = null;
             logAudit("Ended Month"); render(); executeActionWithSave(); isArchiving = false;
             const recapArc = db.archives.find(a => a && !a.tag && a.end === endDateStr) || db.archives[0];
