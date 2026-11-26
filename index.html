@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="app-version" content="7.36.3">
+    <meta name="app-version" content="7.37.0">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/png" href="icon-512.png">
@@ -346,6 +346,8 @@
         .up-row.mine .item-title { color: var(--accent-strong); }
         .arc-foot .btn-pill { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; font-size: 0.8rem; border-radius: 14px; }
         .arc-foot .btn-pill svg { width: 15px; height: 15px; }
+        .arc-lock { display: inline-flex; vertical-align: -2px; color: var(--text-muted); }
+        .arc-lock svg { width: 13px; height: 13px; }
         .archive-details .linear-row:last-child { border-bottom: none; }
         .add-chip.on .ic { color: inherit; }
         #editBar { display: none; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 8px 8px 8px 14px; font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); box-shadow: var(--shadow-lg); }
@@ -962,6 +964,7 @@
         .shop-ic:active { background: var(--surface); }
         .shop-ic svg { width: 16px; height: 16px; }
         .shop-row1 { display: flex; align-items: center; gap: 10px; }
+        #shopList .shop-text { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: default; }
         .shop-row1 .shop-text { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; font-size: 0.98rem; }
         /* Tick: a rounded box that fills with the accent and draws the check */
         .tick-box { -webkit-appearance: none; appearance: none; width: 24px !important; height: 24px !important; flex-shrink: 0; margin: 0; border-radius: 8px; border: 2px solid color-mix(in srgb, var(--text-muted) 55%, transparent); background: var(--surface) !important; cursor: pointer; padding: 0; position: relative; transition: background 0.22s, border-color 0.22s, transform 0.15s; }
@@ -1019,6 +1022,15 @@
         .recap-hero .rh-s { font-size: 0.78rem; opacity: 0.9; }
         .event-strip { display: flex; flex-direction: column; gap: 6px; margin: 12px 16px 0; }
         .event-chip { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: 16px; border: 1px solid var(--gs-border, var(--border)); background: var(--gs-bg, var(--surface)); color: var(--text-main); font: inherit; text-align: left; cursor: pointer; }
+        .since-card { display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 14px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--gs-border)); background: color-mix(in srgb, var(--accent) 8%, var(--gs-bg, var(--surface))); cursor: pointer; }
+        .since-card .ev-ic { width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-strong); }
+        .since-card .ev-ic svg { width: 16px; height: 16px; }
+        .since-card .sc-main { flex: 1; min-width: 0; }
+        .since-card .sc-t { font-size: 0.8rem; font-weight: 800; }
+        .since-card .sc-s { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
+        .since-card .sc-s b { color: var(--text-main); }
+        .sc-x { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .sc-x svg { width: 15px; height: 15px; }
         .event-chip .ev-ic { width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-strong); }
         .event-chip .ev-ic svg { width: 16px; height: 16px; }
         .event-chip .ev-t { flex: 1; min-width: 0; font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1072,6 +1084,8 @@
         .cat-card { background: var(--gs-bg, var(--surface)); border: 1px solid var(--gs-border, var(--border)); border-radius: 18px; padding: 6px 14px; }
         .cat-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
         .cat-row + .cat-row { border-top: 1px solid var(--border); }
+        .cat-row.interactive-btn { cursor: pointer; }
+        .cat-row.interactive-btn::after { content: '›'; color: var(--text-muted); font-size: 1.2rem; margin-left: -4px; }
         .cat-badge { width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); font-size: 1rem; }
         .cat-mid { flex: 1; min-width: 0; }
         .cat-name { font-size: 0.86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1273,7 +1287,7 @@
 
             <div id="helpHouse" class="group-label">Shopping &amp; notes</div>
             <div class="stack">
-                <div class="card help-card"><span class="ri-icon" data-ic="cart"></span><div><div class="card-title">Shopping list</div><p>Tap a usual item above the box to add it, or start typing (<b>mi</b> → Milk) and tap a suggestion. Separate items with commas (<b>2x milk</b> sets how many). Tap <b>I'll get it</b> so nobody buys it twice: the item is then locked for everyone else, and you tap <b>I bought it</b> when you have it. If the person who added it gets it anyway, you get a notification. Then <b>Add as expense</b>.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="cart"></span><div><div class="card-title">Shopping list</div><p>Hold an item's name to fix a typo. Tap a usual item above the box to add it, or start typing (<b>mi</b> → Milk) and tap a suggestion. Separate items with commas (<b>2x milk</b> sets how many). Tap <b>I'll get it</b> so nobody buys it twice: the item is then locked for everyone else, and you tap <b>I bought it</b> when you have it. If the person who added it gets it anyway, you get a notification. Then <b>Add as expense</b>.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="ban"></span><div><div class="card-title">Not available</div><p>Couldn't find it in the shop? Tap the <b>⊘</b> button. It stays on the list, greyed out, until everyone has seen it, then goes by itself. Nobody gets a notification for it.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="pin"></span><div><div class="card-title">Noticeboard</div><p>Notes for the whole house (Wi-Fi password, bin day). Type <b>@name</b> to tag someone. Notes can remove themselves after a few days. Only the writer can edit or delete a note.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Polls</div><p>Tap in the box to see the options, then <b>Poll</b>: write the question, fill the answers (① ② … tap <b>+ Answer</b> for more; left empty they are Yes / No). Tap an answer to vote; tap it again to take your vote back.</p></div></div>
@@ -1284,15 +1298,15 @@
             <div id="helpCycle" class="group-label">Cycles</div>
             <div class="stack">
                 <div class="card help-card"><span class="ri-icon" data-ic="calendar"></span><div><div class="card-title">End the month</div><p>On the balance card, <b>End month &amp; start new</b> saves this cycle (with its payments), clears the shopping list and starts a fresh one, then shows a recap you can share. Tap <b>Cycle started</b> to change the start date.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="archive"></span><div><div class="card-title">Past cycles</div><p>More → Past cycles. <b>Unpaid</b> lists every debt still open from earlier months, and you can settle them there.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Insights</div><p>More → Insights shows where the money went by month or year.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="archive"></span><div><div class="card-title">Past cycles</div><p>More → Past cycles. <b>Unpaid</b> lists every debt still open from earlier months, and you can settle them there. Admins can <b>Lock</b> a cycle: then nobody can delete it or un-mark its payments (unpaid amounts can still be paid).</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="chart"></span><div><div class="card-title">Insights</div><p>More → Insights shows where the money went by month or year. Tap a category to see its expenses. Your profile shows what you paid for this cycle.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="download"></span><div><div class="card-title">Export</div><p>Settings → Export: PDF, Excel, CSV or the receipt photos. Pick which cycles to include. Every export has the totals and per-head amounts.</p></div></div>
             </div>
 
             <div id="helpYou" class="group-label">You &amp; the app</div>
             <div class="stack">
                 <div class="card help-card"><span class="ri-icon" data-ic="user"></span><div><div class="card-title">Your photo and profile</div><p>Tap your picture in More to change your photo or open your profile. Tap your name to go straight to your profile.</p></div></div>
-                <div class="card help-card"><span class="ri-icon" data-ic="bell"></span><div><div class="card-title">Notifications</div><p>The bell shows what changed. Settings → What Notifies Me chooses which changes reach your phone.</p></div></div>
+                <div class="card help-card"><span class="ri-icon" data-ic="bell"></span><div><div class="card-title">Notifications</div><p>The bell shows what changed; tap an item to go to it. Settings → What Notifies Me chooses which changes reach your phone. With phone notifications off, Home shows a "Since you last opened" card instead.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="card"></span><div><div class="card-title">Your payment link</div><p>Settings → My Payment Link: add your Monzo or PayPal link so the Pay button takes people straight there.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="palette"></span><div><div class="card-title">Make it yours</div><p>Settings → Display: theme, text size, accent colour and which currency amounts are shown in. These only change your phone.</p></div></div>
                 <div class="card help-card"><span class="ri-icon" data-ic="shield"></span><div><div class="card-title">Admins</div><p>Admins have Settings → Admin Panel (housemates, Recovery Vault, backups, test mode). The super admin makes other admins and can hand the role on; only the super admin can rename or remove an admin.</p></div></div>
@@ -1787,6 +1801,7 @@
         camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
         image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
         receipt: '<path d="M5 3v18l2.5-1.5L10 21l2-1.5 2 1.5 2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5z"/><path d="M9 9h6M9 13h6"/>',
+        lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', unlock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
         shield: '<path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
         flask: '<path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
         info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8h.01"/>',
@@ -1800,7 +1815,7 @@
     const EMPTY_ART = '<svg class="ea-bg" viewBox="0 0 150 112" aria-hidden="true"><ellipse cx="75" cy="60" rx="64" ry="44" style="fill:var(--accent-soft)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(-11 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="26" width="66" height="62" rx="14" transform="rotate(8 75 57)" style="fill:var(--surface-2); stroke:var(--gs-border)"/><rect x="42" y="22" width="66" height="68" rx="14" style="fill:var(--surface); stroke:var(--gs-border)"/><rect x="58" y="80" width="34" height="4" rx="2" style="fill:var(--border)"/><path class="ea-spark" d="M22 18l2.2 5.8 5.8 2.2-5.8 2.2L22 34l-2.2-5.8L14 26l5.8-2.2z" style="fill:var(--accent)"/><path class="ea-spark s2" d="M128 24l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" style="fill:var(--accent)"/><path class="ea-spark s3" d="M122 84l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" style="fill:var(--accent)"/><circle cx="30" cy="88" r="3" style="fill:var(--accent); opacity:0.45"/><circle cx="112" cy="12" r="2.5" style="fill:var(--accent); opacity:0.45"/></svg>';
     function emptyState(icon, text) { return `<div class="empty"><span class="empty-art" aria-hidden="true">${EMPTY_ART}<span class="ea-ico">${ico(icon)}</span></span><div>${text}</div></div>`; }
     fillIcons();
-    const APP_VERSION = "7.36.3";
+    const APP_VERSION = "7.37.0";
     // House data lives in our own Cloudflare Worker (replaced jsonbin). Each device enters the house PIN once.
     const API_URL = 'https://house-expenses.srktk00.workers.dev';
     function houseKey() { try { return localStorage.getItem('house_key') || ''; } catch (e) { return ''; } }
@@ -1829,7 +1844,9 @@
     function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
     function vapidKeyBytes() { const s = VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); }
     function swReady() { return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('sw_timeout')), 8000))]); }
+    var pushOn = null; // this phone's notifications: true / false once known
     function setNotifLabel(on) {
+        pushOn = !!on; if (typeof eventStripSync === 'function' && currentUser) eventStripSync(); // the "since you last opened" card only shows with them off
         ['notifState', 'inboxPushState'].forEach(id => { const el = document.getElementById(id); if (el) { el.innerText = on ? 'On' : 'Off'; el.style.color = on ? 'var(--success)' : 'var(--text-muted)'; } });
         if (on) hideNotifCard(); // turned on from the bell or the menu: the "turn on notifications" banner has done its job
     }
@@ -2032,7 +2049,7 @@
     const NAV_OPENERS = { openHelp: 'helpOverlay', openAuditLog: 'auditOverlay', openSettings: 'settingsOverlay', openTrash: 'trashOverlay',
         openSearch: 'searchOverlay', openInsights: 'insightsOverlay', openNotices: 'noticeOverlay', openShopping: 'shoppingOverlay',
         openRestore: 'restoreOverlay', openManageUsers: 'manageUsersOverlay', showEditHistory: 'historyOverlay', openNotifPrefs: 'historyOverlay',
-        showMoveOut: 'historyOverlay', showProfile: 'historyOverlay', openExport: 'historyOverlay', iouNew: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay', openAdmin: 'adminOverlay', openAbout: 'aboutOverlay', openAway: 'historyOverlay', openRecap: 'historyOverlay' };
+        showMoveOut: 'historyOverlay', showProfile: 'historyOverlay', openExport: 'historyOverlay', iouNew: 'historyOverlay', showHealthProblems: 'historyOverlay', openExpense: 'expenseOverlay', openPast: 'pastOverlay', openInbox: 'inboxOverlay', startExpenseEdit: 'expenseOverlay', openPhoto: 'photoOverlay', openDebts: 'debtsOverlay', openAdmin: 'adminOverlay', openAbout: 'aboutOverlay', openAway: 'historyOverlay', openRecap: 'historyOverlay', showCategoryExpenses: 'historyOverlay' };
     const NAV_DIALOGS = { promptOverlay: 'closePrompt', confirmOverlay: 'closeConfirm', lightboxOverlay: 'closeLightbox', ctxOverlay: 'closeCtx' };
     let navStack = []; // [{ id: sheet id or 'menu', child: the screen opened from it, scrolls: [[element, scrollTop]] }]
     let navBusy = false, navUserBack = false, navClickAttr = '';
@@ -2984,17 +3001,35 @@
     }
     function expenseCategory(desc) { return expenseCategories(desc)[0]; }
     /** "By category" block for a list of expenses (Insights month and year) */
-    function categoryBarsHtml(exps) {
+    let catLists = []; // the expense lists behind the category cards on screen (tap a row to see them)
+    function categoryBarsHtml(exps, opts = {}) {
         const { fmt } = viewMoney(); const sums = {}; let total = 0;
         exps.forEach(ex => { const cs = expenseCategories(ex.desc), a = Number(ex.amount) || 0; cs.forEach(c => { const k = c.group || c.id; sums[k] = (sums[k] || 0) + a / cs.length; }); total += a; }); // a mixed expense is shared between its categories
         const rows = Object.keys(sums).filter(k => sums[k] > 0).sort((a, b) => (a === 'other') - (b === 'other') || sums[b] - sums[a]);
         if (!rows.length || !total) return '';
         const max = Math.max(...rows.map(k => sums[k]), 0.01);
         // One card: a row per category - icon, name with a slim bar under it, amount and share on the right
-        return `<div class="group-label">By category</div><div class="cat-card">` + rows.map(k => {
+        const click = opts.click !== false; if (catLists.length > 40) catLists = []; const listId = catLists.push(exps) - 1;
+        return `<div class="group-label">${opts.title || 'By category'}</div><div class="cat-card">` + rows.map(k => {
             const c = CATEGORIES.find(x => x.id === k); const name = c ? c.name : 'Other', emo = c ? c.emo : '•';
-            return `<div class="cat-row"><span class="cat-badge" aria-hidden="true">${emo}</span><div class="cat-mid"><div class="cat-name">${escapeHTML(name)}</div><div class="cat-bar"><i style="width:${Math.max(3, sums[k] / max * 100).toFixed(1)}%;"></i></div></div><div class="cat-amt"><b>${escapeHTML(fmt(sums[k]))}</b><span>${Math.round(sums[k] / total * 100)}%</span></div></div>`;
+            return `<div class="cat-row${click ? ' interactive-btn' : ''}"${click ? ` role="button" aria-label="${escapeHTML(name)} expenses" onclick="triggerHaptic(); showCategoryExpenses(${listId}, ${jsArg(k)})"` : ''}><span class="cat-badge" aria-hidden="true">${emo}</span><div class="cat-mid"><div class="cat-name">${escapeHTML(name)}</div><div class="cat-bar"><i style="width:${Math.max(3, sums[k] / max * 100).toFixed(1)}%;"></i></div></div><div class="cat-amt"><b>${escapeHTML(fmt(sums[k]))}</b><span>${Math.round(sums[k] / total * 100)}%</span></div></div>`;
         }).join('') + '</div>';
+    }
+    /** Tap a category: its expenses (newest first) with the total */
+    function showCategoryExpenses(listId, k) {
+        const list = (catLists[listId] || []).filter(ex => ex && expenseCategories(ex.desc).some(c => (c.group || c.id) === k));
+        const c = CATEGORIES.find(x => x.id === k); const { fmt, sym } = viewMoney();
+        const share = (ex) => { const cs = expenseCategories(ex.desc); return (Number(ex.amount) || 0) * cs.filter(x => (x.group || x.id) === k).length / cs.length; };
+        const total = list.reduce((t, ex) => t + share(ex), 0);
+        const sorted = list.slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        let h = `<div class="recap-hero" style="padding:14px 18px;"><div class="rh-k">${c ? c.emo : ''} ${escapeHTML(c ? c.name : 'Other')}</div><div class="rh-v" style="font-size:1.7rem;">${escapeHTML(fmt(total))}</div><div class="rh-s">${list.length} expense${list.length === 1 ? '' : 's'}</div></div>`;
+        h += '<div class="stack" style="margin-top:12px;">' + sorted.map(ex => {
+            const inCur = (db.expenses || []).some(x => x.id === ex.id), mixed = expenseCategories(ex.desc).length > 1;
+            return `<div class="card${inCur ? ' tappable interactive-btn' : ''}"${inCur ? ` role="button" onclick="triggerHaptic(); closeHistory(); openExpense(${jsArg(ex.id)})"` : ''}><div class="card-row" style="align-items:flex-start;"><div style="min-width:0;"><div class="card-title">${escapeHTML(ex.name || '')}</div><div class="card-meta" style="margin:0;">${formatDescDisplay(ex.desc, ex.originalSym || sym) || ''} · ${escapeHTML(formatNiceDate(ex.date || ''))}</div></div><div class="card-amt" style="text-align:right;">${escapeHTML(fmt(Number(ex.amount) || 0))}${mixed ? `<div class="card-meta" style="margin:0; font-size:0.68rem;">${escapeHTML(fmt(share(ex)))} counted here</div>` : ''}</div></div></div>`;
+        }).join('') + '</div>';
+        document.getElementById('historyOverlay').querySelector('h2').innerText = c ? c.name : 'Category';
+        document.getElementById('historyList').innerHTML = h;
+        document.getElementById('historyOverlay').style.display = 'flex';
     }
     function renderInsights() {
         const { fmt } = viewMoney(); const { cycles, tags } = insightCycles();
@@ -3311,13 +3346,35 @@
         if (n.poll.votes[currentUser] === i) delete n.poll.votes[currentUser]; else n.poll.votes[currentUser] = i;
         renderNotices(); executeActionWithSave(); // not logged: voting notifies nobody
     }
+    /* ---- "Since you last opened": with phone notifications OFF, a card on Home sums up what changed while the app was
+       closed (new expenses, notes, shopping, payments) and where you stand now. Tap = the bell; ✕ hides it. ---- */
+    let sinceFrom = 0, sinceUser = '', sinceHidden = false;
+    function sinceKey() { return 'house_last_open_' + currentUser; }
+    function sinceInit() {
+        if (!currentUser || sinceUser === currentUser) return;
+        sinceUser = currentUser; sinceHidden = false;
+        try { sinceFrom = Number(localStorage.getItem(sinceKey())) || 0; } catch (e) { sinceFrom = 0; }
+        safeSetStorage(sinceKey(), String(Date.now()));
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && currentUser && sinceUser === currentUser) safeSetStorage(sinceKey(), String(Date.now())); });
+    function sinceCardHTML() {
+        if (pushOn !== false || sinceHidden || !sinceFrom || !currentUser || sinceUser !== currentUser || !localDbLoaded) return '';
+        const list = inboxEntries().filter(a => a.t > sinceFrom); if (!list.length) return '';
+        const n = (f) => list.filter(f).length;
+        const exps = n(a => a.added), notes = n(a => a.kind === 'mention' || /note|poll/i.test(a.act || '')), shop = n(a => a.kind === 'shop'), pay = n(a => !a.added && (a.kind === 'pastpay' || a.kind === 'nudge' || a.kind === 'iou'));
+        const parts = [exps && `${exps} new expense${exps === 1 ? '' : 's'}`, notes && `${notes} note${notes === 1 ? '' : 's'}`, shop && `${shop} shopping`, pay && `${pay} payment${pay === 1 ? '' : 's'}`].filter(Boolean);
+        const other = list.length - exps - notes - shop - pay; if (other > 0) parts.push(`${other} other`);
+        let stand = ''; try { const t = outstandingFor(currentUser).total; const { fmt } = viewMoney(); stand = Math.abs(t) <= 0.01 ? "You're all square" : t < 0 ? `You owe ${fmt(-t)}` : `You're owed ${fmt(t)}`; } catch (e) {}
+        return `<div class="since-card interactive-btn" role="button" onclick="triggerHaptic(); openInbox()"><span class="ev-ic">${ico('bell')}</span><div class="sc-main"><div class="sc-t">Since you last opened · ${escapeHTML(timeAgo(sinceFrom))}</div><div class="sc-s">${escapeHTML(parts.join(' · '))}${stand ? ' · <b>' + escapeHTML(stand) + '</b>' : ''}</div></div><button class="sc-x interactive-btn" aria-label="Hide" onclick="event.stopPropagation(); triggerHaptic(); sinceHidden = true; eventStripSync();">${ico('x')}</button></div>`;
+    }
     /** Home: upcoming dated notes as a countdown strip under the balance card (next 60 days, soonest first) */
     function eventStripSync() {
         const el = document.getElementById('eventStrip'); if (!el) return;
         const today = isoDay(Date.now()), until = isoDay(Date.now() + 60 * 864e5);
         const list = liveNotices().filter(n => n && n.event && n.event >= today && n.event <= until).sort((a, b) => a.event < b.event ? -1 : 1).slice(0, 3);
-        setHTML(el, list.map(n => { const e = eventLeft(n.event); return `<button class="event-chip interactive-btn" onclick="triggerHaptic(); openNotices(${jsArg(n.id)})"><span class="ev-ic">${ico('calendar')}</span><span class="ev-t">${escapeHTML(n.text.split('\n')[0].slice(0, 60))}</span><span class="ev-left${e.left === 'today' || e.left === 'tomorrow' ? ' soon' : ''}">${escapeHTML(e.left === 'today' ? 'Today' : e.left === 'tomorrow' ? 'Tomorrow' : e.left)}</span></button>`; }).join(''));
-        el.style.display = list.length ? '' : 'none';
+        const since = sinceCardHTML();
+        setHTML(el, since + list.map(n => { const e = eventLeft(n.event); return `<button class="event-chip interactive-btn" onclick="triggerHaptic(); openNotices(${jsArg(n.id)})"><span class="ev-ic">${ico('calendar')}</span><span class="ev-t">${escapeHTML(n.text.split('\n')[0].slice(0, 60))}</span><span class="ev-left${e.left === 'today' || e.left === 'tomorrow' ? ' soon' : ''}">${escapeHTML(e.left === 'today' ? 'Today' : e.left === 'tomorrow' ? 'Tomorrow' : e.left)}</span></button>`; }).join(''));
+        el.style.display = list.length || since ? '' : 'none';
     }
     function expiryChipSync() { const s = document.getElementById('noticeExpiry'), l = document.getElementById('noticeExpiryLabel'); if (s && l && s.selectedIndex >= 0) l.textContent = s.options[s.selectedIndex].text; }
     function setNoticePinChip(on) { const p = document.getElementById('noticePinNew'); if (p) p.setAttribute('aria-pressed', on ? 'true' : 'false'); }
@@ -3529,6 +3586,29 @@
         renderShopping(); executeActionWithSave();
         if (s.claimBy) flashDone(Array.from(document.querySelectorAll('#shopList .shop-item')).find(el => el.dataset.sid === id));
     }
+    /** Hold an item's name (or double-click on a computer) to fix it. Not logged: it notifies nobody */
+    function shopRename(id) {
+        const s = (db.shopping || []).find(x => x.id === id); if (!s || s.done) return;
+        if (shopLocked(s)) { shopLockedToast(s); return; }
+        customPrompt('Change the item', s.text, (val) => {
+            const { text, qty } = shopQtyParse(String(val || '').trim().replace(/s+/g, ' ').slice(0, SHOP_MAX_LEN)); if (!text) return;
+            const it = (db.shopping || []).find(x => x.id === id); if (!it) return;
+            it.text = text; if (qty > 1) it.qty = qty;
+            renderShopping(); executeActionWithSave();
+        });
+    }
+    (function () {
+        let t = null, sx = 0, sy = 0;
+        const stop = () => { clearTimeout(t); t = null; };
+        document.addEventListener('pointerdown', (e) => {
+            const el = e.target.closest && e.target.closest('#shopList .shop-text'); if (!el) return;
+            const card = el.closest('.shop-item'); sx = e.clientX; sy = e.clientY; stop();
+            t = setTimeout(() => { t = null; triggerHaptic(); shopRename(card.dataset.sid); }, 520);
+        }, { passive: true });
+        document.addEventListener('pointermove', (e) => { if (t && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) stop(); }, { passive: true });
+        ['pointerup', 'pointercancel', 'scroll'].forEach(ev => document.addEventListener(ev, stop, { passive: true, capture: true }));
+        document.addEventListener('dblclick', (e) => { const el = e.target.closest && e.target.closest('#shopList .shop-text'); if (el) shopRename(el.closest('.shop-item').dataset.sid); });
+    })();
     /** A tick plays its little animation first, then the list updates (redrawing at once cut it off) */
     function tickThen(el, fn) { triggerHaptic(); el.classList.add('anim'); el.disabled = true; setTimeout(fn, revealMotionOff() ? 0 : 280); }
     /** Someone else said "I'll get it": locked for everyone else (they can only say "I bought it") */
@@ -3913,6 +3993,7 @@
             if (pushLocalChanges) { setNeedsSync(true); setTimeout(() => saveData(), 50); } else { offlineActionsCount = 0; updateOfflineBadge(); }
             processUploadQueue(); refreshWebPush(); setTimeout(maybeShowNotifCard, 2500);
             setTimeout(() => { noteMyVersion(); checkMinVersion(); }, 1500);
+            sinceInit(); eventStripSync();
         } catch (e) {
             if (e.message === "AUTH") { forgetHouseKey(); showLock("Wrong PIN. Try again"); }
             else if (e.message === "LOCKED") { showLock("Too many wrong PINs on this network. Try again in an hour"); }
@@ -4615,6 +4696,16 @@
         renderInboxList();
         navEnsureEntry(); document.getElementById('inboxOverlay').style.display = 'flex';
     }
+    /** Where a bell item leads (besides an expense, which opens on top): its own screen */
+    function inboxTarget(a) {
+        const act = String(a.act || '');
+        if (a.kind === 'shop' || /shopping/i.test(act)) return 'openShopping()';
+        if (a.kind === 'mention' || /note|poll/i.test(act)) return 'openNotices()';
+        if (a.kind === 'nudge' && a.msg && /no need to buy|took .* off the list/.test(a.msg)) return 'openShopping()';
+        if (a.kind === 'nudge' || a.kind === 'iou' || a.kind === 'pastpay' || PAST_PAY_ACTS.has(act) || /paid|settle/i.test(act)) return 'openDebts()';
+        if (/ended month|archive/i.test(act)) return 'openPast()';
+        return '';
+    }
     /** An "I've paid" still waiting for me to confirm: where it is ({arcIdx}) or null */
     function pendingClaimFor(a) {
         if (!a || !a.claim || !Array.isArray(a.who) || a.who[1] !== currentUser) return null;
@@ -4636,7 +4727,8 @@
             const acts = !pc ? '' : pc.settle
                 ? `<div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); settleWith(${jsArg(a.by)}, true)">Got it</button><button class="btn-pill interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); rejectSettleClaim(${jsArg(a.by)})">Not yet</button></div>`
                 : `<div class="card-actions" style="margin-top:8px;"><button class="btn-pill primary interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); confirmClaim(${jsArg(a.trg)}, ${pc.arcIdx})">Got it</button><button class="btn-pill interactive-btn" onclick="event.stopPropagation(); triggerHaptic(); rejectClaim(${jsArg(a.trg)}, ${pc.arcIdx})">Not yet</button></div>`;
-            return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${ex ? ' tappable interactive-btn' : ''}" ${ex ? `role="button" onclick="triggerHaptic(); openExpense(${jsArg(ex.id)})"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
+            const go = ex ? `openExpense(${jsArg(ex.id)})` : inboxTarget(a);
+            return `<div class="card inbox-item${a.t > seen ? ' unread' : ''}${go ? ' tappable interactive-btn' : ''}" ${go ? `role="button" onclick="triggerHaptic(); ${ex ? go : 'closeInbox(); ' + go}"` : ''}><div style="display:flex; gap:10px; align-items:flex-start;">${avatarHTML(a.by, 'sm')}<div style="min-width:0; flex:1;">
                 <div class="card-text">${text}</div>
                 ${a.trg && !nudge ? `<div class="card-meta" style="color:var(--accent-strong);">${auditTargetLabel(a.trg)}</div>` : ''}
                 <div class="card-meta">${timeAgo(a.t)}</div>${acts}</div></div></div>`;
@@ -5146,6 +5238,7 @@
                 : net < 0 ? `<div class="prof-between owe">You owe ${escapeHTML(name)} ${fmt(-net)}</div>` : `<div class="prof-between owed">${escapeHTML(name)} owes you ${fmt(net)}</div>`;
             if (Math.abs(net) > 0.01) html += `<button class="btn-glowing small interactive-btn" style="width:100%; margin-top:8px;" onclick="triggerHaptic(); closeHistory(); openDebts()">Open Settle Up</button>`;
         }
+        html += categoryBarsHtml((db.expenses || []).filter(e => e && e.name === name), { title: `${name === currentUser ? 'What you paid for' : 'What ' + escapeHTML(name) + ' paid for'} · this cycle`, click: false });
         if (recent.length) html += `<div class="group-label" style="margin-top:16px;">Recent expenses</div><div class="stack">` + recent.map(e => {
             const inCur = (db.expenses || []).some(x => x.id === e.id);
             return `<div class="card${inCur ? ' tappable interactive-btn' : ''}"${inCur ? ` role="button" onclick="triggerHaptic(); closeHistory(); openExpense(${jsArg(e.id)})"` : ''}><div class="prof-ex"><span class="pe-t">${formatDescDisplay(e.desc, e.originalSym || sym) || 'Expense'}</span><span class="pe-a">${fmt(Number(e.amount) || 0)}</span></div><div class="card-meta">${formatNiceDate(e.date)}</div></div>`;
@@ -5191,7 +5284,7 @@
         let h = `<div class="recap-hero"><div class="rh-k">${escapeHTML(formatNiceDate(arc.start))} → ${escapeHTML(formatNiceDate(arc.end))}</div><div class="rh-v">${escapeHTML(fmt(total))}</div><div class="rh-s">${exps.length} expense${exps.length === 1 ? '' : 's'}${diff === null ? '' : ` · ${Math.abs(diff).toFixed(0)}% ${diff >= 0 ? 'more' : 'less'} than last time`}</div></div>`;
         h += `<div class="tiles" style="margin-top:10px;">${tile('Per head', escapeHTML(fmt(total / Math.max(active.length, 1))))}${tile('Paid the most', topPayer ? escapeHTML(topPayer) + ' · ' + escapeHTML(fmt(paid[topPayer])) : '-')}</div>`;
         if (biggest) h += `<div class="group-label">Biggest expense</div><div class="group"><div class="health-row"><span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${escapeHTML(biggest.name)}</b> · ${formatDescDisplay(biggest.desc, biggest.originalSym || viewMoney().sym)}</span><span class="hv">${escapeHTML(fmt(biggest.amount))}</span></div></div>`;
-        h += categoryBarsHtml(exps);
+        h += categoryBarsHtml(exps, { click: false });
         h += `<div class="group-label">Who pays whom</div><div class="group">${txs.length ? txs.map(t => { const left = t.amt - ((arc.paidStatus || {})[`${t.from}_${t.to}`] || 0); return `<div class="health-row"><span>${escapeHTML(t.from)} → ${escapeHTML(t.to)}</span><span class="hv"${left <= 0.01 ? ' style="color:var(--success);"' : ''}>${left <= 0.01 ? 'Paid ✓' : escapeHTML(fmt(left))}</span></div>`; }).join('') : '<div class="health-row"><span>Everyone is square</span><span class="hv" style="color:var(--success);">✓</span></div>'}</div>`;
         h += `<div class="card-meta" style="text-align:center; margin-top:8px;">Unpaid amounts stay in Past cycles until they're settled.</div>`;
         h += `<div class="sheet-foot" style="gap:8px;"><button class="btn-glowing interactive-btn" onclick="triggerHaptic(); shareSummaryImage(recapArc)">${ico('share').replace('<svg', '<svg width="17" height="17"')} Share picture</button><button class="btn-glowing primary interactive-btn" onclick="triggerHaptic(); closeHistory()">Done</button></div>`;
@@ -5796,6 +5889,7 @@
         if (!Array.isArray(db.archives) || !db.archives[arcIdx]) { render(); return; } // that cycle was deleted on another phone a moment ago
         if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
         const current = db.archives[arcIdx].paidStatus[key] || 0;
+        if (db.archives[arcIdx].locked && totalBaseAmt - current <= 0.01) { showToast("THIS CYCLE IS LOCKED - PAYMENTS CAN'T BE UN-MARKED", 2600); return; }
         if (totalBaseAmt - current <= 0.01) { db.archives[arcIdx].paidStatus[key] = 0; } else { db.archives[arcIdx].paidStatus[key] = totalBaseAmt; }
         logPastPayment(db.archives[arcIdx].paidStatus[key] ? `Marked a payment of ${viewMoney().fmt(totalBaseAmt)} from ${archiveLabel(db.archives[arcIdx])} as paid` : `Marked a payment from ${archiveLabel(db.archives[arcIdx])} as not paid`, key); render(); executeActionWithSave(); flashPayCard(key);
     }
@@ -5806,6 +5900,7 @@
             if (val === null || val.trim() === "") return; let amtLocal = parseFloat(val.replace(/,/g, '.')); if (isNaN(amtLocal) || amtLocal < 0) return;
             arcIdx = refind(); if (arcIdx < 0) { showToast("That cycle changed - try again", 2500); return; }
             if(!db.archives[arcIdx].paidStatus) db.archives[arcIdx].paidStatus = {};
+            if (amtLocal === 0 && db.archives[arcIdx].locked) { showToast("THIS CYCLE IS LOCKED - PAYMENTS CAN'T BE UN-MARKED", 2600); return; }
             if (amtLocal === 0) { db.archives[arcIdx].paidStatus[key] = 0; } else { if(!db.archives[arcIdx].paidStatus[key]) db.archives[arcIdx].paidStatus[key] = 0; db.archives[arcIdx].paidStatus[key] += (amtLocal / rate); }
             logPastPayment(amtLocal === 0 ? `Cleared a part payment from ${archiveLabel(db.archives[arcIdx])}` : `Logged a part payment of ${viewMoney().fmt(amtLocal / rate)} from ${archiveLabel(db.archives[arcIdx])}`, key); render(); executeActionWithSave();
         }, "decimal");
@@ -5904,9 +5999,10 @@
                 return `<div class="linear-row timeline-item">${avatarHTML(d.name, 'sm')}<div class="item-main"><div class="item-top"><div class="item-title" style="font-size:0.9rem;">${escapeHTML(d.name)}</div><div class="item-amt" style="font-size:0.92rem;">${money(d.amount * rate)}</div></div><div class="item-sub">${descText ? escapeHTML(descText) : ''}${editedTag(d)}</div>${d.receipt ? `<div class="row-actions"><button class="btn-pill success interactive-btn" aria-label="View Receipt" onclick="triggerHaptic(); viewImg(${receiptSafeStr})">Receipt</button></div>` : ''}</div></div>`;
             }).join('');
             const status = cycUnpaidN ? `<span class="tag danger">${cycUnpaidN} unpaid</span>` : (isFullySettled ? `<span class="tag success">Settled</span>` : '');
-            cyclesHtml += `<div class="archive-item gs-card" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)">${calTileHTML(a)}<div class="arc-t"><b>${arcTitle(a)}</b><small>${range} · ${details.length} expense${details.length === 1 ? '' : 's'}</small></div><div class="arc-r"><div class="cycle-total">${money((Number(a.total) || 0) * rate)}</div>${status}</div><svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>`
+            cyclesHtml += `<div class="archive-item gs-card" id="archive-card-${idx}"><div class="archive-header interactive-btn" onclick="toggleSection(this)">${calTileHTML(a)}<div class="arc-t"><b>${arcTitle(a)}${a.locked ? ` <span class="arc-lock" title="Locked">${ico('lock')}</span>` : ''}</b><small>${range} · ${details.length} expense${details.length === 1 ? '' : 's'}</small></div><div class="arc-r"><div class="cycle-total">${money((Number(a.total) || 0) * rate)}</div>${status}</div><svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>`
                 + `<div class="archive-details" onclick="event.stopPropagation()">`
-                + `<div class="arc-foot"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">${ico('download')}Snapshot</button><button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">${ico('trash')}Delete</button></div>`
+                + `<div class="arc-foot"><button class="btn-pill interactive-btn" aria-label="Download Snapshot" onclick="triggerHaptic(); downloadArchive(event, ${idx})">${ico('download')}Snapshot</button>${a.locked ? '' : `<button class="btn-pill danger interactive-btn" aria-label="Delete Archive" onclick="triggerHaptic(); deleteArchive(event, ${idx})">${ico('trash')}Delete</button>`}${isAdmin() ? `<button class="btn-pill interactive-btn" aria-label="${a.locked ? 'Unlock' : 'Lock'} this cycle" onclick="triggerHaptic(); toggleArcLock(event, ${idx})">${ico(a.locked ? 'unlock' : 'lock')}${a.locked ? 'Unlock' : 'Lock'}</button>` : ''}</div>`
+                + (a.locked ? `<div class="card-meta" style="margin:-6px 2px 12px; display:flex; align-items:center; gap:6px;">${ico('lock').replace('<svg', '<svg width="13" height="13"')}Locked by an admin: it can't be deleted and payments can't be un-marked. Unpaid amounts can still be paid.</div>` : '')
                 + (whoHtml ? `<div class="sub-title" style="margin-top:0;">Who paid</div><div class="arc-who">${whoHtml}</div>` : '')
                 + (cycUnpaidN ? `<div class="arc-unpaid interactive-btn" onclick="triggerHaptic(); showCycleUnpaid(${idx})"><div class="warn-banner"><span style="display:flex; align-items:center; gap:8px;">${ico('alert')}${cycUnpaidN} unpaid · ${money(cycUnpaidBase * rate)}</span>${ico('chev')}</div></div>` : '')
                 + `<div class="sub-title">${myViewActive ? 'Your expenses' : 'Expenses'}</div><div>${logsHtml || '<div class="card-meta">No expenses.</div>'}</div>`
@@ -6289,11 +6385,21 @@
         if (exArr.length > 0) { let ex = exArr[0]; ex.deletedAt = Date.now(); if (!db.trash) db.trash = []; db.trash.push(ex); logAudit("Deleted Expense", id); render(); executeActionWithSave(); showToast(`Moved to Vault`, 2000); }
     }
     
+    /** Admins: lock / unlock a past cycle (arc.locked). Locked: no delete, no un-marking a payment; paying what's left still works */
+    function toggleArcLock(ev, i) {
+        ev.stopPropagation(); if (!isAdmin()) return; const refind = arcRefind(i);
+        const a = db.archives[i]; if (!a) return; const lock = !a.locked;
+        customConfirm(lock ? 'Lock this cycle?<br><span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">Nobody can delete it or un-mark its payments. Unpaid amounts can still be paid. Admins can unlock it.</span>' : 'Unlock this cycle?', () => {
+            i = refind(); if (i < 0) return; const arc = db.archives[i]; if (lock) arc.locked = true; else delete arc.locked;
+            logAudit(`${lock ? 'Locked' : 'Unlocked'} the cycle ${archiveLabel(arc)}`, null, true); render(); executeActionWithSave();
+        });
+    }
     function deleteArchive(ev, i) { 
         ev.stopPropagation(); 
+        if (db.archives[i] && db.archives[i].locked) { showToast("THIS CYCLE IS LOCKED", 2200); return; }
         const refind = arcRefind(i);
         customConfirm("Delete this archive permanently?", () => { 
-            i = refind(); if (i < 0) { showToast("That cycle changed - nothing deleted", 2500); return; } const arc = db.archives[i];
+            i = refind(); if (i < 0) { showToast("That cycle changed - nothing deleted", 2500); return; } const arc = db.archives[i]; if (arc.locked) { showToast("THIS CYCLE IS LOCKED", 2200); return; }
             if (arc && Array.isArray(arc.details)) arc.details.forEach(deleteReceiptPhotos);
             db.archives.splice(i,1); logAudit("Deleted Archive"); render(); executeActionWithSave(); 
         }); 
@@ -6351,7 +6457,7 @@
     function login(u) { 
         currentUser = u; localStorage.setItem('house_user', u); document.getElementById('loginOverlay').style.display='none'; document.getElementById('topUserName').innerText = u; const menuUser = document.getElementById('menuUserName'); if(menuUser) menuUser.innerText = u;
         if (!localStorage.getItem('has_seen_input')) { document.getElementById('tabAddBtn').classList.add('intro-glow'); document.getElementById('amtInput').addEventListener('focus', function() { document.getElementById('chatWrapper').classList.remove('intro-glow'); localStorage.setItem('has_seen_input', 'true'); }, { once: true }); }
-        render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500); runPendingQuickAdd();
+        sinceInit(); render(); refreshWebPush(); setTimeout(maybeShowNotifCard, 1500); runPendingQuickAdd();
     }
 
     window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (navigator.onLine) { if (needsSync) { saveData(); } else { loadData(false); } processUploadQueue(); } checkForUpdates(); } });
